@@ -84,3 +84,63 @@ export const orders: Order[] = [
     createdAt: now - 1 * 60 * 1000, // 1 minute ago
   },
 ];
+
+export type MenuItem = {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  imageHint: string;
+  isAvailable: boolean;
+};
+
+export const menuItems: MenuItem[] = [
+  {
+    id: 'item-1',
+    name: 'Zesty Burger',
+    price: 12.99,
+    imageUrl: 'https://picsum.photos/seed/zesty-burger/400/400',
+    imageHint: 'burger fries',
+    isAvailable: true,
+  },
+  {
+    id: 'item-2',
+    name: 'Crispy Fries',
+    price: 4.5,
+    imageUrl: 'https://picsum.photos/seed/crispy-fries/400/400',
+    imageHint: 'fries potato',
+    isAvailable: true,
+  },
+  {
+    id: 'item-3',
+    name: 'Spicy Chicken Wrap',
+    price: 9.5,
+    imageUrl: 'https://picsum.photos/seed/chicken-wrap/400/400',
+    imageHint: 'wrap chicken',
+    isAvailable: true,
+  },
+  {
+    id: 'item-4',
+    name: 'Veggie Delight Pizza',
+    price: 18.0,
+    imageUrl: 'https://picsum.photos/seed/veggie-pizza/400/400',
+    imageHint: 'pizza vegetable',
+    isAvailable: false,
+  },
+  {
+    id: 'item-5',
+    name: 'Onion Rings',
+    price: 5.75,
+    imageUrl: 'https://picsum.photos/seed/onion-rings/400/400',
+    imageHint: 'onion rings',
+    isAvailable: true,
+  },
+  {
+    id: 'item-6',
+    name: 'Classic Milkshake',
+    price: 6.0,
+    imageUrl: 'https://picsum.photos/seed/milkshake/400/400',
+    imageHint: 'milkshake dessert',
+    isAvailable: true,
+  },
+];
