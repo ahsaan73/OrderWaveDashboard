@@ -48,7 +48,7 @@ export function useCollection<T extends FirebaseDocument>(
     );
     
     return () => unsubscribe();
-  }, [JSON.stringify(query)]); // Use JSON.stringify to deep compare query object
+  }, [query]); // Use query object directly as dependency
 
   return { data, isLoading, error };
 }
