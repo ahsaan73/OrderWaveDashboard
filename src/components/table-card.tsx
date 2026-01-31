@@ -7,6 +7,7 @@ import { Users, Utensils, CircleDollarSign, CheckCircle2 } from 'lucide-react';
 
 interface TableCardProps {
   table: Table;
+  onStatusChange?: (tableId: string) => void;
 }
 
 const statusConfig = {
@@ -32,12 +33,21 @@ const statusConfig = {
     }
 }
 
-export function TableCard({ table }: TableCardProps) {
+export function TableCard({ table, onStatusChange }: TableCardProps) {
   const config = statusConfig[table.status];
   const Icon = config.icon;
 
+  const isInteractive = !!onStatusChange;
+
   return (
-    <Card className={cn("transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col aspect-[4/3] justify-center", config.className)}>
+    <Card 
+        className={cn(
+            "transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col aspect-[4/3] justify-center", 
+            config.className,
+            isInteractive && "cursor-pointer"
+        )}
+        onClick={() => onStatusChange?.(table.id)}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="flex justify-between items-center text-xl font-headline">
           <span>{table.name}</span>
