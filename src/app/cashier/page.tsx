@@ -88,6 +88,7 @@ export default function CashierPage() {
         total: total,
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
         createdAt: Date.now(),
+        paymentMethod: method,
     };
     
     try {

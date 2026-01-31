@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import type { StockItem } from '@/lib/data';
+import type { StockItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, Check, X } from 'lucide-react';
 
 interface EditableStockCardProps {
   item: StockItem;
-  onUpdate: (id: string, newLevel: number) => void;
+  onUpdate: (item: StockItem, newLevel: number) => void;
 }
 
 export function EditableStockCard({ item, onUpdate }: EditableStockCardProps) {
@@ -32,7 +32,7 @@ export function EditableStockCard({ item, onUpdate }: EditableStockCardProps) {
     let newLevel = editedLevel;
     if (newLevel > 100) newLevel = 100;
     if (newLevel < 0) newLevel = 0;
-    onUpdate(item.id, newLevel);
+    onUpdate(item, newLevel);
     setIsEditing(false);
   };
   

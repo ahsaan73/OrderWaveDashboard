@@ -47,7 +47,8 @@
         "status": { "type": "string", "enum": ["Waiting", "Cooking", "Done"] },
         "total": { "type": "number" },
         "time": { "type": "string" },
-        "createdAt": { "type": "number" }
+        "createdAt": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "Card"] }
       },
       "required": ["orderNumber", "customerName", "items", "status", "total", "time", "createdAt"]
     },
@@ -72,6 +73,21 @@
         "threshold": { "type": "number" }
       },
       "required": ["name", "stockLevel", "threshold"]
+    },
+    "InventoryLog": {
+        "title": "Inventory Log",
+        "description": "Tracks changes to inventory items.",
+        "type": "object",
+        "properties": {
+            "itemId": { "type": "string", "description": "ID of the StockItem that was changed." },
+            "itemName": { "type": "string", "description": "Name of the StockItem that was changed." },
+            "userId": { "type": "string", "description": "ID of the user who made the change." },
+            "userName": { "type": "string", "description": "Name of the user who made the change." },
+            "oldStockLevel": { "type": "number", "description": "Stock level before the change." },
+            "newStockLevel": { "type": "number", "description": "Stock level after the change." },
+            "timestamp": { "type": "number", "description": "When the change occurred (Unix timestamp)." }
+        },
+        "required": ["itemId", "itemName", "userId", "userName", "oldStockLevel", "newStockLevel", "timestamp"]
     }
   },
   "auth": {
@@ -97,6 +113,10 @@
     "/stockItems/{stockItemId}": {
       "schema": { "$ref": "#/entities/StockItem" },
       "description": "Inventory stock levels."
+    },
+    "/inventoryLogs/{inventoryLogId}": {
+      "schema": { "$ref": "#/entities/InventoryLog" },
+      "description": "Logs of all changes to inventory stock."
     }
   }
 }

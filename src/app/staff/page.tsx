@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { EditableStockCard } from '@/components/editable-stock-card';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, doc, updateDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import type { StockItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -29,12 +29,24 @@ export default function StaffPage() {
 
   const { data: stock, isLoading: dataLoading } = useCollection<StockItem>(stockQuery);
 
-  const handleStockUpdate = async (id: string, newStockLevel: number) => {
-    if (!firestore) return;
-    const itemRef = doc(firestore, 'stockItems', id);
+  const handleStockUpdate = async (item: StockItem, newStockLevel: number) => {
+    if (!firestore || !user) return;
+    const itemRef = doc(firestore, 'stockItems', item.id);
     try {
       await updateDoc(itemRef, { stockLevel: newStockLevel });
-      toast({ title: 'Success', description: 'Stock level updated.'})
+      
+      const logCollection = collection(firestore, 'inventoryLogs');
+      await addDoc(logCollection, {
+          itemId: item.id,
+          itemName: item.name,
+          userId: user.uid,
+          userName: user.displayName || 'N/A',
+          oldStockLevel: item.stockLevel,
+          newStockLevel: newStockLevel,
+          timestamp: Date.now(),
+      });
+
+      toast({ title: 'Success', description: 'Stock level updated and logged.' });
     } catch (error) {
       console.error('Error updating stock level', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not update stock level.'});
