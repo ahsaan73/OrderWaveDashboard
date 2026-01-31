@@ -67,17 +67,20 @@ export default function TableCodesPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Table Codes
-          </h1>
-          <Button onClick={() => setIsAddModalOpen(true)} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">
+              Table Codes
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Generate and print QR codes for your tables. Customers can scan these to order directly.
+            </p>
+          </div>
+          <Button onClick={() => setIsAddModalOpen(true)} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0">
             <Plus className="mr-2" /> Add Table
           </Button>
         </div>
-        <p className="text-muted-foreground">
-          Generate and print QR codes for your tables. Customers can scan these to order directly.
-        </p>
+        
         <Card>
           <CardHeader>
             <CardTitle>Tables</CardTitle>
