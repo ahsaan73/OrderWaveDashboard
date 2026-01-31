@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChefHat, User, Shield, ConciergeBell } from 'lucide-react';
 import { useEffect } from 'react';
 
-type Role = 'manager' | 'cashier' | 'waiter' | 'admin';
+type Role = 'manager' | 'cashier' | 'waiter' | 'admin' | 'kitchen';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,6 +48,10 @@ export default function LoginPage() {
             <Button size="lg" className="h-14 text-lg" variant="secondary" onClick={() => handleLogin('waiter')}>
                 <ConciergeBell className="mr-3"/>
                 Login as Waiter
+            </Button>
+             <Button size="lg" className="h-14 text-lg" variant="secondary" onClick={() => handleLogin('kitchen')}>
+                <ChefHat className="mr-3"/>
+                Login as Kitchen
             </Button>
           </div>
         </CardContent>

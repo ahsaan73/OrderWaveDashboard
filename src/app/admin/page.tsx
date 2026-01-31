@@ -107,6 +107,7 @@ export default function AdminPage() {
                                     <SelectItem value="manager">Manager</SelectItem>
                                     <SelectItem value="cashier">Cashier</SelectItem>
                                     <SelectItem value="waiter">Waiter</SelectItem>
+                                    <SelectItem value="kitchen">Kitchen</SelectItem>
                                 </SelectContent>
                             </Select>
                         </TableCell>

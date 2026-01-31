@@ -44,11 +44,12 @@ const allMenuItems = [
     { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
     { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
     { id: "Admin", label: "User Management", icon: UserCog, href: "/admin", roles: ["admin"] },
-    { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#", roles: ["manager", "admin"] }, // AI context
+    { id: "KitchenDisplay", label: "Kitchen Display", icon: Tv, href: "/kitchen-display", roles: ["manager", "admin"] },
+    { id: "KitchenAI", label: "Kitchen AI", icon: ChefHat, href: "#", roles: ["manager", "admin"] }, // AI context
   ];
 
 
-const aiSections = ["Menu", "Staff", "Kitchen", "Stock"] as const;
+const aiSections = ["Menu", "Staff", "KitchenAI", "Stock"] as const;
 type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -142,17 +143,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
                 </div>
             </div>}
-
-             <Button 
-              variant="outline" 
-              className="justify-start gap-2"
-              asChild
-             >
-                <Link href="/kitchen-display">
-                    <Tv />
-                    <span>Kitchen TV</span>
-                </Link>
-             </Button>
             
             {isManagerOrAdmin && (
                 <Button

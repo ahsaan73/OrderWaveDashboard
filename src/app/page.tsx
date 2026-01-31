@@ -41,10 +41,17 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!userLoading && user && !['manager', 'admin'].includes(user.role || '')) {
-      if (user.role === 'waiter') router.replace('/waiter');
-      else if (user.role === 'cashier') router.replace('/cashier');
-      else router.replace('/login');
+    if (!userLoading) {
+      if (user) {
+        if (user.role === 'waiter') router.replace('/waiter');
+        else if (user.role === 'cashier') router.replace('/cashier');
+        else if (user.role === 'kitchen') router.replace('/kitchen-display');
+        else if (!['manager', 'admin'].includes(user.role || '')) {
+          router.replace('/login');
+        }
+      } else {
+        router.replace('/login');
+      }
     }
   }, [user, userLoading, router]);
 

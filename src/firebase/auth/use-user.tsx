@@ -2,7 +2,7 @@
 import type { User } from '@/lib/types';
 import { useEffect, useState } from 'react';
 
-type Role = 'manager' | 'cashier' | 'waiter' | 'admin';
+type Role = 'manager' | 'cashier' | 'waiter' | 'admin' | 'kitchen';
 
 const demoUsers: Partial<Record<Role, User>> = {
     admin: {
@@ -36,6 +36,14 @@ const demoUsers: Partial<Record<Role, User>> = {
         displayName: 'Demo Waiter',
         photoURL: 'https://picsum.photos/seed/demowaiter/100/100',
         role: 'waiter'
+    },
+    kitchen: {
+        id: 'demokitchen',
+        uid: 'demokitchen',
+        email: 'kitchen@example.com',
+        displayName: 'Demo Kitchen',
+        photoURL: 'https://picsum.photos/seed/demokitchen/100/100',
+        role: 'kitchen'
     }
 };
 

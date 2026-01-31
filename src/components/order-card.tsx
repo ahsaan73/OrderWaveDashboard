@@ -15,6 +15,7 @@ import type { Order } from "@/lib/types";
 interface OrderCardProps {
   order: Order;
   onUpdateStatus: (orderId: string, newStatus: Order['status']) => void;
+  canUpdate?: boolean;
 }
 
 // Thresholds in minutes
@@ -27,7 +28,7 @@ function formatDuration(seconds: number) {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-export function OrderCard({ order, onUpdateStatus }: OrderCardProps) {
+export function OrderCard({ order, onUpdateStatus, canUpdate = false }: OrderCardProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
@@ -90,12 +91,12 @@ export function OrderCard({ order, onUpdateStatus }: OrderCardProps) {
 
       <CardFooter className="p-2">
         {order.status === 'Waiting' && (
-          <Button onClick={handleStartCooking} className="w-full h-16 text-xl bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
+          <Button onClick={handleStartCooking} disabled={!canUpdate} className="w-full h-16 text-xl bg-yellow-500 hover:bg-yellow-600 text-black font-bold disabled:opacity-70 disabled:cursor-not-allowed">
             Start Cooking
           </Button>
         )}
         {order.status === 'Cooking' && (
-            <Button onClick={handleDone} className="w-full h-16 text-xl bg-green-500 hover:bg-green-600 text-white font-bold">
+            <Button onClick={handleDone} disabled={!canUpdate} className="w-full h-16 text-xl bg-green-500 hover:bg-green-600 text-white font-bold disabled:opacity-70 disabled:cursor-not-allowed">
             DONE
           </Button>
         )}

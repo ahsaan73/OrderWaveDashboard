@@ -32,6 +32,13 @@ export const users: Omit<User, 'id' | 'ref'>[] = [
     email: 'bilal.a@example.com',
     photoURL: 'https://picsum.photos/seed/bilal/100/100',
     role: 'waiter'
+  },
+  {
+    uid: 'kitchen-1',
+    displayName: 'Fatima Ali',
+    email: 'fatima.a@example.com',
+    photoURL: 'https://picsum.photos/seed/fatima/100/100',
+    role: 'kitchen'
   }
 ];
 

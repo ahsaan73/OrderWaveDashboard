@@ -10,7 +10,7 @@ export type User = FirebaseDocument & {
   email?: string | null;
   displayName?: string | null;
   photoURL?: string | null;
-  role?: 'manager' | 'cashier' | 'waiter' | 'admin';
+  role?: 'manager' | 'cashier' | 'waiter' | 'admin' | 'kitchen';
 };
 
 export type Order = FirebaseDocument & {
