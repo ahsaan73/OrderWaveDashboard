@@ -7,15 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { tables } from '@/lib/initial-data';
 import { Plus, Minus, ShoppingCart, ChefHat, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, addDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-import type { MenuItem } from '@/lib/types';
+import { useCollection, useDoc, useFirestore } from '@/firebase';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import type { MenuItem, Table } from '@/lib/types';
 
 
 type OrderItem = {
@@ -28,18 +25,25 @@ const restaurantImage = PlaceHolderImages.find(p => p.id === 'restaurant-front')
 function OrderPageContent() {
   const searchParams = useSearchParams();
   const tableId = searchParams.get('tableId');
-  const tableName = tables.find(t => t.id === tableId)?.name;
+  const firestore = useFirestore();
+  
+  const tableRef = useMemo(() => {
+    if (!firestore || !tableId) return null;
+    return doc(firestore, 'tables', tableId);
+  }, [firestore, tableId]);
+
+  const { data: table, isLoading: isTableLoading } = useDoc<Table>(tableRef);
+  const tableName = table?.name;
 
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
-  const firestore = useFirestore();
 
   const menuItemsQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);
 
-  const { data: allMenuItems, isLoading } = useCollection<MenuItem>(menuItemsQuery);
+  const { data: allMenuItems, isLoading: isMenuLoading } = useCollection<MenuItem>(menuItemsQuery);
 
 
   const handleAddItem = (item: MenuItem) => {
@@ -84,7 +88,7 @@ function OrderPageContent() {
         return;
     }
     
-    const newOrder = {
+    const newOrderPayload = {
         orderNumber: `#${Math.floor(Math.random() * 90000) + 10000}`,
         customerName: tableName || `Table ID: ${tableId}`,
         tableId,
@@ -96,7 +100,13 @@ function OrderPageContent() {
     }
 
     try {
-        await addDoc(collection(firestore, 'orders'), newOrder);
+        const newOrderRef = await addDoc(collection(firestore, 'orders'), newOrderPayload);
+
+        // Update table status
+        if (tableRef) {
+          await updateDoc(tableRef, { status: 'Eating', orderId: newOrderRef.id });
+        }
+
         toast({ title: "Order Sent!", description: `Your order for ${tableName || 'your table'} has been sent to the kitchen. We'll bring it to your table shortly!` });
         setOrder([]);
     } catch (error) {
@@ -106,6 +116,7 @@ function OrderPageContent() {
   };
 
   const menuItems = allMenuItems?.filter(item => item.isAvailable);
+  const isLoading = isMenuLoading || isTableLoading;
 
   return (
     <div className="min-h-screen bg-muted/10">

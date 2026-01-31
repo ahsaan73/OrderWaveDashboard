@@ -44,7 +44,7 @@ const allMenuItems = [
     { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
     { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
     { id: "Admin", label: "User Management", icon: UserCog, href: "/admin", roles: ["admin"] },
-    { id: "KitchenDisplay", label: "Kitchen Display", icon: Tv, href: "/kitchen-display", roles: ["manager", "admin"] },
+    { id: "KitchenDisplay", label: "Kitchen Display", icon: Tv, href: "/kitchen-display", roles: ["manager", "admin", "kitchen"] },
     { id: "KitchenAI", label: "Kitchen AI", icon: ChefHat, href: "#", roles: ["manager", "admin"] }, // AI context
   ];
 
@@ -179,7 +179,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <AiAdviceModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}
-          section={activeSection}
+          section={activeSection as 'Menu' | 'Staff' | 'Kitchen' | 'Stock'}
         />
       )}
     </SidebarProvider>

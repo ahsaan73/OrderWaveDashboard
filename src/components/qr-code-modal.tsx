@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import QRCode from 'react-qr-code';
-import type { Table } from '@/lib/data';
+import type { Table } from '@/lib/types';
 import { Printer } from 'lucide-react';
 
 interface QrCodeModalProps {

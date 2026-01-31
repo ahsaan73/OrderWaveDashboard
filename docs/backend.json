@@ -48,7 +48,8 @@
         "total": { "type": "number" },
         "time": { "type": "string" },
         "createdAt": { "type": "number" },
-        "paymentMethod": { "type": "string", "enum": ["Cash", "Card"] }
+        "paymentMethod": { "type": "string", "enum": ["Cash", "Card"] },
+        "tableId": { "type": "string" }
       },
       "required": ["orderNumber", "customerName", "items", "status", "total", "time", "createdAt"]
     },
