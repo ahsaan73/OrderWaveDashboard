@@ -2,39 +2,39 @@
   "placeholderImages": [
     {
       "id": "zesty-burger",
-      "description": "A delicious zesty burger with a side of fries.",
+      "description": "A delicious spicy zinger burger with a side of fries.",
       "imageUrl": "https://images.unsplash.com/photo-1651843465180-5965076f7368?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YnVyZ2VyJTIwZnJpZXN8ZW58MHx8fHwxNzY5ODgyOTk5fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "burger fries"
+      "imageHint": "zinger burger"
     },
     {
       "id": "crispy-fries",
-      "description": "A bowl of crispy golden french fries.",
+      "description": "A bowl of crispy golden masala fries.",
       "imageUrl": "https://images.unsplash.com/photo-1647490029508-eb014efb3805?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmcmllcyUyMHBvdGF0b3xlbnwwfHx8fDE3Njk4ODYxNDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fries potato"
+      "imageHint": "masala fries"
     },
     {
       "id": "chicken-wrap",
-      "description": "A healthy and spicy chicken wrap.",
+      "description": "A tasty chicken paratha roll.",
       "imageUrl": "https://images.unsplash.com/photo-1630914441316-6d95bbd00caf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3cmFwJTIwY2hpY2tlbnxlbnwwfHx8fDE3Njk4ODYxNDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "wrap chicken"
+      "imageHint": "paratha roll"
     },
     {
       "id": "veggie-pizza",
-      "description": "A delicious pizza with lots of vegetables.",
+      "description": "A delicious chicken tikka pizza.",
       "imageUrl": "https://images.unsplash.com/photo-1653184733587-8a49b65e20e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwaXp6YSUyMHZlZ2V0YWJsZXxlbnwwfHx8fDE3Njk4ODYxNDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "pizza vegetable"
+      "imageHint": "tikka pizza"
     },
     {
       "id": "onion-rings",
-      "description": "A stack of crispy onion rings.",
+      "description": "A plate of hot vegetable samosas.",
       "imageUrl": "https://images.unsplash.com/photo-1625938146369-adc83368bda7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxvbmlvbiUyMHJpbmdzfGVufDB8fHx8MTc2OTc3MDQ1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "onion rings"
+      "imageHint": "samosa vegetable"
     },
     {
       "id": "milkshake",
-      "description": "A classic vanilla milkshake.",
+      "description": "A refreshing and sweet mango lassi.",
       "imageUrl": "https://images.unsplash.com/photo-1571245836612-09ae71811d7c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxtaWxrc2hha2UlMjBkZXNzZXJ0fGVufDB8fHx8MTc2OTg4NjE0MXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "milkshake dessert"
+      "imageHint": "mango lassi"
     },
     {
       "id": "restaurant-front",
