@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BookMarked,
   ChefHat,
@@ -10,9 +10,7 @@ import {
   Boxes,
   Sparkles,
   Tv,
-  LayoutDashboard,
   QrCode,
-  LogOut,
   ClipboardList,
   ShoppingCart,
   UserCog,
@@ -32,12 +30,11 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import { AiAdviceModal } from "./ai-advice-modal";
-import { useUser, useAuth } from "@/firebase";
-import { signOut } from "firebase/auth";
+import { useUser } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const allMenuItems = [
-    { id: "Dashboard", label: "Dashboard", href: "/", roles: ["manager", "cashier", "waiter"] },
+    { id: "Dashboard", label: "Dashboard", href: "/", icon: QrCode, roles: ["manager", "cashier", "waiter"] },
     { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager"] },
@@ -54,34 +51,18 @@ type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, loading } = useUser();
-  const auth = useAuth();
 
   const [activeSection, setActiveSection] = React.useState<AiSection | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
-  }, [user, loading, router]);
-
-
   const handleMenuClick = (id: string) => {
     if (aiSections.includes(id as AiSection)) {
       setActiveSection(id as AiSection);
     } else {
       setActiveSection(null);
-    }
-  };
-
-  const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
-        router.push('/login');
     }
   };
 
@@ -93,7 +74,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
   }
 
-  if (loading || !user) {
+  if (loading) {
     return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
   }
 
@@ -136,7 +117,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
           <SidebarSeparator />
           <SidebarFooter className="p-2 flex flex-col gap-2">
-            <div className="flex items-center gap-2 p-2">
+            {user && <div className="flex items-center gap-2 p-2">
                 <Avatar className="h-9 w-9">
                     <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
                     <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
@@ -145,10 +126,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <span className="font-medium text-sm truncate">{user.displayName || 'User'}</span>
                     <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
                 </div>
-                <Button variant="ghost" size="icon" className="ml-auto" onClick={handleLogout}>
-                    <LogOut className="h-4 w-4" />
-                </Button>
-            </div>
+            </div>}
 
              <Button 
               variant="outline" 

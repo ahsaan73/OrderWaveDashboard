@@ -6,13 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PosItemCard } from '@/components/pos-item-card';
-import { LogOut, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, addDoc } from 'firebase/firestore';
-import { useFirestore, useAuth, useUser } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import type { MenuItem } from '@/lib/types';
-import { signOut } from 'firebase/auth';
 
 type OrderItem = {
   item: MenuItem;
@@ -23,7 +22,6 @@ export default function CashierPage() {
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
   const firestore = useFirestore();
-  const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
 
@@ -43,13 +41,6 @@ export default function CashierPage() {
   }, [firestore]);
 
   const { data: menuItems, isLoading: dataLoading } = useCollection<MenuItem>(menuItemsQuery);
-  
-  const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
-        router.push('/login');
-    }
-  };
 
   const handleAddItem = (item: MenuItem) => {
     setOrder(currentOrder => {
@@ -121,9 +112,6 @@ export default function CashierPage() {
         <div className="flex-grow flex flex-col">
              <header className="bg-background shadow-sm p-4 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-primary font-headline">Point of Sale</h1>
-                <Button variant="ghost" size="icon" onClick={handleLogout}>
-                    <LogOut />
-                </Button>
             </header>
             <ScrollArea className="flex-grow">
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
