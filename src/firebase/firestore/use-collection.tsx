@@ -29,7 +29,7 @@ export function useCollection<T extends FirebaseDocument>(
       (snapshot) => {
         const result: T[] = [];
         snapshot.forEach((doc) => {
-          result.push({ id: doc.id, ...doc.data() } as T);
+          result.push({ ...doc.data(), id: doc.id } as T);
         });
         setData(result);
         setError(null);

@@ -81,7 +81,7 @@ export default function CashierPage() {
     const total = calculateTotal();
 
     const newOrder = {
-        id: `#${Math.floor(Math.random() * 90000) + 10000}`,
+        orderNumber: `#${Math.floor(Math.random() * 90000) + 10000}`,
         customerName: 'Walk-in Customer',
         items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),
         status: 'Waiting',

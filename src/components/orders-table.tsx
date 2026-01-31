@@ -38,7 +38,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
           <Card key={order.id}>
             <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 pb-2">
               <div className="grid gap-1">
-                <CardTitle className="text-base font-medium">{order.id.substring(0,7)}</CardTitle>
+                <CardTitle className="text-base font-medium">{order.orderNumber}</CardTitle>
                 <CardDescription>{order.customerName}</CardDescription>
               </div>
               <div className={cn("text-xs font-semibold capitalize px-2 py-1 rounded-full", mobileStatusStyles[order.status])}>
@@ -76,7 +76,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
           <TableBody>
             {orders.map((order) => (
               <TableRow key={order.id}>
-                <TableCell className="font-medium">{order.id.substring(0,7)}</TableCell>
+                <TableCell className="font-medium">{order.orderNumber}</TableCell>
                 <TableCell>{order.customerName}</TableCell>
                 <TableCell>
                   {order.items.map((item) => `${item.name} (x${item.quantity})`).join(", ")}

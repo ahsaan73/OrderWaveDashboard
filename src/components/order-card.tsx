@@ -64,7 +64,7 @@ export function OrderCard({ order, onUpdateStatus }: OrderCardProps) {
       )}>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-2xl font-bold">{order.id.substring(0, 7)}</CardTitle>
+          <CardTitle className="text-2xl font-bold">{order.orderNumber}</CardTitle>
           {order.status !== 'Done' && (
             <div className={cn(
                 "text-2xl font-bold font-mono px-2 py-1 rounded-md",

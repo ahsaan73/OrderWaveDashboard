@@ -85,6 +85,7 @@ function OrderPageContent() {
     }
     
     const newOrder = {
+        orderNumber: `#${Math.floor(Math.random() * 90000) + 10000}`,
         customerName: tableName || `Table ID: ${tableId}`,
         tableId,
         items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),

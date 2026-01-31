@@ -14,6 +14,7 @@ export type User = FirebaseDocument & {
 };
 
 export type Order = FirebaseDocument & {
+  orderNumber: string;
   customerName: string;
   items: { name: string; quantity: number, price: number }[];
   status: 'Waiting' | 'Cooking' | 'Done';

@@ -30,6 +30,7 @@
       "title": "Order",
       "type": "object",
       "properties": {
+        "orderNumber": { "type": "string" },
         "customerName": { "type": "string" },
         "items": {
           "type": "array",
@@ -48,7 +49,7 @@
         "time": { "type": "string" },
         "createdAt": { "type": "number" }
       },
-      "required": ["customerName", "items", "status", "total", "time", "createdAt"]
+      "required": ["orderNumber", "customerName", "items", "status", "total", "time", "createdAt"]
     },
     "Table": {
       "title": "Table",
