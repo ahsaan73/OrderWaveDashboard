@@ -74,7 +74,7 @@
     }
   },
   "auth": {
-    "providers": ["Google"]
+    "providers": ["Google", "Email and Password"]
   },
   "firestore": {
     "/users/{userId}": {
