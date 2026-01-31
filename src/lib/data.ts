@@ -13,7 +13,7 @@ export type Order = {
 };
 
 export const stats = {
-  moneyMadeToday: 4850.75,
+  moneyMadeToday: 43000,
   totalOrders: 124,
 };
 
