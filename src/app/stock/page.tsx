@@ -1,23 +1,38 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { StockItemCard } from '@/components/stock-item-card';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import type { StockItem } from '@/lib/types';
 
 
 export default function StockPage() {
   const firestore = useFirestore();
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading && user?.role !== 'manager') {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
 
   const stockQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'stockItems');
   }, [firestore]);
 
-  const { data: stockItems, isLoading } = useCollection<StockItem>(stockQuery);
+  const { data: stockItems, isLoading: dataLoading } = useCollection<StockItem>(stockQuery);
+
+  const isLoading = userLoading || dataLoading;
+
+  if (userLoading || !user || user.role !== 'manager') {
+    return <DashboardLayout><div>Loading...</div></DashboardLayout>;
+  }
 
   return (
     <DashboardLayout>

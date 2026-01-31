@@ -37,12 +37,12 @@ import { signOut } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const allMenuItems = [
-    { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/", roles: ["manager", "cashier", "waiter"] },
+    { id: "Dashboard", label: "Dashboard", href: "/", roles: ["manager", "cashier", "waiter"] },
     { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager"] },
     { id: "Staff", label: "Manage Stock", icon: Users, href: "/staff", roles: ["manager"] },
-    { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager", "cashier", "waiter"] },
+    { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager"] },
     { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager"] },
     { id: "Admin", label: "Admin", icon: UserCog, href: "/admin", roles: ["manager"] },
     { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#", roles: ["manager"] }, // AI context
