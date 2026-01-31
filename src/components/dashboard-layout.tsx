@@ -11,6 +11,7 @@ import {
   Sparkles,
   Tv,
   LayoutDashboard,
+  LogOut,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -107,6 +108,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Get AI Advice
+            </Button>
+            <SidebarSeparator/>
+            <Button
+                variant="ghost"
+                className="justify-start gap-2"
+                asChild
+            >
+                <Link href="/login">
+                    <LogOut />
+                    <span>Logout</span>
+                </Link>
             </Button>
           </SidebarFooter>
         </Sidebar>

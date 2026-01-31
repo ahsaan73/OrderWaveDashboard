@@ -166,3 +166,23 @@ export const stockItems: StockItem[] = [
     { id: 'stock-7', name: 'Onions', stockLevel: 60, threshold: 20 },
     { id: 'stock-8', name: 'Potatoes', stockLevel: 75, threshold: 30 },
 ];
+
+export type Table = {
+  id: string;
+  name: string;
+  status: 'Empty' | 'Seated' | 'Eating' | 'Needs Bill';
+  guests: number;
+};
+
+export const tables: Table[] = [
+  { id: 'table-1', name: 'Table 1', status: 'Eating', guests: 4 },
+  { id: 'table-2', name: 'Table 2', status: 'Empty', guests: 0 },
+  { id: 'table-3', name: 'Table 3', status: 'Seated', guests: 2 },
+  { id: 'table-4', name: 'Table 4', status: 'Needs Bill', guests: 5 },
+  { id: 'table-5', name: 'Table 5', status: 'Eating', guests: 3 },
+  { id: 'table-6', name: 'Table 6', status: 'Eating', guests: 4 },
+  { id: 'table-7', name: 'Table 7', status: 'Empty', guests: 0 },
+  { id: 'table-8', name: 'Table 8', status: 'Empty', guests: 0 },
+  { id: 'table-9', name: 'Patio 1', status: 'Needs Bill', guests: 6 },
+  { id: 'table-10', name: 'Patio 2', status: 'Seated', guests: 2 },
+];
