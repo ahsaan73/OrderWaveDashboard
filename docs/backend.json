@@ -22,7 +22,7 @@
         "imageUrl": { "type": "string", "format": "uri" },
         "imageHint": { "type": "string" },
         "isAvailable": { "type": "boolean" },
-        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks"] }
+        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] }
       },
       "required": ["name", "price", "imageUrl", "isAvailable", "category"]
     },

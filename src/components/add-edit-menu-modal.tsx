@@ -26,7 +26,7 @@ interface AddEditMenuModalProps {
   onSave: (item: Omit<MenuItem, 'id'>, id?: string) => void;
 }
 
-const menuItemCategories: readonly [MenuItemCategory, ...MenuItemCategory[]] = ['Burgers', 'Sides', 'Wraps', 'Pizzas', 'Drinks'];
+const menuItemCategories: readonly [MenuItemCategory, ...MenuItemCategory[]] = ['Burgers', 'Sides', 'Wraps', 'Pizzas', 'Drinks', 'Pasta'];
 
 const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),

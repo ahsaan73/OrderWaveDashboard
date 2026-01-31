@@ -25,7 +25,7 @@ export type Order = FirebaseDocument & {
   paymentMethod?: 'Cash' | 'Card';
 };
 
-export type MenuItemCategory = 'Burgers' | 'Sides' | 'Wraps' | 'Pizzas' | 'Drinks';
+export type MenuItemCategory = 'Burgers' | 'Sides' | 'Wraps' | 'Pizzas' | 'Drinks' | 'Pasta';
 
 export type MenuItem = FirebaseDocument & {
   name: string;

@@ -52,10 +52,26 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
     category: 'Burgers',
   },
   {
+    name: 'Classic Beef Burger',
+    price: 950,
+    imageUrl: 'https://picsum.photos/seed/beef-burger/400/400',
+    imageHint: 'beef burger',
+    isAvailable: true,
+    category: 'Burgers',
+  },
+  {
     name: 'Masala Fries',
     price: 400,
     imageUrl: imageMap.get('crispy-fries') || 'https://picsum.photos/seed/crispy-fries/400/400',
     imageHint: 'masala fries',
+    isAvailable: true,
+    category: 'Sides',
+  },
+   {
+    name: 'Garlic Bread',
+    price: 350,
+    imageUrl: 'https://picsum.photos/seed/garlic-bread/400/400',
+    imageHint: 'garlic bread',
     isAvailable: true,
     category: 'Sides',
   },
@@ -76,12 +92,20 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
     category: 'Pizzas',
   },
   {
-    name: 'Vegetable Samosas',
-    price: 300,
-    imageUrl: imageMap.get('onion-rings') || 'https://picsum.photos/seed/onion-rings/400/400',
-    imageHint: 'samosa vegetable',
+    name: 'Fajita Pizza',
+    price: 1600,
+    imageUrl: 'https://picsum.photos/seed/fajita-pizza/400/400',
+    imageHint: 'fajita pizza',
     isAvailable: true,
-    category: 'Sides',
+    category: 'Pizzas',
+  },
+  {
+    name: 'Creamy Chicken Pasta',
+    price: 1200,
+    imageUrl: 'https://picsum.photos/seed/chicken-pasta/400/400',
+    imageHint: 'chicken pasta',
+    isAvailable: true,
+    category: 'Pasta',
   },
   {
     name: 'Mango Lassi',
@@ -92,6 +116,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
     category: 'Drinks',
   },
 ];
+
 
 export const stockItems: Omit<StockItem, 'id' | 'ref'>[] = [
     { name: 'Tomatoes', stockLevel: 80, threshold: 20 },

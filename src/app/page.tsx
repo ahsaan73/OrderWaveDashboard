@@ -33,6 +33,7 @@ const pieChartConfig = {
   Pizzas: { label: "Pizzas", color: "hsl(var(--chart-3))" },
   Sides: { label: "Sides", color: "hsl(var(--chart-4))" },
   Drinks: { label: "Drinks", color: "hsl(var(--chart-5))" },
+  Pasta: { label: "Pasta", color: "hsl(var(--chart-2))" },
 } satisfies ChartConfig
 
 export default function Home() {
