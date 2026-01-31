@@ -46,7 +46,7 @@ export default function MenuPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
           <h1 className="text-3xl font-bold tracking-tight font-headline">
             Edit Menu
           </h1>

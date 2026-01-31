@@ -58,7 +58,7 @@ export default function CashierPage() {
   };
 
   return (
-    <div className="flex h-screen bg-muted/30">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-muted/30">
         {/* Left Side: Menu Items */}
         <div className="flex-grow flex flex-col">
              <header className="bg-background shadow-sm p-4 flex justify-between items-center">
@@ -79,7 +79,7 @@ export default function CashierPage() {
         </div>
 
         {/* Right Side: Current Order */}
-        <aside className="w-full max-w-sm border-l bg-background flex flex-col">
+        <aside className="w-full lg:max-w-sm border-l bg-background flex flex-col">
             <CardHeader>
                 <CardTitle className="text-2xl font-headline">Current Order</CardTitle>
             </CardHeader>

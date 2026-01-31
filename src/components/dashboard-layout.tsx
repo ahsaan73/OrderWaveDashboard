@@ -125,10 +125,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-            <div className="p-4 sm:p-6 lg:p-8">
-                <div className="flex justify-end md:hidden mb-4">
-                    <SidebarTrigger/>
+            <header className="flex items-center justify-between p-4 border-b md:hidden">
+                 <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                        <ChefHat className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <h1 className="text-lg font-bold font-headline text-primary">Islamabad Bites</h1>
                 </div>
+                <SidebarTrigger/>
+            </header>
+            <div className="p-4 sm:p-6 lg:p-8">
                 {children}
             </div>
         </SidebarInset>

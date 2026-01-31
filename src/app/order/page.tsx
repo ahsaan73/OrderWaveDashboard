@@ -126,13 +126,13 @@ function OrderPageContent() {
       {totalItems > 0 && (
         <Sheet>
           <SheetTrigger asChild>
-            <Button className="fixed bottom-6 right-6 h-20 w-auto px-6 rounded-full shadow-lg text-lg flex items-center gap-4 animate-in fade-in zoom-in">
+            <Button className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 h-16 sm:h-20 w-auto px-4 sm:px-6 rounded-full shadow-lg text-base sm:text-lg flex items-center gap-2 sm:gap-4 animate-in fade-in zoom-in">
               <div className="relative">
-                <ShoppingCart className="h-8 w-8" />
+                <ShoppingCart className="h-7 w-7 sm:h-8 sm:w-8" />
                 <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">{totalItems}</span>
               </div>
-              <span>View Tummy List</span>
-              <Separator orientation="vertical" className="h-8 bg-primary-foreground/50"/>
+              <span className="hidden sm:inline">View Tummy List</span>
+              <Separator orientation="vertical" className="h-8 bg-primary-foreground/50 hidden sm:block"/>
               <span className="font-bold">PKR {calculateTotal().toFixed(2)}</span>
             </Button>
           </SheetTrigger>
