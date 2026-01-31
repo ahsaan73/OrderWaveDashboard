@@ -93,9 +93,9 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{item ? 'Edit Menu Item' : 'Add New Menu Item'}</DialogTitle>
+          <DialogTitle>{item ? 'Edit Food Sticker' : 'Add New Food Sticker'}</DialogTitle>
           <DialogDescription>
-            {item ? 'Update the details for this menu item.' : 'Enter the details for the new menu item.'}
+            {item ? 'Update the details for this food sticker.' : 'Enter the details for the new food sticker.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>

@@ -89,14 +89,14 @@ export default function MenuPage() {
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
           <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Edit Menu
+            Menu Sticker Book
           </h1>
           <Button onClick={handleOpenAddModal} size="lg">
-            <Plus className="mr-2" /> Add Food Item
+            <Plus className="mr-2" /> Add New Sticker
           </Button>
         </div>
         <p className="text-muted-foreground">
-          Here you can add, edit, and manage your menu items.
+          Add new food 'stickers' to your menu, set their prices, and arrange them just right.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {isLoading && Array.from({length: 4}).map((_, i) => <div key={i} className="bg-muted rounded-lg h-96 animate-pulse" />)}
