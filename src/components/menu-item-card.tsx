@@ -34,7 +34,7 @@ export function MenuItemCard({ item, onToggleAvailability, onEdit }: MenuItemCar
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-xl font-bold mb-1">{item.name}</CardTitle>
-        <p className="text-lg font-semibold text-primary">${item.price.toFixed(2)}</p>
+        <p className="text-lg font-semibold text-primary">PKR {item.price.toFixed(2)}</p>
       </CardContent>
       <CardFooter className="p-4 bg-muted/30 flex justify-between items-center">
         <Label htmlFor={`available-${item.id}`} className="text-sm font-medium">

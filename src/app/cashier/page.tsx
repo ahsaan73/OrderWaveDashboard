@@ -36,7 +36,7 @@ export default function CashierPage() {
     setOrder(currentOrder => {
         const existingItem = currentOrder.find(oi => oi.item.id === itemId);
         if (existingItem && existingItem.quantity > 1) {
-            return currentOrder.map(oi => oi.item.id === itemId ? {...oi, quantity: oi.quantity -1} : oi)
+            return currentOrder.map(oi => oi.item.id === itemId ? {...oi, quantity: oi.quantity - 1} : oi)
         }
         return currentOrder.filter(oi => oi.item.id !== itemId)
     });
@@ -52,8 +52,8 @@ export default function CashierPage() {
         return;
     }
     // In a real app, this would integrate with a payment processor.
-    console.log(`Processing ${method} payment for $${calculateTotal().toFixed(2)}`);
-    toast({ title: "Payment Successful", description: `${method} payment of $${calculateTotal().toFixed(2)} processed.` });
+    console.log(`Processing ${method} payment for PKR ${calculateTotal().toFixed(2)}`);
+    toast({ title: "Payment Successful", description: `${method} payment of PKR ${calculateTotal().toFixed(2)} processed.` });
     setOrder([]);
   };
 
@@ -93,9 +93,9 @@ export default function CashierPage() {
                                 <div key={item.id} className="flex items-center">
                                     <div className="flex-grow">
                                         <p className="font-semibold">{item.name}</p>
-                                        <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} x {quantity}</p>
+                                        <p className="text-sm text-muted-foreground">PKR {item.price.toFixed(2)} x {quantity}</p>
                                     </div>
-                                    <p className="font-bold">${(item.price * quantity).toFixed(2)}</p>
+                                    <p className="font-bold">PKR {(item.price * quantity).toFixed(2)}</p>
                                     <Button variant="ghost" size="icon" className="ml-2" onClick={() => handleRemoveItem(item.id)}>
                                         <Trash2 className="w-4 h-4 text-destructive" />
                                     </Button>
@@ -108,7 +108,7 @@ export default function CashierPage() {
             <CardFooter className="flex-col !p-4 border-t">
                  <div className="w-full flex justify-between items-center text-xl font-bold mb-4">
                     <span>Total:</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
+                    <span>PKR {calculateTotal().toFixed(2)}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 w-full">
                     <Button size="lg" className="h-16 text-lg" onClick={() => handlePayment('Cash')}>Cash</Button>

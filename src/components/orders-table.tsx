@@ -46,7 +46,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               </TableCell>
               <TableCell>{order.time}</TableCell>
               <TableCell className="text-right">
-                ${order.total.toFixed(2)}
+                PKR {order.total.toFixed(2)}
               </TableCell>
               <TableCell className="text-center">
                 <span

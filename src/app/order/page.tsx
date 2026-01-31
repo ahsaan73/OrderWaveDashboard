@@ -112,7 +112,7 @@ function OrderPageContent() {
                 />
                 <div className="flex-grow">
                     <h3 className="font-bold text-lg">{item.name}</h3>
-                    <p className="text-muted-foreground text-sm">${item.price.toFixed(2)}</p>
+                    <p className="text-muted-foreground text-sm">PKR {item.price.toFixed(2)}</p>
                 </div>
                 <Button size="icon" className="rounded-full h-12 w-12" onClick={() => handleAddItem(item)}>
                     <Plus/>
@@ -133,7 +133,7 @@ function OrderPageContent() {
               </div>
               <span>View Tummy List</span>
               <Separator orientation="vertical" className="h-8 bg-primary-foreground/50"/>
-              <span className="font-bold">${calculateTotal().toFixed(2)}</span>
+              <span className="font-bold">PKR {calculateTotal().toFixed(2)}</span>
             </Button>
           </SheetTrigger>
           <SheetContent className="flex flex-col">
@@ -151,7 +151,7 @@ function OrderPageContent() {
                       <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="w-16 h-16 rounded-md object-cover mr-4" />
                       <div className="flex-grow">
                         <p className="font-semibold">{item.name}</p>
-                        <p className="text-sm text-primary font-semibold">${item.price.toFixed(2)}</p>
+                        <p className="text-sm text-primary font-semibold">PKR {item.price.toFixed(2)}</p>
                          <div className="flex items-center gap-2 mt-2">
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleRemoveItem(item.id)}><Minus className="h-3 w-3" /></Button>
                             <span className="font-bold text-lg w-6 text-center">{quantity}</span>
@@ -159,7 +159,7 @@ function OrderPageContent() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">${(item.price * quantity).toFixed(2)}</p>
+                        <p className="font-bold">PKR {(item.price * quantity).toFixed(2)}</p>
                         <Button variant="ghost" size="icon" className="h-8 w-8 mt-1" onClick={() => handleClearItem(item.id)}>
                             <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
@@ -173,7 +173,7 @@ function OrderPageContent() {
                 <Separator />
                 <div className="w-full flex justify-between items-center text-xl font-bold my-2">
                     <span>Total:</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
+                    <span>PKR {calculateTotal().toFixed(2)}</span>
                 </div>
               <Button size="lg" className="w-full h-16 text-xl shiny-button" onClick={handlePlaceOrder}>
                 <ChefHat className="mr-2"/> Order Now!

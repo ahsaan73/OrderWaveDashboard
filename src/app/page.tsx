@@ -59,7 +59,7 @@ export default function Home() {
         <div className="grid gap-4 md:grid-cols-2">
           <StatCard
             title="Money Made Today"
-            value={`$${stats.moneyMadeToday.toLocaleString()}`}
+            value={`PKR ${stats.moneyMadeToday.toLocaleString()}`}
             icon={<DollarSign className="text-green-500" />}
             change="+12.5%"
           />
@@ -82,7 +82,7 @@ export default function Home() {
                         <LineChart data={salesByHour} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="hour" tickLine={false} axisLine={false} tickMargin={8} />
-                            <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `$${value}`} />
+                            <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `PKR ${value}`} />
                             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
                             <Line dataKey="sales" type="monotone" stroke="var(--color-sales)" strokeWidth={2} dot={false} />
                         </LineChart>
@@ -137,7 +137,7 @@ export default function Home() {
         
         <Card className="text-center p-8 bg-card">
             <CardTitle className="text-muted-foreground font-normal">Total Cash Today</CardTitle>
-            <p className="text-6xl font-bold font-headline mt-2">${stats.moneyMadeToday.toLocaleString()}</p>
+            <p className="text-6xl font-bold font-headline mt-2">PKR {stats.moneyMadeToday.toLocaleString()}</p>
         </Card>
 
       </div>
@@ -164,7 +164,7 @@ export default function Home() {
               <Separator />
               <div className="flex justify-between items-center font-bold text-lg">
                 <span>Total Due:</span>
-                <span>${selectedOrder.total.toFixed(2)}</span>
+                <span>PKR {selectedOrder.total.toFixed(2)}</span>
               </div>
             </div>
           )}
