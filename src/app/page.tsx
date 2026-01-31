@@ -5,11 +5,11 @@ import { OrdersTable } from "@/components/orders-table";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { orders, stats, salesByHour, salesByCategory, tables, type Order, type Table } from "@/lib/data";
+import { orders as initialOrders, stats, salesByHour, salesByCategory, tables, type Order, type Table } from "@/lib/data";
 import { DollarSign, ShoppingCart } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TableCard } from "@/components/table-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
@@ -38,7 +38,39 @@ const pieChartConfig = {
 } satisfies ChartConfig
 
 export default function Home() {
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    const loadOrders = () => {
+      try {
+        const storedOrders: Order[] = JSON.parse(localStorage.getItem('orders') || '[]');
+        
+        // Prevent duplicates by using a Map, with initial orders as the base
+        const orderMap = new Map(initialOrders.map(o => [o.id, o]));
+        storedOrders.forEach(order => {
+            orderMap.set(order.id, order);
+        });
+
+        const combinedOrders = Array.from(orderMap.values()).sort((a, b) => b.createdAt - a.createdAt);
+        
+        setOrders(combinedOrders);
+      } catch (e) {
+        console.error("Could not load orders from local storage", e);
+        setOrders(initialOrders);
+      }
+    };
+    
+    loadOrders();
+
+    // Listen for storage changes from other tabs to keep the dashboard live
+    window.addEventListener('storage', loadOrders);
+    
+    return () => {
+        window.removeEventListener('storage', loadOrders);
+    };
+
+  }, []);
 
   const handleTableClick = (table: Table) => {
     if ((table.status === 'Eating' || table.status === 'Needs Bill') && table.orderId) {

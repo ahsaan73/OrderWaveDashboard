@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { menuItems, type MenuItem } from '@/lib/data';
+import { menuItems, type MenuItem, type Order } from '@/lib/data';
 import { PosItemCard } from '@/components/pos-item-card';
 import { LogOut, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -51,9 +51,27 @@ export default function CashierPage() {
         toast({ variant: "destructive", title: "Cannot process payment", description: "The order is empty." });
         return;
     }
-    // In a real app, this would integrate with a payment processor.
-    console.log(`Processing ${method} payment for PKR ${calculateTotal().toFixed(2)}`);
-    toast({ title: "Payment Successful", description: `${method} payment of PKR ${calculateTotal().toFixed(2)} processed.` });
+    
+    const total = calculateTotal();
+
+    const newOrder: Order = {
+        id: `#${Math.floor(Math.random() * 90000) + 10000}`,
+        customerName: 'Walk-in Customer',
+        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity })),
+        status: 'Waiting',
+        total: total,
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
+        createdAt: Date.now(),
+    };
+    
+    try {
+        const existingOrders: Order[] = JSON.parse(localStorage.getItem('orders') || '[]');
+        localStorage.setItem('orders', JSON.stringify([newOrder, ...existingOrders]));
+    } catch (e) {
+        console.error("Could not save order to local storage", e);
+    }
+    
+    toast({ title: "Payment Successful", description: `${method} payment of PKR ${total.toFixed(2)} processed. Order sent to kitchen.` });
     setOrder([]);
   };
 
