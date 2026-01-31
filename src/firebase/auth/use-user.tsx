@@ -22,14 +22,16 @@ export function useUser() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!auth || !firestore) {
-      if (auth === null && firestore === null) {
-          // Firebase services are not yet initialized
-          setLoading(true);
-      } else if (!auth) {
-        // Auth is not ready, but firestore might be. Wait for auth.
-        setLoading(true);
-      }
+    // If auth service is not available (disabled), we are in a public-only mode.
+    if (auth === null) {
+        setUser(null);
+        setLoading(false);
+        return;
+    }
+    
+    // If auth is not null, but firestore isn't ready, we wait.
+    if (!firestore) {
+      setLoading(true);
       return;
     };
     
