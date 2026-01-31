@@ -186,3 +186,24 @@ export const tables: Table[] = [
   { id: 'table-9', name: 'Patio 1', status: 'Needs Bill', guests: 6 },
   { id: 'table-10', name: 'Patio 2', status: 'Seated', guests: 2 },
 ];
+
+export const salesByHour = [
+    { hour: '9 AM', sales: 250 },
+    { hour: '10 AM', sales: 300.50 },
+    { hour: '11 AM', sales: 450.25 },
+    { hour: '12 PM', sales: 700.80 },
+    { hour: '1 PM', sales: 650.40 },
+    { hour: '2 PM', sales: 850.90 },
+    { hour: '3 PM', sales: 500.20 },
+    { hour: '4 PM', sales: 600.00 },
+    { hour: '5 PM', sales: 900.50 },
+    { hour: '6 PM', sales: 1200.75 },
+    { hour: '7 PM', sales: 1500.00 },
+    { hour: '8 PM', sales: 1300.25 },
+];
+
+export const salesByCategory = [
+    { category: "Pizza", sales: 50 },
+    { category: "Pasta", sales: 30 },
+    { category: "Drinks", sales: 20 },
+];
