@@ -79,9 +79,9 @@ export function QrCodeModal({ isOpen, setIsOpen, table, url }: QrCodeModalProps)
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>QR Code for {table.name}</DialogTitle>
+          <DialogTitle>Your Sticker for {table.name}</DialogTitle>
           <DialogDescription>
-            Print this code and place it on the table.
+            Print this sticker and place it on the table.
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center justify-center p-4 bg-white" ref={qrCodeRef}>

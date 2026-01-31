@@ -49,11 +49,11 @@ export default function TableCodesPage() {
       <div className="flex flex-col gap-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Table QR Codes
+            The Sticker Factory
           </h1>
         </div>
         <p className="text-muted-foreground">
-          Generate a unique QR code for each table. Customers can scan it to view the menu and place an order.
+          Here you can make the special square codes for your tables. Print them out and stick them on! When a customer scans a sticker, the computer knows exactly where they are sitting.
         </p>
         <Card>
           <CardHeader>

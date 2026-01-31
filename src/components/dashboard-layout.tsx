@@ -41,7 +41,7 @@ const allMenuItems = (role?: string) => [
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager", "admin"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
     { id: "Stock", label: role === 'admin' ? "Stock" : "Manage Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
-    { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
+    { id: "TableCodes", label: "Sticker Factory", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
     { id: "Admin", label: "User Management", icon: UserCog, href: "/admin", roles: ["admin"] },
     { id: "KitchenDisplay", label: "Kitchen Display", icon: Tv, href: "/kitchen-display", roles: ["manager", "admin", "kitchen"] },
     { id: "KitchenAI", label: "Kitchen AI", icon: ChefHat, href: "#", roles: ["manager", "admin"] }, // AI context
