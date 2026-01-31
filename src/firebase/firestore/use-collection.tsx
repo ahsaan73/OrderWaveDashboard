@@ -1,11 +1,11 @@
 'use client';
 import {
-  onSnapshot,
+  getDocs,
   type CollectionReference,
   type DocumentData,
   type Query,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import type { FirebaseDocument } from '@/lib/types';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
@@ -17,51 +17,50 @@ export function useCollection<T extends FirebaseDocument>(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Use a ref to store the query to prevent re-subscribing on every render
-  const queryRef = useRef(query);
-
   useEffect(() => {
-    // Deep comparison of query objects to avoid re-fetching if the query itself hasn't changed
-    if (JSON.stringify(queryRef.current) !== JSON.stringify(query)) {
-      queryRef.current = query;
-    }
-  }, [query]);
-
-
-  useEffect(() => {
-    if (!queryRef.current) {
-        setIsLoading(false);
-        setData(null);
-        return;
+    if (!query) {
+      setData(null);
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(true);
+    let isMounted = true;
 
-    const unsubscribe = onSnapshot(
-      queryRef.current,
-      (snapshot) => {
-        const result: T[] = [];
-        snapshot.forEach((doc) => {
-          result.push({ id: doc.id, ...doc.data() } as T);
-        });
-        setData(result);
-        setIsLoading(false);
-        setError(null);
-      },
-      (err) => {
-        console.error(`Error fetching collection:`, err);
-        const permissionError = new FirestorePermissionError({
-            path: (queryRef.current as CollectionReference).path,
-            operation: 'list'
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        setError(err);
-        setIsLoading(false);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const snapshot = await getDocs(query);
+        if (isMounted) {
+          const result: T[] = [];
+          snapshot.forEach((doc) => {
+            result.push({ id: doc.id, ...doc.data() } as T);
+          });
+          setData(result);
+          setError(null);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          console.error(`Error fetching collection:`, err);
+          const permissionError = new FirestorePermissionError({
+            path: (query as CollectionReference).path,
+            operation: 'list',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          setError(err);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [queryRef]); // Dependency on the ref's value
+    fetchData();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [JSON.stringify(query)]); // Use JSON.stringify to deep compare query object
 
   return { data, isLoading, error };
 }

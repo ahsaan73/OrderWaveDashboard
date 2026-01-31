@@ -1,6 +1,6 @@
 'use client';
-import { onSnapshot, type DocumentReference, type DocumentData } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { getDoc, type DocumentReference, type DocumentData } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import type { FirebaseDocument } from '@/lib/types';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
@@ -12,48 +12,50 @@ export function useDoc<T extends FirebaseDocument>(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const docRefRef = useRef(docRef);
-
   useEffect(() => {
-      if (docRefRef.current?.path !== docRef?.path) {
-          docRefRef.current = docRef;
-      }
-  }, [docRef]);
-
-  useEffect(() => {
-    if (!docRefRef.current) {
-      setIsLoading(false);
+    if (!docRef) {
       setData(null);
+      setIsLoading(false);
       return;
     }
-    
-    setIsLoading(true);
 
-    const unsubscribe = onSnapshot(
-      docRefRef.current,
-      (doc) => {
-        if (doc.exists()) {
-          setData({ id: doc.id, ...doc.data() } as T);
-        } else {
-          setData(null);
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const docSnap = await getDoc(docRef);
+        if (isMounted) {
+          if (docSnap.exists()) {
+            setData({ id: docSnap.id, ...docSnap.data() } as T);
+          } else {
+            setData(null);
+          }
+          setError(null);
         }
-        setIsLoading(false);
-        setError(null);
-      },
-      (err) => {
-        console.error(`Error fetching document:`, err);
-         const permissionError = new FirestorePermissionError({
-            path: docRefRef.current?.path || 'unknown',
+      } catch (err: any) {
+        if (isMounted) {
+          console.error(`Error fetching document:`, err);
+          const permissionError = new FirestorePermissionError({
+            path: docRef?.path || 'unknown',
             operation: 'get'
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        setError(err);
-        setIsLoading(false);
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          setError(err);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [docRefRef]);
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [docRef?.path]); // Re-run effect if document path changes
 
   return { data, isLoading, error };
 }
