@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { menuItems, type MenuItem, type Order } from '@/lib/data';
 import { PosItemCard } from '@/components/pos-item-card';
 import { LogOut, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import type { MenuItem } from '@/lib/types';
 
 type OrderItem = {
   item: MenuItem;
@@ -19,6 +22,15 @@ type OrderItem = {
 export default function CashierPage() {
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  
+  const menuItemsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'menuItems');
+  }, [firestore]);
+
+  const { data: menuItems, isLoading } = useCollection<MenuItem>(menuItemsQuery);
 
   const handleAddItem = (item: MenuItem) => {
     setOrder(currentOrder => {
@@ -46,18 +58,22 @@ export default function CashierPage() {
     return order.reduce((total, oi) => total + oi.item.price * oi.quantity, 0);
   };
 
-  const handlePayment = (method: 'Cash' | 'Card') => {
+  const handlePayment = async (method: 'Cash' | 'Card') => {
     if (order.length === 0) {
         toast({ variant: "destructive", title: "Cannot process payment", description: "The order is empty." });
+        return;
+    }
+    if (!firestore) {
+        toast({ variant: "destructive", title: "Error", description: "Could not connect to the database."});
         return;
     }
     
     const total = calculateTotal();
 
-    const newOrder: Order = {
+    const newOrder = {
         id: `#${Math.floor(Math.random() * 90000) + 10000}`,
         customerName: 'Walk-in Customer',
-        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity })),
+        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),
         status: 'Waiting',
         total: total,
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
@@ -65,14 +81,13 @@ export default function CashierPage() {
     };
     
     try {
-        const existingOrders: Order[] = JSON.parse(localStorage.getItem('orders') || '[]');
-        localStorage.setItem('orders', JSON.stringify([newOrder, ...existingOrders]));
+        await addDoc(collection(firestore, 'orders'), newOrder);
+        toast({ title: "Payment Successful", description: `${method} payment of PKR ${total.toFixed(2)} processed. Order sent to kitchen.` });
+        setOrder([]);
     } catch (e) {
-        console.error("Could not save order to local storage", e);
+        console.error("Could not save order", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not save the order."});
     }
-    
-    toast({ title: "Payment Successful", description: `${method} payment of PKR ${total.toFixed(2)} processed. Order sent to kitchen.` });
-    setOrder([]);
   };
 
   return (
@@ -81,7 +96,7 @@ export default function CashierPage() {
         <div className="flex-grow flex flex-col">
              <header className="bg-background shadow-sm p-4 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-primary font-headline">Point of Sale</h1>
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild onClick={() => auth?.signOut()}>
                     <Link href="/login">
                         <LogOut className="mr-2" /> Logout
                     </Link>
@@ -89,7 +104,8 @@ export default function CashierPage() {
             </header>
             <ScrollArea className="flex-grow">
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {menuItems.map(item => (
+                    {isLoading && Array.from({length: 12}).map((_, i) => <Card key={i} className="h-48 animate-pulse bg-muted" />)}
+                    {menuItems?.map(item => (
                         <PosItemCard key={item.id} item={item} onSelect={handleAddItem} />
                     ))}
                 </div>

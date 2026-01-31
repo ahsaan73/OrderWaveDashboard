@@ -1,24 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { MenuItemCard } from '@/components/menu-item-card';
 import { AddEditMenuModal } from '@/components/add-edit-menu-modal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { menuItems as initialMenuItems, type MenuItem } from '@/lib/data';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import type { MenuItem } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function MenuPage() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const menuItemsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'menuItems');
+  }, [firestore]);
+
+  const { data: menuItems, isLoading } = useCollection<MenuItem>(menuItemsQuery);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
 
-  const handleToggleAvailability = (id: string) => {
-    setMenuItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, isAvailable: !item.isAvailable } : item
-      )
-    );
+  const handleToggleAvailability = async (id: string, isAvailable: boolean) => {
+    if (!firestore) return;
+    const itemRef = doc(firestore, 'menuItems', id);
+    try {
+      await updateDoc(itemRef, { isAvailable: !isAvailable });
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not update item availability.'})
+    }
   };
 
   const handleOpenAddModal = () => {
@@ -31,16 +48,25 @@ export default function MenuPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveItem = (item: MenuItem) => {
-    if (editingItem) {
-      // Update existing item
-      setMenuItems(items => items.map(i => (i.id === item.id ? item : i)));
-    } else {
-      // Add new item
-      const newItem = { ...item, id: `item-${Date.now()}` };
-      setMenuItems(items => [...items, newItem]);
+  const handleSaveItem = async (item: Omit<MenuItem, 'id'>, id?: string) => {
+    if (!firestore) return;
+    try {
+        if (id) {
+            // Update existing item
+            const itemRef = doc(firestore, 'menuItems', id);
+            await updateDoc(itemRef, item);
+            toast({ title: 'Success', description: 'Menu item updated.' });
+        } else {
+            // Add new item
+            await addDoc(collection(firestore, 'menuItems'), item);
+            toast({ title: 'Success', description: 'New menu item added.' });
+        }
+        setIsModalOpen(false);
+
+    } catch(error) {
+        console.error('Error saving item:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not save menu item.'});
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -55,14 +81,15 @@ export default function MenuPage() {
           </Button>
         </div>
         <p className="text-muted-foreground">
-          Here you can add, edit, and manage your menu items. Drag and drop to re-order.
+          Here you can add, edit, and manage your menu items.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {menuItems.map(item => (
+          {isLoading && Array.from({length: 4}).map((_, i) => <div key={i} className="bg-muted rounded-lg h-96 animate-pulse" />)}
+          {menuItems?.map(item => (
             <MenuItemCard
               key={item.id}
               item={item}
-              onToggleAvailability={handleToggleAvailability}
+              onToggleAvailability={() => handleToggleAvailability(item.id, item.isAvailable)}
               onEdit={() => handleOpenEditModal(item)}
             />
           ))}

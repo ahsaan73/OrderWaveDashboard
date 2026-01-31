@@ -1,13 +1,13 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { type Table } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Users, Utensils, CircleDollarSign, CheckCircle2 } from 'lucide-react';
+import type { Table } from '@/lib/types';
 
 interface TableCardProps {
   table: Table;
-  onStatusChange?: (tableId: string) => void;
+  onStatusChange?: (tableId: string, currentStatus: Table['status']) => void;
 }
 
 const statusConfig = {
@@ -47,7 +47,7 @@ export function TableCard({ table, onStatusChange }: TableCardProps) {
             isInteractive && "cursor-pointer",
             table.shape === 'square' ? 'aspect-[4/3]' : 'aspect-square rounded-full'
         )}
-        onClick={() => onStatusChange?.(table.id)}
+        onClick={() => onStatusChange?.(table.id, table.status)}
     >
       <CardHeader className="pb-2">
         <CardTitle className="flex justify-between items-center text-xl font-headline">

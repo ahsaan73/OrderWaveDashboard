@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Only signed in users who are owners of their data can r/w their data
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+    
+    // Menu items are publically readable, but only writable by signed in users
+    match /menuItems/{menuItemId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    match /orders/{orderId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    match /tables/{tableId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /stockItems/{stockItemId} {
+        allow read, write: if isSignedIn();
+    }
+  }
+}

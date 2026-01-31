@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string", "format": "uri" },
+        "role": { "type": "string", "enum": ["manager", "cashier", "waiter"] }
+      },
+      "required": ["uid", "email"]
+    },
+    "MenuItem": {
+      "title": "Menu Item",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "imageHint": { "type": "string" },
+        "isAvailable": { "type": "boolean" },
+        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks"] }
+      },
+      "required": ["name", "price", "imageUrl", "isAvailable", "category"]
+    },
+    "Order": {
+      "title": "Order",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" }
+            },
+            "required": ["name", "quantity", "price"]
+          }
+        },
+        "status": { "type": "string", "enum": ["Waiting", "Cooking", "Done"] },
+        "total": { "type": "number" },
+        "time": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["customerName", "items", "status", "total", "time", "createdAt"]
+    },
+    "Table": {
+      "title": "Table",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["Empty", "Seated", "Eating", "Needs Bill"] },
+        "guests": { "type": "number" },
+        "orderId": { "type": "string" },
+        "shape": { "type": "string", "enum": ["square", "circle"] }
+      },
+      "required": ["name", "status", "guests", "shape"]
+    },
+    "StockItem": {
+      "title": "Stock Item",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "stockLevel": { "type": "number" },
+        "threshold": { "type": "number" }
+      },
+      "required": ["name", "stockLevel", "threshold"]
+    }
+  },
+  "auth": {
+    "providers": ["Google"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles."
+    },
+    "/menuItems/{menuItemId}": {
+      "schema": { "$ref": "#/entities/MenuItem" },
+      "description": "List of all menu items."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "All customer orders."
+    },
+    "/tables/{tableId}": {
+      "schema": { "$ref": "#/entities/Table" },
+      "description": "Restaurant tables."
+    },
+    "/stockItems/{stockItemId}": {
+      "schema": { "$ref": "#/entities/StockItem" },
+      "description": "Inventory stock levels."
+    }
+  }
+}

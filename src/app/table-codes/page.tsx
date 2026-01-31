@@ -1,16 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
-import { tables, type Table } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode } from 'lucide-react';
 import { QrCodeModal } from '@/components/qr-code-modal';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import type { Table } from '@/lib/types';
 
 export default function TableCodesPage() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const firestore = useFirestore();
+  const tablesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'tables'), orderBy('name'));
+  }, [firestore]);
+  const { data: tables, isLoading } = useCollection<Table>(tablesQuery);
   
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -35,8 +45,9 @@ export default function TableCodesPage() {
             <CardTitle>Tables</CardTitle>
           </CardHeader>
           <CardContent>
+            {isLoading && <p>Loading tables...</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tables.map(table => (
+              {tables?.map(table => (
                 <div key={table.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <span className="font-semibold">{table.name}</span>
                   <Button variant="outline" size="sm" onClick={() => handleShowQrCode(table)}>

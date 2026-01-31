@@ -1,6 +1,5 @@
 "use client";
 
-import type { Order } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -11,18 +10,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import type { Order } from "@/lib/types";
 
 interface OrdersTableProps {
   orders: Order[];
 }
 
-const mobileStatusStyles = {
+const mobileStatusStyles: { [key in Order['status']]: string } = {
   Done: "bg-chart-2/20 text-chart-2",
   Cooking: "bg-chart-4/20 text-chart-4",
   Waiting: "bg-chart-1/20 text-chart-1",
 };
 
-const desktopStatusStyles = {
+const desktopStatusStyles: { [key in Order['status']]: string } = {
   Done: "bg-chart-2/20 text-chart-2 border border-chart-2/30",
   Cooking: "bg-chart-4/20 text-chart-4 border border-chart-4/30",
   Waiting: "bg-chart-1/20 text-chart-1 border border-chart-1/30",
@@ -38,7 +38,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
           <Card key={order.id}>
             <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 pb-2">
               <div className="grid gap-1">
-                <CardTitle className="text-base font-medium">{order.id}</CardTitle>
+                <CardTitle className="text-base font-medium">{order.id.substring(0,7)}</CardTitle>
                 <CardDescription>{order.customerName}</CardDescription>
               </div>
               <div className={cn("text-xs font-semibold capitalize px-2 py-1 rounded-full", mobileStatusStyles[order.status])}>
@@ -76,7 +76,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
           <TableBody>
             {orders.map((order) => (
               <TableRow key={order.id}>
-                <TableCell className="font-medium">{order.id}</TableCell>
+                <TableCell className="font-medium">{order.id.substring(0,7)}</TableCell>
                 <TableCell>{order.customerName}</TableCell>
                 <TableCell>
                   {order.items.map((item) => `${item.name} (x${item.quantity})`).join(", ")}

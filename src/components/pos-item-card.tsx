@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import type { MenuItem } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import type { MenuItem } from '@/lib/types';
 
 interface PosItemCardProps {
   item: MenuItem;

@@ -1,17 +1,22 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useMemo } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { menuItems as allMenuItems, tables, type MenuItem } from '@/lib/data';
+import { tables } from '@/lib/initial-data';
 import { Plus, Minus, ShoppingCart, ChefHat, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, addDoc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import type { MenuItem } from '@/lib/types';
+
 
 type OrderItem = {
   item: MenuItem;
@@ -27,6 +32,15 @@ function OrderPageContent() {
 
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const menuItemsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'menuItems');
+  }, [firestore]);
+
+  const { data: allMenuItems, isLoading } = useCollection<MenuItem>(menuItemsQuery);
+
 
   const handleAddItem = (item: MenuItem) => {
     setOrder(currentOrder => {
@@ -60,18 +74,37 @@ function OrderPageContent() {
   
   const totalItems = order.reduce((total, oi) => total + oi.quantity, 0);
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (order.length === 0) {
       toast({ variant: "destructive", title: "Your Tummy List is empty!", description: "Add some items before ordering." });
       return;
     }
-    // In a real app, this would send the order to the kitchen.
-    console.log("Order placed:", { order, tableId });
-    toast({ title: "Order Sent!", description: `Your order for ${tableName || 'your table'} has been sent to the kitchen. We'll bring it to your table shortly!` });
-    setOrder([]);
+    if (!firestore || !tableId) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not place order. Invalid table.'});
+        return;
+    }
+    
+    const newOrder = {
+        customerName: tableName || `Table ID: ${tableId}`,
+        tableId,
+        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),
+        status: 'Waiting',
+        total: calculateTotal(),
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
+        createdAt: Date.now(),
+    }
+
+    try {
+        await addDoc(collection(firestore, 'orders'), newOrder);
+        toast({ title: "Order Sent!", description: `Your order for ${tableName || 'your table'} has been sent to the kitchen. We'll bring it to your table shortly!` });
+        setOrder([]);
+    } catch (error) {
+        console.error("Error placing order:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'There was a problem placing your order.'});
+    }
   };
 
-  const menuItems = allMenuItems.filter(item => item.isAvailable);
+  const menuItems = allMenuItems?.filter(item => item.isAvailable);
 
   return (
     <div className="min-h-screen bg-muted/10">
@@ -100,7 +133,8 @@ function OrderPageContent() {
       <main className="container mx-auto p-4 pb-32">
         <h2 className="text-3xl font-bold tracking-tight font-headline mb-6">Our Menu</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {menuItems.map(item => (
+          {isLoading && Array.from({length: 4}).map((_,i) => <div key={i} className="bg-background rounded-lg shadow-md h-32 animate-pulse" />)}
+          {menuItems?.map(item => (
             <div key={item.id} className="bg-background rounded-lg shadow-md overflow-hidden flex items-center gap-4 p-4 transition-all hover:shadow-lg">
                 <Image
                     src={item.imageUrl}
@@ -202,7 +236,7 @@ function OrderPageContent() {
 
 export default function OrderPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
             <OrderPageContent />
         </Suspense>
     )

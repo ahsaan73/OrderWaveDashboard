@@ -1,44 +1,68 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { OrderCard } from "@/components/order-card";
-import { orders as initialOrders, type Order } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { useCollection } from "@/firebase/firestore/use-collection";
+import { collection, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { useFirestore } from "@/firebase";
+import type { Order } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function KitchenDisplayPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const firestore = useFirestore();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    // To avoid hydration mismatch for timestamps, load orders on client
-    setOrders(initialOrders);
-    setIsClient(true);
-  }, []);
-
-
-  const handleUpdateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    setOrders(currentOrders =>
-      currentOrders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      ).sort((a,b) => a.createdAt - b.createdAt) // Keep orders sorted
+  const ordersQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(
+        collection(firestore, "orders"), 
+        where('status', 'in', ['Waiting', 'Cooking']),
+        orderBy('createdAt', 'asc')
     );
+  }, [firestore]);
+  
+  const doneOrdersQuery = useMemo(() => {
+      if (!firestore) return null;
+      return query(
+          collection(firestore, "orders"),
+          where('status', '==', 'Done'),
+          orderBy('createdAt', 'desc')
+      )
+  }, [firestore]);
+
+  const { data: activeOrders, isLoading: isLoadingActive } = useCollection<Order>(ordersQuery);
+  const { data: doneOrdersData, isLoading: isLoadingDone } = useCollection<Order>(doneOrdersQuery);
+
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    if (!firestore) return;
+    const orderRef = doc(firestore, 'orders', orderId);
+    try {
+      await updateDoc(orderRef, { status: newStatus });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not update order status.'
+      })
+    }
   };
 
-  if (!isClient) {
-    // You can return a loader here
-    return (
-        <div className="bg-gray-900 text-white min-h-screen p-4 flex items-center justify-center">
-            <h1 className="text-4xl font-bold text-primary font-headline">Loading Kitchen...</h1>
-        </div>
-    );
-  }
+  const waitingOrders = activeOrders?.filter(o => o.status === 'Waiting');
+  const cookingOrders = activeOrders?.filter(o => o.status === 'Cooking');
+  const doneOrders = doneOrdersData?.slice(0, 5);
 
-  const waitingOrders = orders.filter(o => o.status === 'Waiting');
-  const cookingOrders = orders.filter(o => o.status === 'Cooking');
-  // Show more done orders so it feels like things are moving
-  const doneOrders = orders.filter(o => o.status === 'Done').slice(-5).reverse();
+  const renderSkeleton = () => (
+      <div className="flex flex-col gap-4">
+          <div className="h-8 w-3/4 mx-auto bg-gray-700 rounded animate-pulse" />
+          <div className="aspect-square bg-gray-800 rounded-lg animate-pulse" />
+          <div className="aspect-square bg-gray-800 rounded-lg animate-pulse" />
+      </div>
+  );
 
   return (
     <div className="bg-gray-900 text-white min-h-screen p-4">
@@ -54,7 +78,7 @@ export default function KitchenDisplayPage() {
         {/* Waiting Column */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-semibold text-red-400 text-center uppercase tracking-wider">Waiting</h2>
-          {waitingOrders.map(order => (
+          {isLoadingActive ? renderSkeleton() : waitingOrders?.map(order => (
             <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateOrderStatus} />
           ))}
         </div>
@@ -62,7 +86,7 @@ export default function KitchenDisplayPage() {
         {/* Cooking Column */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-semibold text-yellow-400 text-center uppercase tracking-wider">Cooking</h2>
-          {cookingOrders.map(order => (
+          {isLoadingActive ? null : cookingOrders?.map(order => (
             <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateOrderStatus} />
           ))}
         </div>
@@ -70,7 +94,7 @@ export default function KitchenDisplayPage() {
         {/* Done Column */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-semibold text-green-400 text-center uppercase tracking-wider">Recently Done</h2>
-          {doneOrders.map(order => (
+          {isLoadingDone ? null : doneOrders?.map(order => (
             <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateOrderStatus} />
           ))}
         </div>

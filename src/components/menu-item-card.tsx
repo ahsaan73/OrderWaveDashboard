@@ -5,13 +5,13 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import type { MenuItem } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
+import type { MenuItem } from '@/lib/types';
 
 interface MenuItemCardProps {
   item: MenuItem;
-  onToggleAvailability: (id: string) => void;
+  onToggleAvailability: () => void;
   onEdit: () => void;
 }
 
@@ -43,7 +43,7 @@ export function MenuItemCard({ item, onToggleAvailability, onEdit }: MenuItemCar
         <Switch
           id={`available-${item.id}`}
           checked={item.isAvailable}
-          onCheckedChange={() => onToggleAvailability(item.id)}
+          onCheckedChange={onToggleAvailability}
         />
       </CardFooter>
     </Card>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Order } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -11,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "./ui/button";
+import type { Order } from "@/lib/types";
 
 interface OrderCardProps {
   order: Order;
@@ -64,7 +64,7 @@ export function OrderCard({ order, onUpdateStatus }: OrderCardProps) {
       )}>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-2xl font-bold">{order.id}</CardTitle>
+          <CardTitle className="text-2xl font-bold">{order.id.substring(0, 7)}</CardTitle>
           {order.status !== 'Done' && (
             <div className={cn(
                 "text-2xl font-bold font-mono px-2 py-1 rounded-md",

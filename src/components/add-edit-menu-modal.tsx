@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -15,15 +15,18 @@ import { Label } from '@/components/ui/label';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { MenuItem } from '@/lib/data';
+import type { MenuItem, MenuItemCategory } from '@/lib/types';
 import Image from 'next/image';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface AddEditMenuModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   item: MenuItem | null;
-  onSave: (item: MenuItem) => void;
+  onSave: (item: Omit<MenuItem, 'id'>, id?: string) => void;
 }
+
+const menuItemCategories: readonly [MenuItemCategory, ...MenuItemCategory[]] = ['Burgers', 'Sides', 'Wraps', 'Pizzas', 'Drinks'];
 
 const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -33,6 +36,7 @@ const menuItemSchema = z.object({
   ),
   imageUrl: z.string().url('Must be a valid image URL'),
   imageHint: z.string().optional(),
+  category: z.enum(menuItemCategories),
 });
 
 type MenuItemFormData = z.infer<typeof menuItemSchema>;
@@ -43,7 +47,8 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     handleSubmit,
     reset,
     formState: { errors },
-    watch
+    watch,
+    control
   } = useForm<MenuItemFormData>({
     resolver: zodResolver(menuItemSchema),
   });
@@ -51,38 +56,39 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
   const watchedImageUrl = watch("imageUrl");
 
   useEffect(() => {
-    if (item) {
-      reset({
-        name: item.name,
-        price: item.price,
-        imageUrl: item.imageUrl,
-        imageHint: item.imageHint
-      });
-    } else {
-      reset({
-        name: '',
-        price: 0,
-        imageUrl: '',
-        imageHint: ''
-      });
+    if (isOpen) {
+        if (item) {
+          reset({
+            name: item.name,
+            price: item.price,
+            imageUrl: item.imageUrl,
+            imageHint: item.imageHint,
+            category: item.category
+          });
+        } else {
+          reset({
+            name: '',
+            price: 0,
+            imageUrl: 'https://picsum.photos/seed/newitem/400/400',
+            imageHint: '',
+            category: 'Burgers'
+          });
+        }
     }
   }, [item, reset, isOpen]);
 
   const onSubmit = (data: MenuItemFormData) => {
-    const savedItem: MenuItem = {
-      ...item,
-      id: item?.id || `new-${Date.now()}`,
+    const savedItem = {
       name: data.name,
       price: data.price,
       imageUrl: data.imageUrl,
       imageHint: data.imageHint || '',
+      category: data.category,
       isAvailable: item?.isAvailable ?? true,
     };
-    onSave(savedItem);
+    onSave(savedItem, item?.id);
   };
 
-  // I can't handle file uploads directly, so I'll ask for an image URL.
-  // This is a reasonable simplification.
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px]">
@@ -111,6 +117,28 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
                 <Input id="price" type="number" step="0.01" {...register('price')} className="w-full" />
                 {errors.price && <p className="text-destructive text-xs mt-1">{errors.price.message}</p>}
               </div>
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Category
+              </Label>
+              <Controller
+                  control={control}
+                  name="category"
+                  render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                      {menuItemCategories.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                      </SelectContent>
+                  </Select>
+                  )}
+              />
+              {errors.category && <p className="col-start-2 col-span-3 text-destructive text-xs mt-1">{errors.category.message}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="imageUrl" className="text-right">
