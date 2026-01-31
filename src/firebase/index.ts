@@ -6,7 +6,7 @@ import { firebaseConfig } from './config';
 
 type FirebaseServices = {
   app: FirebaseApp;
-  auth: Auth | null;
+  auth: Auth;
   firestore: Firestore;
 };
 
@@ -19,9 +19,9 @@ export const initializeFirebase = (): FirebaseServices => {
 
   const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   const firestore = getFirestore(app);
+  const auth = getAuth(app);
 
-  // Authentication is disabled for public dashboard view
-  firebaseServices = { app, auth: null, firestore };
+  firebaseServices = { app, auth, firestore };
   return firebaseServices;
 };
 
