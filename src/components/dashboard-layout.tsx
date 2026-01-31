@@ -40,8 +40,7 @@ const allMenuItems = [
     { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
-    { id: "Staff", label: "Manage Stock", icon: Users, href: "/staff", roles: ["manager", "admin"] },
-    { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
+    { id: "Staff", label: "Ingredients", icon: Boxes, href: "/staff", roles: ["manager", "admin"] },
     { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
     { id: "Admin", label: "User Management", icon: UserCog, href: "/admin", roles: ["admin"] },
     { id: "KitchenDisplay", label: "Kitchen Display", icon: Tv, href: "/kitchen-display", roles: ["manager", "admin", "kitchen"] },
@@ -49,7 +48,7 @@ const allMenuItems = [
   ];
 
 
-const aiSections = ["Menu", "Staff", "KitchenAI", "Stock"] as const;
+const aiSections = ["Menu", "Staff", "KitchenAI"] as const;
 type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -179,7 +178,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <AiAdviceModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}
-          section={activeSection as 'Menu' | 'Staff' | 'Kitchen' | 'Stock'}
+          section={activeSection === 'Staff' ? 'Staff' : activeSection === 'Menu' ? 'Menu' : 'Kitchen'}
         />
       )}
     </SidebarProvider>

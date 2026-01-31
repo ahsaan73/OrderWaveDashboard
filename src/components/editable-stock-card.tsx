@@ -7,14 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { StockItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, Check, X } from 'lucide-react';
+import { AlertTriangle, Check, X, Pencil, Trash2 } from 'lucide-react';
 
 interface EditableStockCardProps {
   item: StockItem;
   onUpdate: (item: StockItem, newLevel: number) => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-export function EditableStockCard({ item, onUpdate }: EditableStockCardProps) {
+export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: EditableStockCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedLevel, setEditedLevel] = useState(item.stockLevel);
 
@@ -42,14 +44,21 @@ export function EditableStockCard({ item, onUpdate }: EditableStockCardProps) {
   }
 
   return (
-    <Card className={cn("transition-all hover:shadow-md", isLow && !isEditing && "border-destructive/50 bg-destructive/5")}>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center justify-between text-xl">
-          <span>{item.name}</span>
-          {isLow && !isEditing && <AlertTriangle className="h-5 w-5 text-destructive" />}
+    <Card className={cn("transition-all hover:shadow-md flex flex-col", isLow && !isEditing && "border-destructive/50 bg-destructive/5")}>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-xl">
+          {item.name}
         </CardTitle>
+        <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+                <Pencil className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete}>
+                <Trash2 className="h-4 w-4" />
+            </Button>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow flex flex-col justify-center">
         <div className="flex items-center gap-4">
           <Progress 
             value={item.stockLevel} 
@@ -77,6 +86,12 @@ export function EditableStockCard({ item, onUpdate }: EditableStockCardProps) {
             </span>
           )}
         </div>
+         {isLow && !isEditing && (
+            <div className="flex items-center gap-2 text-destructive mt-2 text-sm">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Low stock! Below {item.threshold}%.</span>
+            </div>
+        )}
       </CardContent>
     </Card>
   );
