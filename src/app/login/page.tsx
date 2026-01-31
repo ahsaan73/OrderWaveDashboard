@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +16,7 @@ import {
 import { ChefHat } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { useAuth, useFirestore } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock SVG for Google Icon
 const GoogleIcon = () => (
@@ -24,47 +25,74 @@ const GoogleIcon = () => (
 
 
 export default function LoginPage() {
-  const { user, loading } = useUser();
+  const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isProcessingSignIn, setIsProcessingSignIn] = useState(true);
 
+  // 1. If the user is already logged in, redirect them.
   useEffect(() => {
-    if (!loading && user) {
+    if (!userLoading && user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, userLoading, router]);
+
+  // 2. Handle the redirect result from Google Sign-In.
+  useEffect(() => {
+    if (!auth || !firestore) return;
+
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result) {
+          // User has successfully signed in.
+          const user = result.user;
+          const userRef = doc(firestore, 'users', user.uid);
+          const docSnap = await getDoc(userRef);
+
+          if (!docSnap.exists()) {
+            await setDoc(userRef, {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              role: 'waiter' // Default role
+            }, { merge: true });
+          }
+          // The useUser hook will pick up the new user and trigger the redirect in the first effect.
+        } else {
+          // No redirect result, not in a sign-in flow.
+          setIsProcessingSignIn(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error during sign-in redirect:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Sign-In Error',
+            description: 'Could not complete sign-in. Please try again.'
+        });
+        setIsProcessingSignIn(false);
+      });
+  }, [auth, firestore, router, toast]);
 
   const handleGoogleSignIn = async () => {
-    if (!auth || !firestore) return;
+    if (!auth) return;
     const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      // Create user profile in Firestore if it doesn't exist
-      if (user) {
-        const userRef = doc(firestore, 'users', user.uid);
-        const docSnap = await getDoc(userRef);
-
-        if (!docSnap.exists()) {
-          await setDoc(userRef, {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            role: 'waiter' // Default role
-          }, { merge: true });
-        }
-      }
-      router.push('/');
-    } catch (error) {
-      console.error('Error during sign-in:', error);
-    }
+    // Start the redirect flow. The logic in the useEffect above will handle the result.
+    await signInWithRedirect(auth, provider);
   };
-
-  if (loading || user) {
+  
+  // Show a loading state while checking auth status or processing a sign-in.
+  if (userLoading || isProcessingSignIn) {
     return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
+  }
+  
+  // If user exists after all checks, they will be redirected by the first effect.
+  // This state is unlikely to be seen but is a good fallback.
+  if (user) {
+    return <div className="flex h-screen w-screen items-center justify-center">Redirecting...</div>;
   }
   
   return (
