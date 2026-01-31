@@ -5,19 +5,33 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChefHat, Chrome } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useAuth, useUser, useFirestore } from '@/firebase';
+import { GoogleAuthProvider, signInWithPopup, type UserCredential } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, loading, error } = useUser();
 
   const handleLogin = async () => {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result: UserCredential = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Create user document in Firestore on successful login
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await setDoc(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          role: 'cashier', // Default role for new users
+      }, { merge: true });
+
     } catch (error) {
       console.error("Error signing in with Google", error);
     }

@@ -40,7 +40,7 @@ export function useUser() {
                 setUser({ ...user, ...userDoc.data() } as UserProfile);
             } else {
                 // Handle case where user is authenticated but has no profile document
-                // This could be a new user, so you might want to create a profile here.
+                // This could be a new user. The login page now handles creating this.
                 setUser(user);
             }
           } else {
@@ -60,7 +60,7 @@ export function useUser() {
     );
 
     return () => unsubscribe();
-  }, [auth, firestore, loading]);
+  }, [auth, firestore]);
 
   return { user, loading, error };
 }
