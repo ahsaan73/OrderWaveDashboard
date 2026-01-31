@@ -33,7 +33,7 @@ import type { OperationalAdviceInput } from "@/ai/flows/operational-advice";
 const menuItems = [
   { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { id: "Menu", label: "Menu", icon: BookMarked, href: "/menu" },
-  { id: "Staff", label: "Staff", icon: Users, href: "#" },
+  { id: "Staff", label: "Staff", icon: Users, href: "/staff" },
   { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#" },
   { id: "Stock", label: "Stock", icon: Boxes, href: "/stock" },
 ];
