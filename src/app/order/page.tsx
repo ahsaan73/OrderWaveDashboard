@@ -5,14 +5,14 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Minus, ShoppingCart, ChefHat, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection, useDoc, useFirestore } from '@/firebase';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import type { MenuItem, Table } from '@/lib/types';
+import type { MenuItem, Table, MenuItemCategory } from '@/lib/types';
 
 
 type OrderItem = {
@@ -37,6 +37,8 @@ function OrderPageContent() {
 
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
+  const [selectedCategory, setSelectedCategory] = useState<MenuItemCategory | 'All'>('All');
+
 
   const menuItemsQuery = useMemo(() => {
     if (!firestore) return null;
@@ -44,6 +46,21 @@ function OrderPageContent() {
   }, [firestore]);
 
   const { data: allMenuItems, isLoading: isMenuLoading } = useCollection<MenuItem>(menuItemsQuery);
+
+  const categories = useMemo(() => {
+    if (!allMenuItems) return [];
+    const predefinedOrder: MenuItemCategory[] = ['Burgers', 'Pizzas', 'Wraps', 'Pasta', 'Sides', 'Drinks'];
+    const availableCategories = new Set(allMenuItems.map(item => item.category));
+    return predefinedOrder.filter(cat => availableCategories.has(cat));
+  }, [allMenuItems]);
+
+  const menuItems = useMemo(() => {
+    const availableItems = allMenuItems?.filter(item => item.isAvailable);
+    if (selectedCategory === 'All') {
+      return availableItems;
+    }
+    return availableItems?.filter(item => item.category === selectedCategory);
+  }, [allMenuItems, selectedCategory]);
 
 
   const handleAddItem = (item: MenuItem) => {
@@ -115,7 +132,6 @@ function OrderPageContent() {
     }
   };
 
-  const menuItems = allMenuItems?.filter(item => item.isAvailable);
   const isLoading = isMenuLoading || isTableLoading;
 
   return (
@@ -144,6 +160,32 @@ function OrderPageContent() {
 
       <main className="container mx-auto p-4 pb-32">
         <h2 className="text-3xl font-bold tracking-tight font-headline mb-6">Our Menu</h2>
+        
+        <div className="mb-6">
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex w-max space-x-2 pb-2">
+              <Button
+                variant={selectedCategory === 'All' ? 'default' : 'outline'}
+                onClick={() => setSelectedCategory('All')}
+                className="rounded-full px-4"
+              >
+                All
+              </Button>
+              {categories.map(category => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory(category)}
+                  className="rounded-full px-4"
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {isLoading && Array.from({length: 4}).map((_,i) => <div key={i} className="bg-background rounded-lg shadow-md h-32 animate-pulse" />)}
           {menuItems?.map(item => (
@@ -166,6 +208,11 @@ function OrderPageContent() {
                 </Button>
             </div>
           ))}
+           {!isLoading && menuItems?.length === 0 && (
+            <div className="col-span-1 md:col-span-2 text-center py-12">
+              <p className="text-muted-foreground">No items in this category yet. Stay tuned!</p>
+            </div>
+          )}
         </div>
       </main>
 
