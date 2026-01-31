@@ -34,7 +34,7 @@ const menuItems = [
   { id: "Menu", label: "Menu", icon: BookMarked, href: "/menu" },
   { id: "Staff", label: "Staff", icon: Users, href: "#" },
   { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#" },
-  { id: "Stock", label: "Stock", icon: Boxes, href: "#" },
+  { id: "Stock", label: "Stock", icon: Boxes, href: "/stock" },
 ];
 
 const aiSections = ["Menu", "Staff", "Kitchen", "Stock"] as const;

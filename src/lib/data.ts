@@ -148,3 +148,21 @@ export const menuItems: MenuItem[] = [
     isAvailable: true,
   },
 ];
+
+export type StockItem = {
+  id: string;
+  name: string;
+  stockLevel: number; // Percentage from 0 to 100
+  threshold: number; // Percentage below which it is considered low
+};
+
+export const stockItems: StockItem[] = [
+    { id: 'stock-1', name: 'Tomatoes', stockLevel: 80, threshold: 20 },
+    { id: 'stock-2', name: 'Flour', stockLevel: 40, threshold: 20 },
+    { id: 'stock-3', name: 'Cheese', stockLevel: 15, threshold: 20 },
+    { id: 'stock-4', name: 'Chicken Patties', stockLevel: 95, threshold: 25 },
+    { id: 'stock-5', name: 'Burger Buns', stockLevel: 50, threshold: 25 },
+    { id: 'stock-6', name: 'Lettuce', stockLevel: 10, threshold: 25 },
+    { id: 'stock-7', name: 'Onions', stockLevel: 60, threshold: 20 },
+    { id: 'stock-8', name: 'Potatoes', stockLevel: 75, threshold: 30 },
+];
