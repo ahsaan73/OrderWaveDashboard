@@ -6,7 +6,7 @@ import { OrderCard } from "@/components/order-card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useCollection } from "@/firebase/firestore/use-collection";
-import { collection, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore } from "@/firebase";
 import type { Order } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -19,8 +19,7 @@ export default function KitchenDisplayPage() {
     if (!firestore) return null;
     return query(
         collection(firestore, "orders"), 
-        where('status', 'in', ['Waiting', 'Cooking']),
-        orderBy('createdAt', 'asc')
+        where('status', 'in', ['Waiting', 'Cooking'])
     );
   }, [firestore]);
   
@@ -28,8 +27,7 @@ export default function KitchenDisplayPage() {
       if (!firestore) return null;
       return query(
           collection(firestore, "orders"),
-          where('status', '==', 'Done'),
-          orderBy('createdAt', 'desc')
+          where('status', '==', 'Done')
       )
   }, [firestore]);
 
@@ -52,9 +50,24 @@ export default function KitchenDisplayPage() {
     }
   };
 
-  const waitingOrders = activeOrders?.filter(o => o.status === 'Waiting');
-  const cookingOrders = activeOrders?.filter(o => o.status === 'Cooking');
-  const doneOrders = doneOrdersData?.slice(0, 5);
+  const waitingOrders = useMemo(() => 
+    activeOrders
+      ?.filter(o => o.status === 'Waiting')
+      .sort((a, b) => a.createdAt - b.createdAt)
+  , [activeOrders]);
+
+  const cookingOrders = useMemo(() =>
+    activeOrders
+      ?.filter(o => o.status === 'Cooking')
+      .sort((a, b) => a.createdAt - b.createdAt)
+  , [activeOrders]);
+  
+  const doneOrders = useMemo(() =>
+    doneOrdersData
+        ?.sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 5)
+  , [doneOrdersData]);
+
 
   const renderSkeleton = () => (
       <div className="flex flex-col gap-4">
