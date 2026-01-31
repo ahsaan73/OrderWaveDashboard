@@ -5,18 +5,22 @@ import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode } from 'lucide-react';
+import { QrCode, Plus } from 'lucide-react';
 import { QrCodeModal } from '@/components/qr-code-modal';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import type { Table } from '@/lib/types';
+import { AddEditTableModal } from '@/components/add-edit-table-modal';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TableCodesPage() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!userLoading && !['manager', 'admin'].includes(user?.role || '')) {
@@ -35,9 +39,25 @@ export default function TableCodesPage() {
 
   const handleShowQrCode = (table: Table) => {
     setSelectedTable(table);
-    setIsModalOpen(true);
+    setIsQrModalOpen(true);
   };
   
+  const handleSaveTable = async (data: { name: string; shape: 'square' | 'circle' }) => {
+    if (!firestore) return;
+    try {
+      await addDoc(collection(firestore, 'tables'), {
+        ...data,
+        status: 'Empty',
+        guests: 0,
+      });
+      toast({ title: 'Success', description: 'New table added.' });
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error('Error saving table:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not save table.' });
+    }
+  };
+
   const isLoading = userLoading || dataLoading;
 
   if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
@@ -49,11 +69,14 @@ export default function TableCodesPage() {
       <div className="flex flex-col gap-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight font-headline">
-            The Sticker Factory
+            Table Codes
           </h1>
+          <Button onClick={() => setIsAddModalOpen(true)} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Plus className="mr-2" /> Add Table
+          </Button>
         </div>
         <p className="text-muted-foreground">
-          Here you can make the special square codes for your tables. Print them out and stick them on! When a customer scans a sticker, the computer knows exactly where they are sitting.
+          Generate and print QR codes for your tables. Customers can scan these to order directly.
         </p>
         <Card>
           <CardHeader>
@@ -67,7 +90,7 @@ export default function TableCodesPage() {
                   <span className="font-semibold">{table.name}</span>
                   <Button variant="outline" size="sm" onClick={() => handleShowQrCode(table)}>
                     <QrCode className="mr-2 h-4 w-4" />
-                    Make QR Code
+                    Show QR Code
                   </Button>
                 </div>
               ))}
@@ -77,12 +100,17 @@ export default function TableCodesPage() {
       </div>
       {selectedTable && (
         <QrCodeModal
-          isOpen={isModalOpen}
-          setIsOpen={setIsModalOpen}
+          isOpen={isQrModalOpen}
+          setIsOpen={setIsQrModalOpen}
           table={selectedTable}
           url={`${origin}/order?tableId=${selectedTable.id}`}
         />
       )}
+      <AddEditTableModal
+        isOpen={isAddModalOpen}
+        setIsOpen={setIsAddModalOpen}
+        onSave={handleSaveTable}
+      />
     </DashboardLayout>
   );
 }
