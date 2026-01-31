@@ -14,7 +14,7 @@ import { Plus } from 'lucide-react';
 import { AddEditStockModal } from '@/components/add-edit-stock-modal';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
 
-export default function StaffPage() {
+export default function StockPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
@@ -23,6 +23,8 @@ export default function StaffPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
+  
+  const isManager = user?.role === 'manager';
 
   useEffect(() => {
     if (!userLoading && !['manager', 'admin'].includes(user?.role || '')) {
@@ -38,7 +40,7 @@ export default function StaffPage() {
   const { data: stock, isLoading: dataLoading } = useCollection<StockItem>(stockQuery);
 
   const handleStockUpdate = async (item: StockItem, newStockLevel: number) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || !isManager) return;
     const itemRef = doc(firestore, 'stockItems', item.id);
     try {
       await updateDoc(itemRef, { stockLevel: newStockLevel });
@@ -62,7 +64,7 @@ export default function StaffPage() {
   };
 
   const handleSaveItem = async (itemData: Omit<StockItem, 'id' | 'ref'>, id?: string) => {
-    if (!firestore) return;
+    if (!firestore || !isManager) return;
     try {
       if (id) {
         const itemRef = doc(firestore, 'stockItems', id);
@@ -80,7 +82,7 @@ export default function StaffPage() {
   };
   
   const handleDeleteItem = async () => {
-    if (!firestore || !selectedItem) return;
+    if (!firestore || !selectedItem || !isManager) return;
     try {
       const itemRef = doc(firestore, 'stockItems', selectedItem.id);
       await deleteDoc(itemRef);
@@ -121,15 +123,20 @@ export default function StaffPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
           <div className="flex-grow">
             <h1 className="text-3xl font-bold tracking-tight font-headline">
-              Manage Ingredients
+              {isManager ? 'Manage Stock' : 'Stock'}
             </h1>
             <p className="text-muted-foreground mt-2">
-              Add, edit, delete, and update the stock levels for your restaurant's ingredients.
+              {isManager
+                ? "Add, edit, delete, and update the stock levels for your restaurant's ingredients."
+                : "View-only access to current stock levels."
+              }
             </p>
           </div>
-          <Button onClick={handleOpenAddModal} size="lg" className="bg-green-600 hover:bg-green-700">
-            <Plus className="mr-2" /> Add New Ingredient
-          </Button>
+          {isManager && (
+            <Button onClick={handleOpenAddModal} size="lg" className="bg-green-600 hover:bg-green-700">
+              <Plus className="mr-2" /> Add New Ingredient
+            </Button>
+          )}
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -141,22 +148,27 @@ export default function StaffPage() {
                 onUpdate={handleStockUpdate} 
                 onEdit={() => handleOpenEditModal(item)}
                 onDelete={() => handleOpenDeleteAlert(item)}
+                canEdit={isManager}
             />
           ))}
         </div>
       </div>
-      <AddEditStockModal
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        item={selectedItem}
-        onSave={handleSaveItem}
-      />
-       <DeleteConfirmationModal
-        isOpen={isAlertOpen}
-        onOpenChange={setIsAlertOpen}
-        onConfirm={handleDeleteItem}
-        itemName={selectedItem?.name || 'the selected item'}
-      />
+      {isManager && (
+        <>
+          <AddEditStockModal
+            isOpen={isModalOpen}
+            setIsOpen={setIsModalOpen}
+            item={selectedItem}
+            onSave={handleSaveItem}
+          />
+          <DeleteConfirmationModal
+            isOpen={isAlertOpen}
+            onOpenChange={setIsAlertOpen}
+            onConfirm={handleDeleteItem}
+            itemName={selectedItem?.name || 'the selected item'}
+          />
+        </>
+      )}
     </DashboardLayout>
   );
 }

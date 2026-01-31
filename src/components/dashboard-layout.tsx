@@ -35,12 +35,12 @@ import { AiAdviceModal } from "./ai-advice-modal";
 import { useUser } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-const allMenuItems = [
+const allMenuItems = (role?: string) => [
     { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin"] },
     { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
-    { id: "Staff", label: "Ingredients", icon: Boxes, href: "/staff", roles: ["manager", "admin"] },
+    { id: "Stock", label: role === 'admin' ? "Stock" : "Manage Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
     { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
     { id: "Admin", label: "User Management", icon: UserCog, href: "/admin", roles: ["admin"] },
     { id: "KitchenDisplay", label: "Kitchen Display", icon: Tv, href: "/kitchen-display", roles: ["manager", "admin", "kitchen"] },
@@ -48,7 +48,7 @@ const allMenuItems = [
   ];
 
 
-const aiSections = ["Menu", "Staff", "KitchenAI"] as const;
+const aiSections = ["Menu", "Stock", "KitchenAI"] as const;
 type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -89,7 +89,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
   
   const userRole = user.role || 'waiter';
-  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
+  const menuItems = allMenuItems(userRole).filter(item => item.roles.includes(userRole));
   const isManagerOrAdmin = userRole === 'manager' || userRole === 'admin';
 
 
@@ -178,7 +178,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <AiAdviceModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}
-          section={activeSection === 'Staff' ? 'Staff' : activeSection === 'Menu' ? 'Menu' : 'Kitchen'}
+          section={activeSection === 'Stock' ? 'Stock' : activeSection === 'Menu' ? 'Menu' : 'Kitchen'}
         />
       )}
     </SidebarProvider>

@@ -14,9 +14,10 @@ interface EditableStockCardProps {
   onUpdate: (item: StockItem, newLevel: number) => void;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit: boolean;
 }
 
-export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: EditableStockCardProps) {
+export function EditableStockCard({ item, onUpdate, onEdit, onDelete, canEdit }: EditableStockCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedLevel, setEditedLevel] = useState(item.stockLevel);
 
@@ -49,14 +50,16 @@ export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: Editable
         <CardTitle className="text-xl">
           {item.name}
         </CardTitle>
-        <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
-                <Pencil className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete}>
-                <Trash2 className="h-4 w-4" />
-            </Button>
-        </div>
+        {canEdit && (
+            <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+                    <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete}>
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+            </div>
+        )}
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-center">
         <div className="flex items-center gap-4">
@@ -64,7 +67,7 @@ export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: Editable
             value={item.stockLevel} 
             className={cn(progressColorClass, "transition-all")}
           />
-          {isEditing ? (
+          {isEditing && canEdit ? (
             <div className="flex items-center gap-2">
                 <Input 
                     type="number"
@@ -79,8 +82,12 @@ export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: Editable
             </div>
           ) : (
             <span 
-              className={cn("font-bold text-lg tabular-nums cursor-pointer", isLow && "text-destructive")}
-              onClick={() => setIsEditing(true)}
+              className={cn(
+                "font-bold text-lg tabular-nums",
+                canEdit && "cursor-pointer",
+                isLow && "text-destructive"
+              )}
+              onClick={() => canEdit && setIsEditing(true)}
             >
               {item.stockLevel}%
             </span>
