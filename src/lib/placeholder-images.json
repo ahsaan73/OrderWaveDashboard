@@ -35,6 +35,12 @@
       "description": "A classic vanilla milkshake.",
       "imageUrl": "https://images.unsplash.com/photo-1571245836612-09ae71811d7c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxtaWxrc2hha2UlMjBkZXNzZXJ0fGVufDB8fHx8MTc2OTg4NjE0MXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "milkshake dessert"
+    },
+    {
+      "id": "restaurant-front",
+      "description": "The welcoming entrance of a modern restaurant.",
+      "imageUrl": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxyZXN0YXVyYW50JTIwZW50cmFuY2V8ZW58MHx8fHwxNzcwMDMyNDIyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "restaurant entrance"
     }
   ]
 }
