@@ -17,7 +17,13 @@ export default function AdminPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const { user: currentUser, loading: userLoading } = useUser();
+  const { user, loading: userLoading } = useUser();
+
+  useEffect(() => {
+    if (!userLoading && user?.role !== 'manager') {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
 
   const usersQuery = useMemo(() => {
     if (!firestore) return null;
@@ -25,12 +31,6 @@ export default function AdminPage() {
   }, [firestore]);
 
   const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);
-
-  useEffect(() => {
-    if (!userLoading && currentUser?.role !== 'manager') {
-      router.replace('/');
-    }
-  }, [currentUser, userLoading, router]);
 
   const handleRoleChange = async (uid: string, newRole: User['role']) => {
     if (!firestore) return;
@@ -50,7 +50,7 @@ export default function AdminPage() {
 
   const isLoading = userLoading || usersLoading;
 
-  if (userLoading || !currentUser || currentUser.role !== 'manager') {
+  if (userLoading || !user || user.role !== 'manager') {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
@@ -81,23 +81,23 @@ export default function AdminPage() {
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {users?.map(user => (
-                        <TableRow key={user.uid}>
+                    {users?.map(u => (
+                        <TableRow key={u.uid}>
                         <TableCell>
                             <div className="flex items-center gap-3">
                                 <Avatar className="h-9 w-9">
-                                    <AvatarImage src={user.photoURL || undefined} />
-                                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                                    <AvatarImage src={u.photoURL || undefined} />
+                                    <AvatarFallback>{getInitials(u.displayName)}</AvatarFallback>
                                 </Avatar>
-                                <span className="font-medium">{user.displayName}</span>
+                                <span className="font-medium">{u.displayName}</span>
                             </div>
                         </TableCell>
-                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{u.email}</TableCell>
                         <TableCell>
                             <Select 
-                                defaultValue={user.role} 
-                                onValueChange={(value: User['role']) => handleRoleChange(user.uid, value)}
-                                disabled={user.uid === currentUser?.uid} // Can't change your own role
+                                defaultValue={u.role} 
+                                onValueChange={(value: User['role']) => handleRoleChange(u.uid, value)}
+                                disabled={u.uid === user?.uid} // Can't change your own role
                             >
                                 <SelectTrigger>
                                     <SelectValue />

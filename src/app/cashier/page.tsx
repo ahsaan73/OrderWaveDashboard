@@ -102,7 +102,7 @@ export default function CashierPage() {
   
   const isLoading = userLoading || dataLoading;
 
-  if (userLoading || !user) {
+  if (isLoading || !user) {
     return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
   }
 

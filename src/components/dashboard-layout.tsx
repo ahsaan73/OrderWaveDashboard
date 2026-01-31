@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BookMarked,
   ChefHat,
@@ -14,6 +14,7 @@ import {
   ClipboardList,
   ShoppingCart,
   UserCog,
+  LogOut,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -51,12 +52,19 @@ type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, loading } = useUser();
 
   const [activeSection, setActiveSection] = React.useState<AiSection | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+        router.replace('/login');
+    }
+  }, [user, loading, router]);
 
   const handleMenuClick = (id: string) => {
     if (aiSections.includes(id as AiSection)) {
@@ -66,17 +74,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const userRole = user?.role || 'waiter';
-  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
-  const isManager = userRole === 'manager';
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    router.push('/login');
+  }
 
   const getInitials = (name?: string | null) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
   }
 
-  if (loading) {
+  if (loading || !user) {
     return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
   }
+  
+  const userRole = user.role || 'waiter';
+  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
+  const isManager = userRole === 'manager';
+
 
   return (
     <SidebarProvider>
@@ -149,6 +163,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 Get AI Advice
                 </Button>
             )}
+            <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout}>
+                <LogOut />
+                <span>Logout</span>
+            </Button>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
