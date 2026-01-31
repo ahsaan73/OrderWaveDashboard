@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChefHat, User, Shield, ConciergeBell } from 'lucide-react';
 import { useEffect } from 'react';
 
-type Role = 'manager' | 'cashier' | 'waiter';
+type Role = 'manager' | 'cashier' | 'waiter' | 'admin';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,8 +33,12 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            <Button size="lg" className="h-14 text-lg" onClick={() => handleLogin('manager')}>
+            <Button size="lg" className="h-14 text-lg" onClick={() => handleLogin('admin')}>
                 <Shield className="mr-3"/>
+                Login as Admin
+            </Button>
+            <Button size="lg" className="h-14 text-lg" variant="secondary" onClick={() => handleLogin('manager')}>
+                <User className="mr-3"/>
                 Login as Manager
             </Button>
             <Button size="lg" className="h-14 text-lg" variant="secondary" onClick={() => handleLogin('cashier')}>

@@ -20,7 +20,7 @@ export default function AdminPage() {
   const { user, loading: userLoading } = useUser();
 
   useEffect(() => {
-    if (!userLoading && user?.role !== 'manager') {
+    if (!userLoading && user?.role !== 'admin') {
       router.replace('/');
     }
   }, [user, userLoading, router]);
@@ -50,7 +50,7 @@ export default function AdminPage() {
 
   const isLoading = userLoading || usersLoading;
 
-  if (userLoading || !user || user.role !== 'manager') {
+  if (userLoading || !user || user.role !== 'admin') {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
@@ -103,6 +103,7 @@ export default function AdminPage() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="admin">Admin</SelectItem>
                                     <SelectItem value="manager">Manager</SelectItem>
                                     <SelectItem value="cashier">Cashier</SelectItem>
                                     <SelectItem value="waiter">Waiter</SelectItem>

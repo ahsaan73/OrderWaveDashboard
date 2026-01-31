@@ -15,6 +15,7 @@ import {
   ShoppingCart,
   UserCog,
   LogOut,
+  Home,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -35,15 +36,15 @@ import { useUser } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const allMenuItems = [
-    { id: "Dashboard", label: "Dashboard", href: "/", icon: QrCode, roles: ["manager", "cashier", "waiter"] },
+    { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin"] },
     { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager"] },
-    { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager"] },
-    { id: "Staff", label: "Manage Stock", icon: Users, href: "/staff", roles: ["manager"] },
-    { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager"] },
-    { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager"] },
-    { id: "Admin", label: "Admin", icon: UserCog, href: "/admin", roles: ["manager"] },
-    { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#", roles: ["manager"] }, // AI context
+    { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
+    { id: "Staff", label: "Manage Stock", icon: Users, href: "/staff", roles: ["manager", "admin"] },
+    { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
+    { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
+    { id: "Admin", label: "User Management", icon: UserCog, href: "/admin", roles: ["admin"] },
+    { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#", roles: ["manager", "admin"] }, // AI context
   ];
 
 
@@ -89,7 +90,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   
   const userRole = user.role || 'waiter';
   const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
-  const isManager = userRole === 'manager';
+  const isManagerOrAdmin = userRole === 'manager' || userRole === 'admin';
 
 
   return (
@@ -153,7 +154,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </Link>
              </Button>
             
-            {isManager && (
+            {isManagerOrAdmin && (
                 <Button
                 onClick={() => setIsModalOpen(true)}
                 disabled={!activeSection}
@@ -184,7 +185,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
         </SidebarInset>
       </div>
-      {activeSection && isManager && (
+      {activeSection && isManagerOrAdmin && (
         <AiAdviceModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}

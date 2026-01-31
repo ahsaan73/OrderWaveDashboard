@@ -15,8 +15,9 @@ import { Separator } from "@/components/ui/separator";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import type { Order, Table, MenuItem } from "@/lib/types";
 import { collection, query, where, orderBy, limit } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
 import { startOfToday, endOfToday, getHours } from 'date-fns';
+import { useRouter } from "next/navigation";
 
 
 const lineChartConfig = {
@@ -36,6 +37,16 @@ const pieChartConfig = {
 
 export default function Home() {
   const firestore = useFirestore();
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading && user && !['manager', 'admin'].includes(user.role || '')) {
+      if (user.role === 'waiter') router.replace('/waiter');
+      else if (user.role === 'cashier') router.replace('/cashier');
+      else router.replace('/login');
+    }
+  }, [user, userLoading, router]);
 
   const ordersQuery = useMemo(() => {
     if (!firestore) return null;
@@ -134,6 +145,10 @@ export default function Home() {
   }
   
   const isLoading = isLoadingOrders || isLoadingTables || isLoadingMenuItems;
+
+  if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
+    return <DashboardLayout><div>Loading...</div></DashboardLayout>;
+  }
 
   return (
     <DashboardLayout>

@@ -6,8 +6,15 @@ const imageMap = new Map(PlaceHolderImages.map(p => [p.id, p.imageUrl]));
 
 export const users: Omit<User, 'id' | 'ref'>[] = [
   {
-    uid: 'demouser',
-    displayName: 'Demo User',
+    uid: 'demoadmin',
+    displayName: 'Demo Admin',
+    email: 'admin@example.com',
+    photoURL: 'https://picsum.photos/seed/demoadmin/100/100',
+    role: 'admin'
+  },
+  {
+    uid: 'demomanager',
+    displayName: 'Demo Manager',
     email: 'demo@example.com',
     photoURL: 'https://picsum.photos/seed/demouser/100/100',
     role: 'manager'

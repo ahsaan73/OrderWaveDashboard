@@ -21,7 +21,7 @@ export default function MenuPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!userLoading && user?.role !== 'manager') {
+    if (!userLoading && !['manager', 'admin'].includes(user?.role || '')) {
       router.replace('/');
     }
   }, [user, userLoading, router]);
@@ -80,7 +80,7 @@ export default function MenuPage() {
 
   const isLoading = userLoading || dataLoading;
 
-  if (userLoading || !user || user.role !== 'manager') {
+  if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
