@@ -28,7 +28,7 @@ export const orders: Order[] = [
       { name: 'Crispy Fries', quantity: 1 },
     ],
     status: 'Done',
-    total: 15.99,
+    total: 1300,
     time: '12:45 PM',
     createdAt: now - 10 * 60 * 1000, // 10 minutes ago
   },
@@ -40,7 +40,7 @@ export const orders: Order[] = [
       { name: 'Lemonade', quantity: 2 },
     ],
     status: 'Cooking',
-    total: 22.5,
+    total: 2000,
     time: '12:43 PM',
     createdAt: now - 8 * 60 * 1000, // 8 minutes ago
   },
@@ -49,7 +49,7 @@ export const orders: Order[] = [
     customerName: 'Charlie Brown',
     items: [{ name: 'Veggie Delight Pizza', quantity: 1 }],
     status: 'Waiting',
-    total: 18.0,
+    total: 1400,
     time: '12:42 PM',
     createdAt: now - 6 * 60 * 1000, // 6 minutes ago. This will be overdue.
   },
@@ -62,7 +62,7 @@ export const orders: Order[] = [
       { name: 'Milkshake', quantity: 1 },
     ],
     status: 'Done',
-    total: 20.75,
+    total: 1950,
     time: '12:40 PM',
     createdAt: now - 15 * 60 * 1000, // 15 mins ago
   },
@@ -71,7 +71,7 @@ export const orders: Order[] = [
     customerName: 'Ethan Hunt',
     items: [{ name: 'Spicy Chicken Wrap', quantity: 1 }],
     status: 'Cooking',
-    total: 9.5,
+    total: 750,
     time: '12:38 PM',
     createdAt: now - 2 * 60 * 1000, // 2 minutes ago
   },
@@ -83,7 +83,7 @@ export const orders: Order[] = [
         { name: 'Salad', quantity: 1 },
     ],
     status: 'Waiting',
-    total: 24.00,
+    total: 2000,
     time: '12:35 PM',
     createdAt: now - 1 * 60 * 1000, // 1 minute ago
   },
@@ -102,7 +102,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 'item-1',
     name: 'Zesty Burger',
-    price: 12.99,
+    price: 950,
     imageUrl: imageMap.get('zesty-burger') || 'https://picsum.photos/seed/zesty-burger/400/400',
     imageHint: 'burger fries',
     isAvailable: true,
@@ -110,7 +110,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 'item-2',
     name: 'Crispy Fries',
-    price: 4.5,
+    price: 350,
     imageUrl: imageMap.get('crispy-fries') || 'https://picsum.photos/seed/crispy-fries/400/400',
     imageHint: 'fries potato',
     isAvailable: true,
@@ -118,7 +118,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 'item-3',
     name: 'Spicy Chicken Wrap',
-    price: 9.5,
+    price: 750,
     imageUrl: imageMap.get('chicken-wrap') || 'https://picsum.photos/seed/chicken-wrap/400/400',
     imageHint: 'wrap chicken',
     isAvailable: true,
@@ -126,7 +126,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 'item-4',
     name: 'Veggie Delight Pizza',
-    price: 18.0,
+    price: 1400,
     imageUrl: imageMap.get('veggie-pizza') || 'https://picsum.photos/seed/veggie-pizza/400/400',
     imageHint: 'pizza vegetable',
     isAvailable: false,
@@ -134,7 +134,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 'item-5',
     name: 'Onion Rings',
-    price: 5.75,
+    price: 450,
     imageUrl: imageMap.get('onion-rings') || 'https://picsum.photos/seed/onion-rings/400/400',
     imageHint: 'onion rings',
     isAvailable: true,
@@ -142,7 +142,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 'item-6',
     name: 'Classic Milkshake',
-    price: 6.0,
+    price: 550,
     imageUrl: imageMap.get('milkshake') || 'https://picsum.photos/seed/milkshake/400/400',
     imageHint: 'milkshake dessert',
     isAvailable: true,
@@ -190,18 +190,18 @@ export const tables: Table[] = [
 ];
 
 export const salesByHour = [
-    { hour: '9 AM', sales: 250 },
-    { hour: '10 AM', sales: 300.50 },
-    { hour: '11 AM', sales: 450.25 },
-    { hour: '12 PM', sales: 700.80 },
-    { hour: '1 PM', sales: 650.40 },
-    { hour: '2 PM', sales: 850.90 },
-    { hour: '3 PM', sales: 500.20 },
-    { hour: '4 PM', sales: 600.00 },
-    { hour: '5 PM', sales: 900.50 },
-    { hour: '6 PM', sales: 1200.75 },
-    { hour: '7 PM', sales: 1500.00 },
-    { hour: '8 PM', sales: 1300.25 },
+    { hour: '9 AM', sales: 1000 },
+    { hour: '10 AM', sales: 1500 },
+    { hour: '11 AM', sales: 2500 },
+    { hour: '12 PM', sales: 5000 },
+    { hour: '1 PM', sales: 6000 },
+    { hour: '2 PM', sales: 5500 },
+    { hour: '3 PM', sales: 3000 },
+    { hour: '4 PM', sales: 3500 },
+    { hour: '5 PM', sales: 4000 },
+    { hour: '6 PM', sales: 4500 },
+    { hour: '7 PM', sales: 5000 },
+    { hour: '8 PM', sales: 1500 },
 ];
 
 export const salesByCategory = [
