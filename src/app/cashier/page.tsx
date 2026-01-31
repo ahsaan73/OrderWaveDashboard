@@ -1,16 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PosItemCard } from '@/components/pos-item-card';
-import { LogOut, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import type { MenuItem } from '@/lib/types';
 
@@ -22,7 +20,6 @@ type OrderItem = {
 export default function CashierPage() {
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
-  const auth = useAuth();
   const firestore = useFirestore();
   
   const menuItemsQuery = useMemo(() => {
@@ -96,11 +93,6 @@ export default function CashierPage() {
         <div className="flex-grow flex flex-col">
              <header className="bg-background shadow-sm p-4 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-primary font-headline">Point of Sale</h1>
-                <Button variant="outline" asChild onClick={() => auth?.signOut()}>
-                    <Link href="/login">
-                        <LogOut className="mr-2" /> Logout
-                    </Link>
-                </Button>
             </header>
             <ScrollArea className="flex-grow">
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">

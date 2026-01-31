@@ -1,11 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { TableCard } from '@/components/table-card';
-import { LogOut } from 'lucide-react';
-import { useAuth } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
@@ -15,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 const statuses: Table['status'][] = ['Empty', 'Seated', 'Eating', 'Needs Bill'];
 
 export default function WaiterPage() {
-  const auth = useAuth();
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -66,11 +62,6 @@ export default function WaiterPage() {
     <div className="bg-muted/30 min-h-screen">
       <header className="bg-background shadow-sm p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-primary font-headline">Waiter View - Table Status</h1>
-        <Button variant="outline" asChild onClick={() => auth?.signOut()}>
-          <Link href="/login">
-            <LogOut className="mr-2" /> Logout
-          </Link>
-        </Button>
       </header>
       <main className="p-4 sm:p-6 lg:p-8">
         <p className="text-center text-muted-foreground mb-6">Click on a table to cycle through its status. When seating an empty table, you'll be prompted for the number of guests.</p>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BookMarked,
   ChefHat,
@@ -11,9 +11,7 @@ import {
   Sparkles,
   Tv,
   LayoutDashboard,
-  LogOut,
   QrCode,
-  User,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -30,8 +28,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import { AiAdviceModal } from "./ai-advice-modal";
-import { useAuth, useUser } from "@/firebase";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const menuItems = [
   { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/" },
@@ -47,20 +43,11 @@ type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const auth = useAuth();
-  const { user, loading } = useUser();
 
   const [activeSection, setActiveSection] = React.useState<AiSection | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router])
 
   const handleMenuClick = (id: string) => {
     if (aiSections.includes(id as AiSection)) {
@@ -70,37 +57,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleLogout = () => {
-    if (auth) {
-      auth.signOut();
-    }
-  }
-  
-  if (loading) {
-      return (
-          <div className="flex h-screen w-full items-center justify-center">
-              <p>Loading Dashboard...</p>
-          </div>
-      )
-  }
-  
-  if (!user) {
-      return null;
-  }
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
         <Sidebar>
           <SidebarHeader>
              <div className="flex items-center gap-3 p-3">
-              <Avatar>
-                <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-                <AvatarFallback><User/></AvatarFallback>
-              </Avatar>
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                    <ChefHat className="w-6 h-6 text-primary-foreground" />
+                </div>
               <div className="flex flex-col">
-                <span className="font-semibold text-sm">{user.displayName}</span>
-                <span className="text-xs text-muted-foreground">{user.email}</span>
+                <span className="font-semibold text-sm">Islamabad Bites</span>
+                <span className="text-xs text-muted-foreground">Restaurant Dashboard</span>
               </div>
             </div>
           </SidebarHeader>
@@ -144,15 +112,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Get AI Advice
-            </Button>
-            <SidebarSeparator/>
-            <Button
-                variant="ghost"
-                className="justify-start gap-2"
-                onClick={handleLogout}
-            >
-                <LogOut />
-                <span>Logout</span>
             </Button>
           </SidebarFooter>
         </Sidebar>
