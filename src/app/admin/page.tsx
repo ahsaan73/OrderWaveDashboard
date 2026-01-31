@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
-import type { UserProfile } from '@/firebase/auth/use-user';
+import type { User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,7 +24,7 @@ export default function AdminPage() {
     return collection(firestore, 'users');
   }, [firestore]);
 
-  const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
+  const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);
 
   useEffect(() => {
     if (!userLoading && currentUser?.role !== 'manager') {
@@ -32,7 +32,7 @@ export default function AdminPage() {
     }
   }, [currentUser, userLoading, router]);
 
-  const handleRoleChange = async (uid: string, newRole: UserProfile['role']) => {
+  const handleRoleChange = async (uid: string, newRole: User['role']) => {
     if (!firestore) return;
     const userRef = doc(firestore, 'users', uid);
     try {
@@ -96,7 +96,7 @@ export default function AdminPage() {
                         <TableCell>
                             <Select 
                                 defaultValue={user.role} 
-                                onValueChange={(value: UserProfile['role']) => handleRoleChange(user.uid, value)}
+                                onValueChange={(value: User['role']) => handleRoleChange(user.uid, value)}
                                 disabled={user.uid === currentUser?.uid} // Can't change your own role
                             >
                                 <SelectTrigger>

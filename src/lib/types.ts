@@ -5,6 +5,14 @@ export interface FirebaseDocument {
     ref?: DocumentReference<DocumentData>;
 }
 
+export type User = FirebaseDocument & {
+  uid: string;
+  email?: string | null;
+  displayName?: string | null;
+  photoURL?: string | null;
+  role?: 'manager' | 'cashier' | 'waiter';
+};
+
 export type Order = FirebaseDocument & {
   customerName: string;
   items: { name: string; quantity: number, price: number }[];

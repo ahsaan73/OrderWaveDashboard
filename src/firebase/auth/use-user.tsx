@@ -1,14 +1,10 @@
 'use client';
+import type { User } from '@/lib/types';
 
-export type UserProfile = {
-  uid: string;
-  email?: string | null;
-  displayName?: string | null;
-  photoURL?: string | null;
-  role?: 'manager' | 'cashier' | 'waiter';
-};
+export type UserProfile = User;
 
-const demoUser: UserProfile = {
+const demoUser: User = {
+    id: 'demouser',
     uid: 'demouser',
     email: 'demo@example.com',
     displayName: 'Demo User',

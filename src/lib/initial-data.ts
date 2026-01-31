@@ -1,8 +1,34 @@
 import { PlaceHolderImages } from './placeholder-images';
+import type { User, MenuItem, StockItem, Table } from './types';
+
 
 const imageMap = new Map(PlaceHolderImages.map(p => [p.id, p.imageUrl]));
 
-export const menuItems: Omit<import('./types').MenuItem, 'id'>[] = [
+export const users: Omit<User, 'id' | 'ref'>[] = [
+  {
+    uid: 'demouser',
+    displayName: 'Demo User',
+    email: 'demo@example.com',
+    photoURL: 'https://picsum.photos/seed/demouser/100/100',
+    role: 'manager'
+  },
+  {
+    uid: 'cashier-1',
+    displayName: 'Ayesha Khan',
+    email: 'ayesha.k@example.com',
+    photoURL: 'https://picsum.photos/seed/ayesha/100/100',
+    role: 'cashier'
+  },
+  {
+    uid: 'waiter-1',
+    displayName: 'Bilal Ahmed',
+    email: 'bilal.a@example.com',
+    photoURL: 'https://picsum.photos/seed/bilal/100/100',
+    role: 'waiter'
+  }
+];
+
+export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Spicy Zinger Burger',
     price: 850,
@@ -53,7 +79,7 @@ export const menuItems: Omit<import('./types').MenuItem, 'id'>[] = [
   },
 ];
 
-export const stockItems: Omit<import('./types').StockItem, 'id'>[] = [
+export const stockItems: Omit<StockItem, 'id' | 'ref'>[] = [
     { name: 'Tomatoes', stockLevel: 80, threshold: 20 },
     { name: 'Flour', stockLevel: 40, threshold: 20 },
     { name: 'Cheese', stockLevel: 15, threshold: 20 },
@@ -64,7 +90,7 @@ export const stockItems: Omit<import('./types').StockItem, 'id'>[] = [
     { name: 'Potatoes', stockLevel: 75, threshold: 30 },
 ];
 
-export const tables: Omit<import('./types').Table, 'id'>[] = [
+export const tables: Omit<Table, 'id' | 'ref'>[] = [
   { name: 'Table 1', status: 'Empty', guests: 0, orderId: '', shape: 'square' },
   { name: 'Table 2', status: 'Empty', guests: 0, shape: 'square' },
   { name: 'Table 3', status: 'Empty', guests: 0, shape: 'circle' },

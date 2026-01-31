@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, setDoc, doc } from "firebase/firestore";
 import { firebaseConfig } from "@/firebase/config";
-import { menuItems, stockItems, tables } from "@/lib/initial-data";
+import { menuItems, stockItems, tables, users } from "@/lib/initial-data";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -43,6 +43,18 @@ export async function GET() {
         console.log("Tables seeded.");
     } else {
         console.log("Tables already exist.");
+    }
+
+    // Seed Users
+    const usersCollection = collection(db, "users");
+    const usersSnapshot = await getDocs(usersCollection);
+    if (usersSnapshot.empty) {
+      for (const user of users) {
+        await setDoc(doc(db, "users", user.uid), user);
+      }
+      console.log("Users seeded.");
+    } else {
+      console.log("Users already exist.");
     }
     
     return NextResponse.json({ success: true, message: 'Database seeded successfully.' });
