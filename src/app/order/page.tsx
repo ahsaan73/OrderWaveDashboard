@@ -81,7 +81,7 @@ function OrderPageContent() {
             <ChefHat className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-primary font-headline">ZestyDash</h1>
+            <h1 className="text-2xl font-bold text-primary font-headline">Islamabad Bites</h1>
             <p className="text-sm text-muted-foreground">{tableName ? `Ordering for ${tableName}` : 'Welcome! Order from your table.'}</p>
           </div>
         </div>

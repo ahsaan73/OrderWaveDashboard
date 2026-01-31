@@ -41,7 +41,7 @@ export default function LoginPage() {
                     <ChefHat className="w-8 h-8 text-primary-foreground" />
                 </div>
             </div>
-          <CardTitle className="text-2xl font-headline">ZestyDash Login</CardTitle>
+          <CardTitle className="text-2xl font-headline">Islamabad Bites Login</CardTitle>
           <CardDescription>Select a role to see the custom dashboard.</CardDescription>
         </CardHeader>
         <CardContent>

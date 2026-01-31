@@ -67,7 +67,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                 <ChefHat className="w-5 h-5 text-primary-foreground" />
               </div>
-              <h1 className="text-xl font-bold font-headline text-primary">ZestyDash</h1>
+              <h1 className="text-xl font-bold font-headline text-primary">Islamabad Bites</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
