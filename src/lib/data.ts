@@ -5,12 +5,15 @@ export type Order = {
   status: 'Waiting' | 'Cooking' | 'Done';
   total: number;
   time: string;
+  createdAt: number; // Unix timestamp in milliseconds
 };
 
 export const stats = {
   moneyMadeToday: 4850.75,
   totalOrders: 124,
 };
+
+const now = Date.now();
 
 export const orders: Order[] = [
   {
@@ -23,6 +26,7 @@ export const orders: Order[] = [
     status: 'Done',
     total: 15.99,
     time: '12:45 PM',
+    createdAt: now - 10 * 60 * 1000, // 10 minutes ago
   },
   {
     id: '#83411',
@@ -34,6 +38,7 @@ export const orders: Order[] = [
     status: 'Cooking',
     total: 22.5,
     time: '12:43 PM',
+    createdAt: now - 8 * 60 * 1000, // 8 minutes ago
   },
   {
     id: '#83410',
@@ -42,6 +47,7 @@ export const orders: Order[] = [
     status: 'Waiting',
     total: 18.0,
     time: '12:42 PM',
+    createdAt: now - 6 * 60 * 1000, // 6 minutes ago. This will be overdue.
   },
   {
     id: '#83409',
@@ -54,6 +60,7 @@ export const orders: Order[] = [
     status: 'Done',
     total: 20.75,
     time: '12:40 PM',
+    createdAt: now - 15 * 60 * 1000, // 15 mins ago
   },
   {
     id: '#83408',
@@ -62,6 +69,7 @@ export const orders: Order[] = [
     status: 'Cooking',
     total: 9.5,
     time: '12:38 PM',
+    createdAt: now - 2 * 60 * 1000, // 2 minutes ago
   },
     {
     id: '#83407',
@@ -73,5 +81,6 @@ export const orders: Order[] = [
     status: 'Waiting',
     total: 24.00,
     time: '12:35 PM',
+    createdAt: now - 1 * 60 * 1000, // 1 minute ago
   },
 ];

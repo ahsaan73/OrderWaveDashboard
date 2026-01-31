@@ -6,68 +6,105 @@ import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "./ui/separator";
+import { Button } from "./ui/button";
 
 interface OrderCardProps {
   order: Order;
+  onUpdateStatus: (orderId: string, newStatus: Order['status']) => void;
 }
 
-const statusStyles = {
-  Done: "bg-green-500 text-white",
-  Cooking: "bg-yellow-500 text-black",
-  Waiting: "bg-red-500 text-white",
-};
+// Thresholds in minutes
+const WAITING_THRESHOLD = 5;
+const COOKING_THRESHOLD = 10;
 
-export function OrderCard({ order: initialOrder }: OrderCardProps) {
-  const [order, setOrder] = useState(initialOrder);
+function formatDuration(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
 
-  // Simulate status changes for demo purposes
+export function OrderCard({ order, onUpdateStatus }: OrderCardProps) {
+  const [elapsedTime, setElapsedTime] = useState(0);
+
   useEffect(() => {
-    if (order.status === 'Waiting') {
-      const timer = setTimeout(() => {
-        setOrder(prev => ({...prev, status: 'Cooking'}));
-      }, Math.random() * 5000 + 3000);
-      return () => clearTimeout(timer);
-    }
-    if (order.status === 'Cooking') {
-        const timer = setTimeout(() => {
-          setOrder(prev => ({...prev, status: 'Done'}));
-        }, Math.random() * 8000 + 5000);
-        return () => clearTimeout(timer);
-      }
-  }, [order.status]);
+    if (order.status === 'Done') return;
 
+    const updateTimer = () => {
+      const seconds = (Date.now() - order.createdAt) / 1000;
+      setElapsedTime(seconds);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [order.createdAt, order.status]);
+  
+  const isOverdue = 
+    (order.status === 'Waiting' && elapsedTime > WAITING_THRESHOLD * 60) ||
+    (order.status === 'Cooking' && elapsedTime > COOKING_THRESHOLD * 60);
+
+  const handleStartCooking = () => {
+    onUpdateStatus(order.id, 'Cooking');
+  }
+
+  const handleDone = () => {
+    onUpdateStatus(order.id, 'Done');
+  }
 
   return (
-    <Card className="bg-gray-800 border-gray-700 text-white transition-all hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1">
+    <Card className={cn(
+        "bg-gray-800 border-gray-700 text-white flex flex-col justify-between aspect-square transition-all",
+        isOverdue && "bg-red-900/50 border-red-500",
+        order.status === 'Done' && "opacity-50"
+      )}>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start">
           <CardTitle className="text-2xl font-bold">{order.id}</CardTitle>
-          <span
-            className={cn(
-              "px-4 py-1.5 text-lg font-bold rounded-md capitalize transition-colors duration-500",
-              statusStyles[order.status]
-            )}
-          >
-            {order.status}
-          </span>
+          {order.status !== 'Done' && (
+            <div className={cn(
+                "text-2xl font-bold font-mono px-2 py-1 rounded-md",
+                isOverdue ? "bg-red-500 text-white" : "bg-gray-700"
+              )}>
+                {formatDuration(elapsedTime)}
+            </div>
+          )}
         </div>
-        <p className="text-gray-400">{order.time} - {order.customerName}</p>
+        <p className="text-gray-400">{order.customerName}</p>
       </CardHeader>
-      <Separator className="bg-gray-700" />
-      <CardContent className="pt-4">
-        <ul className="space-y-2">
+      
+      <CardContent className="flex-grow flex items-center justify-center py-0">
+        <ul className="space-y-2 text-center">
           {order.items.map((item, index) => (
-            <li key={index} className="flex justify-between items-center text-lg">
-              <span className="font-semibold">{item.name}</span>
-              <span className="font-bold text-xl">x{item.quantity}</span>
+            <li key={index} className="flex flex-col">
+              <span className="text-4xl font-bold leading-tight">{item.name}</span>
+              <span className="text-2xl font-bold text-yellow-400">x{item.quantity}</span>
             </li>
           ))}
         </ul>
       </CardContent>
+
+      <CardFooter className="p-2">
+        {order.status === 'Waiting' && (
+          <Button onClick={handleStartCooking} className="w-full h-16 text-xl bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
+            Start Cooking
+          </Button>
+        )}
+        {order.status === 'Cooking' && (
+            <Button onClick={handleDone} className="w-full h-16 text-xl bg-green-500 hover:bg-green-600 text-white font-bold">
+            DONE
+          </Button>
+        )}
+        {order.status === 'Done' && (
+            <div className="w-full h-16 flex items-center justify-center text-2xl bg-green-900/50 text-green-400 font-bold rounded-md">
+                Completed
+            </div>
+        )}
+      </CardFooter>
     </Card>
   );
 }
