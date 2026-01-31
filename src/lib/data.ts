@@ -1,3 +1,7 @@
+import { PlaceHolderImages } from './placeholder-images';
+
+const imageMap = new Map(PlaceHolderImages.map(p => [p.id, p.imageUrl]));
+
 export type Order = {
   id: string;
   customerName: string;
@@ -99,7 +103,7 @@ export const menuItems: MenuItem[] = [
     id: 'item-1',
     name: 'Zesty Burger',
     price: 12.99,
-    imageUrl: 'https://picsum.photos/seed/zesty-burger/400/400',
+    imageUrl: imageMap.get('zesty-burger') || 'https://picsum.photos/seed/zesty-burger/400/400',
     imageHint: 'burger fries',
     isAvailable: true,
   },
@@ -107,7 +111,7 @@ export const menuItems: MenuItem[] = [
     id: 'item-2',
     name: 'Crispy Fries',
     price: 4.5,
-    imageUrl: 'https://picsum.photos/seed/crispy-fries/400/400',
+    imageUrl: imageMap.get('crispy-fries') || 'https://picsum.photos/seed/crispy-fries/400/400',
     imageHint: 'fries potato',
     isAvailable: true,
   },
@@ -115,7 +119,7 @@ export const menuItems: MenuItem[] = [
     id: 'item-3',
     name: 'Spicy Chicken Wrap',
     price: 9.5,
-    imageUrl: 'https://picsum.photos/seed/chicken-wrap/400/400',
+    imageUrl: imageMap.get('chicken-wrap') || 'https://picsum.photos/seed/chicken-wrap/400/400',
     imageHint: 'wrap chicken',
     isAvailable: true,
   },
@@ -123,7 +127,7 @@ export const menuItems: MenuItem[] = [
     id: 'item-4',
     name: 'Veggie Delight Pizza',
     price: 18.0,
-    imageUrl: 'https://picsum.photos/seed/veggie-pizza/400/400',
+    imageUrl: imageMap.get('veggie-pizza') || 'https://picsum.photos/seed/veggie-pizza/400/400',
     imageHint: 'pizza vegetable',
     isAvailable: false,
   },
@@ -131,7 +135,7 @@ export const menuItems: MenuItem[] = [
     id: 'item-5',
     name: 'Onion Rings',
     price: 5.75,
-    imageUrl: 'https://picsum.photos/seed/onion-rings/400/400',
+    imageUrl: imageMap.get('onion-rings') || 'https://picsum.photos/seed/onion-rings/400/400',
     imageHint: 'onion rings',
     isAvailable: true,
   },
@@ -139,7 +143,7 @@ export const menuItems: MenuItem[] = [
     id: 'item-6',
     name: 'Classic Milkshake',
     price: 6.0,
-    imageUrl: 'https://picsum.photos/seed/milkshake/400/400',
+    imageUrl: imageMap.get('milkshake') || 'https://picsum.photos/seed/milkshake/400/400',
     imageHint: 'milkshake dessert',
     isAvailable: true,
   },
