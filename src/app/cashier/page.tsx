@@ -29,7 +29,7 @@ export default function CashierPage() {
     if (!userLoading) {
       if (!user) {
         router.replace('/login');
-      } else if (!['cashier', 'manager'].includes(user.role || '')) {
+      } else if (!['cashier', 'manager', 'admin'].includes(user.role || '')) {
         router.replace('/');
       }
     }

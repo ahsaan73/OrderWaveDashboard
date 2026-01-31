@@ -21,7 +21,7 @@ export default function WaiterPage() {
     if (!userLoading) {
       if (!user) {
         router.replace('/login');
-      } else if (!['waiter', 'manager'].includes(user.role || '')) {
+      } else if (!['waiter', 'manager', 'admin'].includes(user.role || '')) {
         router.replace('/');
       }
     }
@@ -38,6 +38,15 @@ export default function WaiterPage() {
   const handleTableStatusChange = async (tableId: string, currentStatus: Table['status']) => {
     if (!firestore) return;
     
+    if (user?.role !== 'waiter') {
+        toast({
+            variant: 'destructive',
+            title: 'Permission Denied',
+            description: "Only waiters can change table status."
+        });
+        return;
+    }
+
     const tableRef = doc(firestore, 'tables', tableId);
     const currentStatusIndex = statuses.indexOf(currentStatus);
     const nextStatusIndex = (currentStatusIndex + 1) % statuses.length;
@@ -47,10 +56,10 @@ export default function WaiterPage() {
 
     if (currentStatus === 'Empty' && nextStatus === 'Seated') {
       const guestCountStr = window.prompt(`Enter number of guests for table:`, "2");
-      if (guestCountStr === null) return;
+      if (guestCountStr === null) return; // User cancelled
       const guestCount = parseInt(guestCountStr, 10);
       if (isNaN(guestCount) || guestCount <= 0) {
-        alert("Please enter a valid number of guests (1 or more).");
+        toast({ variant: 'destructive', title: 'Invalid Input', description: 'Please enter a valid number of guests.'});
         return;
       }
       updates.guests = guestCount;
@@ -75,13 +84,17 @@ export default function WaiterPage() {
       return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
   }
 
+  const pageTitle = user?.role === 'waiter' ? "Waiter View - Table Status" : "Restaurant Map (View-Only)";
+
   return (
     <div className="bg-muted/30 min-h-screen">
       <header className="bg-background shadow-sm p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-primary font-headline">Waiter View - Table Status</h1>
+        <h1 className="text-2xl font-bold text-primary font-headline">{pageTitle}</h1>
       </header>
       <main className="p-4 sm:p-6 lg:p-8">
-        <p className="text-center text-muted-foreground mb-6">Click on a table to cycle through its status. When seating an empty table, you'll be prompted for the number of guests.</p>
+        {user?.role === 'waiter' && (
+            <p className="text-center text-muted-foreground mb-6">Click on a table to cycle through its status. When seating an empty table, you'll be prompted for the number of guests.</p>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {isLoading && Array.from({length: 10}).map((_, i) => <div key={i} className="h-40 w-full bg-muted rounded-lg animate-pulse" />)}
           {tables?.map(table => (

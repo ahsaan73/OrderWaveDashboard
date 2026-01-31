@@ -28,7 +28,7 @@ const statusConfig = {
     },
     'Needs Bill': {
         icon: CircleDollarSign,
-        className: "bg-primary/10 text-primary border-primary/20",
+        className: "bg-primary/10 text-primary border-primary/20 animate-pulse",
         label: "Needs Bill"
     }
 }
@@ -49,7 +49,7 @@ export function TableCard({ table, onStatusChange }: TableCardProps) {
         )}
         onClick={() => onStatusChange?.(table.id, table.status)}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 text-center">
         <CardTitle className="flex justify-between items-center text-xl font-headline">
           <span>{table.name}</span>
           <Icon className="w-6 h-6" />

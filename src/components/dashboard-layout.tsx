@@ -37,8 +37,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const allMenuItems = (role?: string) => [
     { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin"] },
-    { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager"] },
-    { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager"] },
+    { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager", "admin"] },
+    { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager", "admin"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
     { id: "Stock", label: role === 'admin' ? "Stock" : "Manage Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
     { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
