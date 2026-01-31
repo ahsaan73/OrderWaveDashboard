@@ -172,19 +172,21 @@ export type Table = {
   name: string;
   status: 'Empty' | 'Seated' | 'Eating' | 'Needs Bill';
   guests: number;
+  orderId?: string;
+  shape: 'square' | 'circle';
 };
 
 export const tables: Table[] = [
-  { id: 'table-1', name: 'Table 1', status: 'Eating', guests: 4 },
-  { id: 'table-2', name: 'Table 2', status: 'Empty', guests: 0 },
-  { id: 'table-3', name: 'Table 3', status: 'Seated', guests: 2 },
-  { id: 'table-4', name: 'Table 4', status: 'Needs Bill', guests: 5 },
-  { id: 'table-5', name: 'Table 5', status: 'Eating', guests: 3 },
-  { id: 'table-6', name: 'Table 6', status: 'Eating', guests: 4 },
-  { id: 'table-7', name: 'Table 7', status: 'Empty', guests: 0 },
-  { id: 'table-8', name: 'Table 8', status: 'Empty', guests: 0 },
-  { id: 'table-9', name: 'Patio 1', status: 'Needs Bill', guests: 6 },
-  { id: 'table-10', name: 'Patio 2', status: 'Seated', guests: 2 },
+  { id: 'table-1', name: 'Table 1', status: 'Eating', guests: 4, orderId: '#83411', shape: 'square' },
+  { id: 'table-2', name: 'Table 2', status: 'Empty', guests: 0, shape: 'square' },
+  { id: 'table-3', name: 'Table 3', status: 'Seated', guests: 2, shape: 'circle' },
+  { id: 'table-4', name: 'Table 4', status: 'Needs Bill', guests: 5, orderId: '#83410', shape: 'square' },
+  { id: 'table-5', name: 'Table 5', status: 'Eating', guests: 3, orderId: '#83408', shape: 'circle' },
+  { id: 'table-6', name: 'Table 6', status: 'Eating', guests: 4, orderId: '#83409', shape: 'square' },
+  { id: 'table-7', name: 'Table 7', status: 'Empty', guests: 0, shape: 'circle' },
+  { id: 'table-8', name: 'Table 8', status: 'Empty', guests: 0, shape: 'square' },
+  { id: 'table-9', name: 'Patio 1', status: 'Needs Bill', guests: 6, orderId: '#83407', shape: 'square' },
+  { id: 'table-10', name: 'Patio 2', status: 'Seated', guests: 2, shape: 'circle' },
 ];
 
 export const salesByHour = [

@@ -5,10 +5,15 @@ import { OrdersTable } from "@/components/orders-table";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { orders, stats, salesByHour, salesByCategory } from "@/lib/data";
+import { orders, stats, salesByHour, salesByCategory, tables, type Order, type Table } from "@/lib/data";
 import { DollarSign, ShoppingCart } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
-import type { ChartConfig } from "@/components/ui/chart"
+import type { ChartConfig } from "@/components/ui/chart";
+import { useState } from "react";
+import { TableCard } from "@/components/table-card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+
 
 const lineChartConfig = {
   sales: {
@@ -33,6 +38,21 @@ const pieChartConfig = {
 } satisfies ChartConfig
 
 export default function Home() {
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const handleTableClick = (table: Table) => {
+    if ((table.status === 'Eating' || table.status === 'Needs Bill') && table.orderId) {
+      const order = orders.find(o => o.id === table.orderId);
+      if (order) {
+        setSelectedOrder(order);
+      }
+    }
+  };
+
+  const closeOrderModal = () => {
+    setSelectedOrder(null);
+  }
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8">
@@ -92,6 +112,23 @@ export default function Home() {
                 </CardContent>
             </Card>
         </div>
+
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Restaurant Map</h2>
+           <Card>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {tables.map(table => (
+                  <div key={table.id} onClick={() => handleTableClick(table)} className="cursor-pointer">
+                    <TableCard 
+                        table={table} 
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         
         <div>
           <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
@@ -104,6 +141,35 @@ export default function Home() {
         </Card>
 
       </div>
+       <Dialog open={!!selectedOrder} onOpenChange={(isOpen) => !isOpen && closeOrderModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Order for {tables.find(t => t.orderId === selectedOrder?.id)?.name}</DialogTitle>
+            <DialogDescription>
+              Details for the current table order.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="flex flex-col gap-4 py-4">
+              <div>
+                <h3 className="font-semibold mb-2 text-muted-foreground">Items</h3>
+                <div className="space-y-2">
+                  {selectedOrder.items.map((item, index) => (
+                    <div key={index} className="flex justify-between">
+                      <span>{item.name} <span className="text-muted-foreground">x{item.quantity}</span></span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center font-bold text-lg">
+                <span>Total Due:</span>
+                <span>${selectedOrder.total.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

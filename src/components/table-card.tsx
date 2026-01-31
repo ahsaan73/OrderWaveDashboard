@@ -13,22 +13,22 @@ interface TableCardProps {
 const statusConfig = {
     Empty: {
         icon: CheckCircle2,
-        className: "bg-chart-2/10 text-chart-2 border-chart-2/20",
+        className: "bg-chart-2/10 text-chart-2 border-chart-2/20", // Green
         label: "Empty"
     },
     Seated: {
         icon: Users,
-        className: "bg-primary/10 text-primary border-primary/20",
-        label: "Seated"
+        className: "bg-chart-4/10 text-chart-4 border-chart-4/20", // Yellow
+        label: "Ordering"
     },
     Eating: {
         icon: Utensils,
-        className: "bg-chart-4/10 text-chart-4 border-chart-4/20",
+        className: "bg-destructive/10 text-destructive border-destructive/20", // Red
         label: "Eating"
     },
     'Needs Bill': {
         icon: CircleDollarSign,
-        className: "bg-chart-1/10 text-chart-1 border-chart-1/20",
+        className: "bg-primary/10 text-primary border-primary/20",
         label: "Needs Bill"
     }
 }
@@ -42,9 +42,10 @@ export function TableCard({ table, onStatusChange }: TableCardProps) {
   return (
     <Card 
         className={cn(
-            "transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col aspect-[4/3] justify-center", 
+            "transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col justify-center", 
             config.className,
-            isInteractive && "cursor-pointer"
+            isInteractive && "cursor-pointer",
+            table.shape === 'square' ? 'aspect-[4/3]' : 'aspect-square rounded-full'
         )}
         onClick={() => onStatusChange?.(table.id)}
     >
