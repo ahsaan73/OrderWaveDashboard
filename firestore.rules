@@ -1,35 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    // Anyone can read the menu
-    match /menuItems/{menuItemId} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-    
-    // Anyone can create an order (for table-side ordering)
-    // but only staff can update/read all orders.
-    match /orders/{orderId} {
-        allow create: if true;
-        allow read, update: if isSignedIn();
-    }
-
-    // Only staff can manage user profiles, tables, and stock
-    match /users/{userId} {
-      allow read, write: if isSignedIn();
-    }
-    
-    match /tables/{tableId} {
-      allow read, write: if isSignedIn();
-    }
-
-    match /stockItems/{stockItemId} {
-        allow read, write: if isSignedIn();
+    // Rules are wide open for this demo.
+    // In a real application, you would secure these endpoints.
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

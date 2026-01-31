@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BookMarked,
   ChefHat,
@@ -12,8 +12,6 @@ import {
   Tv,
   LayoutDashboard,
   QrCode,
-  LogOut,
-  User as UserIcon,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -30,17 +28,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import { AiAdviceModal } from "./ai-advice-modal";
-import { useUser } from "@/firebase/auth/use-user";
-import { useAuth } from "@/firebase";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const menuItems = [
   { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/" },
@@ -56,16 +43,6 @@ type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, loading } = useUser();
-  const auth = useAuth();
-
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
 
   const [activeSection, setActiveSection] = React.useState<AiSection | null>(
     null
@@ -79,17 +56,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       setActiveSection(null);
     }
   };
-
-  const handleSignOut = async () => {
-    if (auth) {
-      await auth.signOut();
-      router.push('/login');
-    }
-  };
-  
-  if (loading || !user) {
-      return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
-  }
 
   return (
     <SidebarProvider>
@@ -129,32 +95,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
           <SidebarSeparator />
           <SidebarFooter className="p-2 flex flex-col gap-2">
-            <div className="p-2">
-              <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-start gap-2 p-2 h-auto">
-                          <Avatar className="w-8 h-8">
-                              <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'}/>
-                              <AvatarFallback>
-                                <UserIcon/>
-                              </AvatarFallback>
-                          </Avatar>
-                          <div className="text-left overflow-hidden">
-                              <p className="text-sm font-medium truncate">{user?.displayName}</p>
-                              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                          </div>
-                      </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent side="right" align="start" className="w-56">
-                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleSignOut}>
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Log out</span>
-                      </DropdownMenuItem>
-                  </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
              <Button 
               variant="outline" 
               className="justify-start gap-2"
