@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { menuItems as allMenuItems, type MenuItem } from '@/lib/data';
+import { menuItems as allMenuItems, tables, type MenuItem } from '@/lib/data';
 import { Plus, Minus, ShoppingCart, ChefHat, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -19,7 +20,11 @@ type OrderItem = {
 
 const restaurantImage = PlaceHolderImages.find(p => p.id === 'restaurant-front');
 
-export default function OrderPage() {
+function OrderPageContent() {
+  const searchParams = useSearchParams();
+  const tableId = searchParams.get('tableId');
+  const tableName = tables.find(t => t.id === tableId)?.name;
+
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
 
@@ -61,8 +66,8 @@ export default function OrderPage() {
       return;
     }
     // In a real app, this would send the order to the kitchen.
-    console.log("Order placed:", order);
-    toast({ title: "Order Sent!", description: "Your order has been sent to the kitchen. We'll bring it to your table shortly!" });
+    console.log("Order placed:", { order, tableId });
+    toast({ title: "Order Sent!", description: `Your order for ${tableName || 'your table'} has been sent to the kitchen. We'll bring it to your table shortly!` });
     setOrder([]);
   };
 
@@ -77,7 +82,7 @@ export default function OrderPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-primary font-headline">ZestyDash</h1>
-            <p className="text-sm text-muted-foreground">Welcome! Order from your table.</p>
+            <p className="text-sm text-muted-foreground">{tableName ? `Ordering for ${tableName}` : 'Welcome! Order from your table.'}</p>
           </div>
         </div>
         <div className="relative h-32 md:h-48 w-full">
@@ -192,4 +197,13 @@ export default function OrderPage() {
       `}</style>
     </div>
   );
+}
+
+
+export default function OrderPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <OrderPageContent />
+        </Suspense>
+    )
 }

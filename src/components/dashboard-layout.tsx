@@ -12,6 +12,7 @@ import {
   Tv,
   LayoutDashboard,
   LogOut,
+  QrCode,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -36,6 +37,7 @@ const menuItems = [
   { id: "Staff", label: "Staff", icon: Users, href: "/staff" },
   { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#" },
   { id: "Stock", label: "Stock", icon: Boxes, href: "/stock" },
+  { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes" },
 ];
 
 const aiSections = ["Menu", "Staff", "Kitchen", "Stock"] as const;
