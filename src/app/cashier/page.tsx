@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PosItemCard } from '@/components/pos-item-card';
-import { Trash2 } from 'lucide-react';
+import { LogOut, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, addDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useAuth, useUser } from '@/firebase';
 import type { MenuItem } from '@/lib/types';
+import { signOut } from 'firebase/auth';
 
 type OrderItem = {
   item: MenuItem;
@@ -21,13 +23,33 @@ export default function CashierPage() {
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const auth = useAuth();
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading) {
+      if (!user) {
+        router.replace('/login');
+      } else if (!['cashier', 'manager'].includes(user.role || '')) {
+        router.replace('/');
+      }
+    }
+  }, [user, userLoading, router]);
   
   const menuItemsQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);
 
-  const { data: menuItems, isLoading } = useCollection<MenuItem>(menuItemsQuery);
+  const { data: menuItems, isLoading: dataLoading } = useCollection<MenuItem>(menuItemsQuery);
+  
+  const handleLogout = async () => {
+    if (auth) {
+        await signOut(auth);
+        router.push('/login');
+    }
+  };
 
   const handleAddItem = (item: MenuItem) => {
     setOrder(currentOrder => {
@@ -86,6 +108,12 @@ export default function CashierPage() {
         toast({ variant: "destructive", title: "Error", description: "Could not save the order."});
     }
   };
+  
+  const isLoading = userLoading || dataLoading;
+
+  if (userLoading || !user) {
+    return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-muted/30">
@@ -93,6 +121,9 @@ export default function CashierPage() {
         <div className="flex-grow flex flex-col">
              <header className="bg-background shadow-sm p-4 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-primary font-headline">Point of Sale</h1>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                    <LogOut />
+                </Button>
             </header>
             <ScrollArea className="flex-grow">
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">

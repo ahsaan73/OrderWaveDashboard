@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { MenuItemCard } from '@/components/menu-item-card';
 import { AddEditMenuModal } from '@/components/add-edit-menu-modal';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc, addDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import type { MenuItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,13 +17,21 @@ import { useToast } from '@/hooks/use-toast';
 export default function MenuPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading && user?.role !== 'manager') {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
 
   const menuItemsQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);
 
-  const { data: menuItems, isLoading } = useCollection<MenuItem>(menuItemsQuery);
+  const { data: menuItems, isLoading: dataLoading } = useCollection<MenuItem>(menuItemsQuery);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -68,6 +77,12 @@ export default function MenuPage() {
         toast({ variant: 'destructive', title: 'Error', description: 'Could not save menu item.'});
     }
   };
+
+  const isLoading = userLoading || dataLoading;
+
+  if (userLoading || !user || user.role !== 'manager') {
+    return <DashboardLayout><div>Loading...</div></DashboardLayout>;
+  }
 
   return (
     <DashboardLayout>

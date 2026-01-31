@@ -1,24 +1,33 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { EditableStockCard } from '@/components/editable-stock-card';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import type { StockItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 export default function StaffPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading && user?.role !== 'manager') {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
 
   const stockQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'stockItems');
   }, [firestore]);
 
-  const { data: stock, isLoading } = useCollection<StockItem>(stockQuery);
+  const { data: stock, isLoading: dataLoading } = useCollection<StockItem>(stockQuery);
 
   const handleStockUpdate = async (id: string, newStockLevel: number) => {
     if (!firestore) return;
@@ -31,6 +40,12 @@ export default function StaffPage() {
       toast({ variant: 'destructive', title: 'Error', description: 'Could not update stock level.'});
     }
   };
+  
+  const isLoading = userLoading || dataLoading;
+
+  if (userLoading || !user || user.role !== 'manager') {
+    return <DashboardLayout><div>Loading...</div></DashboardLayout>;
+  }
 
   return (
     <DashboardLayout>

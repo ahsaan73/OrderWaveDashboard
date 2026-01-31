@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,19 +9,27 @@ import { QrCode } from 'lucide-react';
 import { QrCodeModal } from '@/components/qr-code-modal';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import type { Table } from '@/lib/types';
 
 export default function TableCodesPage() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading && user?.role !== 'manager') {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
+
   const firestore = useFirestore();
   const tablesQuery = useMemo(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'tables'), orderBy('name'));
   }, [firestore]);
-  const { data: tables, isLoading } = useCollection<Table>(tablesQuery);
+  const { data: tables, isLoading: dataLoading } = useCollection<Table>(tablesQuery);
   
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -28,6 +37,12 @@ export default function TableCodesPage() {
     setSelectedTable(table);
     setIsModalOpen(true);
   };
+  
+  const isLoading = userLoading || dataLoading;
+
+  if (userLoading || !user || user.role !== 'manager') {
+    return <DashboardLayout><div>Loading...</div></DashboardLayout>;
+  }
 
   return (
     <DashboardLayout>

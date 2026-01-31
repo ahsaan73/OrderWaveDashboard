@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BookMarked,
   ChefHat,
@@ -12,6 +12,10 @@ import {
   Tv,
   LayoutDashboard,
   QrCode,
+  LogOut,
+  ClipboardList,
+  ShoppingCart,
+  UserCog,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -28,26 +32,43 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import { AiAdviceModal } from "./ai-advice-modal";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-const menuItems = [
-  { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/" },
-  { id: "Menu", label: "Menu", icon: BookMarked, href: "/menu" },
-  { id: "Staff", label: "Staff", icon: Users, href: "/staff" },
-  { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#" },
-  { id: "Stock", label: "Stock", icon: Boxes, href: "/stock" },
-  { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes" },
-];
+const allMenuItems = [
+    { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/", roles: ["manager", "cashier", "waiter"] },
+    { id: "Cashier", label: "Point of Sale", icon: ShoppingCart, href: "/cashier", roles: ["cashier", "manager"] },
+    { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager"] },
+    { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager"] },
+    { id: "Staff", label: "Manage Stock", icon: Users, href: "/staff", roles: ["manager"] },
+    { id: "Stock", label: "View Stock", icon: Boxes, href: "/stock", roles: ["manager", "cashier", "waiter"] },
+    { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager"] },
+    { id: "Admin", label: "Admin", icon: UserCog, href: "/admin", roles: ["manager"] },
+    { id: "Kitchen", label: "Kitchen", icon: ChefHat, href: "#", roles: ["manager"] }, // AI context
+  ];
+
 
 const aiSections = ["Menu", "Staff", "Kitchen", "Stock"] as const;
 type AiSection = (typeof aiSections)[number];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useUser();
+  const auth = useAuth();
 
   const [activeSection, setActiveSection] = React.useState<AiSection | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [user, loading, router]);
+
 
   const handleMenuClick = (id: string) => {
     if (aiSections.includes(id as AiSection)) {
@@ -56,6 +77,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       setActiveSection(null);
     }
   };
+
+  const handleLogout = async () => {
+    if (auth) {
+        await signOut(auth);
+        router.push('/login');
+    }
+  };
+
+  const userRole = user?.role || 'waiter';
+  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
+  const isManager = userRole === 'manager';
+
+  const getInitials = (name?: string | null) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+  }
+
+  if (loading || !user) {
+    return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
+  }
 
   return (
     <SidebarProvider>
@@ -81,6 +121,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       onClick={() => handleMenuClick(item.id)}
                       isActive={
                         pathname === item.href ||
+                        (item.href !== '/' && pathname.startsWith(item.href)) ||
                         activeSection === item.id
                       }
                       tooltip={item.label}
@@ -95,6 +136,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
           <SidebarSeparator />
           <SidebarFooter className="p-2 flex flex-col gap-2">
+            <div className="flex items-center gap-2 p-2">
+                <Avatar className="h-9 w-9">
+                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col truncate">
+                    <span className="font-medium text-sm truncate">{user.displayName || 'User'}</span>
+                    <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
+                </div>
+                <Button variant="ghost" size="icon" className="ml-auto" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                </Button>
+            </div>
+
              <Button 
               variant="outline" 
               className="justify-start gap-2"
@@ -105,14 +160,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <span>Kitchen TV</span>
                 </Link>
              </Button>
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              disabled={!activeSection}
-              className="bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Get AI Advice
-            </Button>
+            
+            {isManager && (
+                <Button
+                onClick={() => setIsModalOpen(true)}
+                disabled={!activeSection}
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Get AI Advice
+                </Button>
+            )}
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
@@ -130,7 +188,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
         </SidebarInset>
       </div>
-      {activeSection && (
+      {activeSection && isManager && (
         <AiAdviceModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}

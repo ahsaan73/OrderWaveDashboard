@@ -1,26 +1,42 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { TableCard } from '@/components/table-card';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser, useAuth } from '@/firebase';
 import type { Table } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { signOut } from 'firebase/auth';
+import { LogOut } from 'lucide-react';
 
 const statuses: Table['status'][] = ['Empty', 'Seated', 'Eating', 'Needs Bill'];
 
 export default function WaiterPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { user, loading: userLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading) {
+      if (!user) {
+        router.replace('/login');
+      } else if (!['waiter', 'manager'].includes(user.role || '')) {
+        router.replace('/');
+      }
+    }
+  }, [user, userLoading, router]);
 
   const tablesQuery = useMemo(() => {
     if (!firestore) return null;
     return query(collection(firestore, "tables"), orderBy("name"));
   }, [firestore]);
 
-  const { data: tables, isLoading } = useCollection<Table>(tablesQuery);
+  const { data: tables, isLoading: dataLoading } = useCollection<Table>(tablesQuery);
 
 
   const handleTableStatusChange = async (tableId: string, currentStatus: Table['status']) => {
@@ -57,11 +73,26 @@ export default function WaiterPage() {
     }
   };
 
+  const handleLogout = async () => {
+    if (auth) {
+        await signOut(auth);
+        router.push('/login');
+    }
+  };
+
+  const isLoading = userLoading || dataLoading;
+  
+  if (userLoading || !user) {
+      return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="bg-muted/30 min-h-screen">
       <header className="bg-background shadow-sm p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-primary font-headline">Waiter View - Table Status</h1>
+         <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <LogOut />
+        </Button>
       </header>
       <main className="p-4 sm:p-6 lg:p-8">
         <p className="text-center text-muted-foreground mb-6">Click on a table to cycle through its status. When seating an empty table, you'll be prompted for the number of guests.</p>
