@@ -19,13 +19,29 @@ export default function WaiterPage() {
           const currentStatusIndex = statuses.indexOf(table.status);
           const nextStatusIndex = (currentStatusIndex + 1) % statuses.length;
           const nextStatus = statuses[nextStatusIndex];
+
+          // Special handling for seating new guests
+          if (table.status === 'Empty' && nextStatus === 'Seated') {
+            const guestCountStr = window.prompt(`Enter number of guests for ${table.name}:`, "2");
+            
+            // If user cancels, don't change anything
+            if (guestCountStr === null) {
+              return table;
+            }
+
+            const guestCount = parseInt(guestCountStr, 10);
+
+            // If input is not a positive number, alert user and don't change anything
+            if (isNaN(guestCount) || guestCount <= 0) {
+              alert("Please enter a valid number of guests (1 or more).");
+              return table;
+            }
+            
+            return { ...table, status: 'Seated', guests: guestCount };
+          }
           
-          // Reset guests if table becomes empty
-          const newGuests = nextStatus === 'Empty' ? 0 : table.guests;
-          // If table was empty, maybe seat some guests (for demo purposes)
-          const updatedGuests = table.status === 'Empty' && nextStatus === 'Seated' ? (Math.floor(Math.random() * 5) + 1) : newGuests;
-
-
+          // For all other status transitions
+          const updatedGuests = nextStatus === 'Empty' ? 0 : table.guests;
           return { ...table, status: nextStatus, guests: updatedGuests };
         }
         return table;
@@ -45,7 +61,7 @@ export default function WaiterPage() {
         </Button>
       </header>
       <main className="p-4 sm:p-6 lg:p-8">
-        <p className="text-center text-muted-foreground mb-6">Click on a table to cycle through its status.</p>
+        <p className="text-center text-muted-foreground mb-6">Click on a table to cycle through its status. When seating an empty table, you'll be prompted for the number of guests.</p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {tables.map(table => (
             <TableCard 
