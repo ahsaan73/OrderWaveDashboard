@@ -1,5 +1,5 @@
 'use client';
-import { getDoc, type DocumentReference, type DocumentData } from 'firebase/firestore';
+import { onSnapshot, type DocumentReference, type DocumentData } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { FirebaseDocument } from '@/lib/types';
 import { errorEmitter } from '../error-emitter';
@@ -19,42 +19,30 @@ export function useDoc<T extends FirebaseDocument>(
       return;
     }
 
-    let isMounted = true;
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const docSnap = await getDoc(docRef);
-        if (isMounted) {
-          if (docSnap.exists()) {
-            setData({ id: docSnap.id, ...docSnap.data() } as T);
-          } else {
-            setData(null);
-          }
-          setError(null);
+    setIsLoading(true);
+    const unsubscribe = onSnapshot(docRef, 
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setData({ id: docSnap.id, ...docSnap.data() } as T);
+        } else {
+          setData(null);
         }
-      } catch (err: any) {
-        if (isMounted) {
-          console.error(`Error fetching document:`, err);
-          const permissionError = new FirestorePermissionError({
-            path: docRef?.path || 'unknown',
-            operation: 'get'
-          });
-          errorEmitter.emit('permission-error', permissionError);
-          setError(err);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setError(null);
+        setIsLoading(false);
+      },
+      (err: any) => {
+        console.error(`Error fetching document:`, err);
+        const permissionError = new FirestorePermissionError({
+          path: docRef?.path || 'unknown',
+          operation: 'get'
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setError(err);
+        setIsLoading(false);
       }
-    };
+    );
 
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => unsubscribe();
   }, [docRef?.path]); // Re-run effect if document path changes
 
   return { data, isLoading, error };

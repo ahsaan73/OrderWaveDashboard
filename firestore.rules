@@ -1,27 +1,35 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read/write access to all collections
-    // since authentication has been removed.
-    
-    match /users/{userId} {
-      allow read, write: if true;
+
+    function isSignedIn() {
+      return request.auth != null;
     }
     
+    // Anyone can read the menu
     match /menuItems/{menuItemId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isSignedIn();
     }
     
+    // Anyone can create an order (for table-side ordering)
+    // but only staff can update/read all orders.
     match /orders/{orderId} {
-      allow read, write: if true;
+        allow create: if true;
+        allow read, update: if isSignedIn();
+    }
+
+    // Only staff can manage user profiles, tables, and stock
+    match /users/{userId} {
+      allow read, write: if isSignedIn();
     }
     
     match /tables/{tableId} {
-      allow read, write: if true;
+      allow read, write: if isSignedIn();
     }
 
     match /stockItems/{stockItemId} {
-        allow read, write: if true;
+        allow read, write: if isSignedIn();
     }
   }
 }
