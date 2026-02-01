@@ -1,23 +1,21 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChefHat, Shield } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { User as UserType } from '@/lib/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 
 export default function LoginPage() {
   const router = useRouter();
   const firestore = useFirestore();
-  const [selectedUid, setSelectedUid] = useState<string>('');
 
   useEffect(() => {
     // Clear any previous user on mount
@@ -31,10 +29,13 @@ export default function LoginPage() {
   }, [firestore]);
 
   const { data: users, isLoading } = useCollection<UserType>(usersQuery);
+  
+  const adminUser = users?.find(u => u.role === 'admin');
+  const staffUsers = users?.filter(u => u.role !== 'admin');
 
-  const handleLogin = () => {
-    if (selectedUid) {
-      localStorage.setItem('userUid', selectedUid);
+  const handleLogin = (uid: string) => {
+    if (uid) {
+      localStorage.setItem('userUid', uid);
       router.push('/');
     }
   };
@@ -43,56 +44,80 @@ export default function LoginPage() {
       return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
   }
 
-  const selectedUserDetails = users?.find(u => u.uid === selectedUid);
-
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen w-screen items-center justify-center bg-muted/30 p-4">
+      <div className="w-full max-w-2xl">
         <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
             <ChefHat className="w-10 h-10 text-primary-foreground" />
         </div>
         <h1 className="text-3xl font-headline text-center font-bold">Islamabad Bites</h1>
         <p className="text-muted-foreground text-center mb-6">Staff & Owner Login</p>
       
-        <Card className="shadow-xl">
-            <CardHeader>
-            <CardTitle>Select User</CardTitle>
-            <CardDescription>Select your user profile to continue.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Select value={selectedUid} onValueChange={setSelectedUid} disabled={isLoading}>
-                    <SelectTrigger className="h-14">
-                        <SelectValue placeholder="Select a user to login..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {isLoading ? (
-                            <div className="p-2">
-                                <Skeleton className="h-8 w-full" />
-                            </div>
-                        ) : (
-                            users?.map(user => (
-                                <SelectItem key={user.uid} value={user.uid}>
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8">
+        <div className="grid gap-8">
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle>Staff Login</CardTitle>
+                    <CardDescription>Select your profile to continue.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {Array.from({length: 4}).map((_, i) => (
+                                <div key={i} className="flex flex-col items-center gap-2 p-2">
+                                    <Skeleton className="h-20 w-20 rounded-full" />
+                                    <Skeleton className="h-4 w-24 mt-2" />
+                                    <Skeleton className="h-3 w-16" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {staffUsers?.map(user => (
+                                <Card key={user.uid} className="cursor-pointer hover:bg-muted/50 hover:shadow-lg transition-all" onClick={() => handleLogin(user.uid)}>
+                                    <CardContent className="flex flex-col items-center text-center gap-2 p-4">
+                                        <Avatar className="h-20 w-20">
                                             <AvatarImage src={user.photoURL || undefined} />
                                             <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-medium">{user.displayName}</p>
-                                            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                                            <p className="font-semibold">{user.displayName}</p>
+                                            <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
                                         </div>
-                                    </div>
-                                </SelectItem>
-                            ))
-                        )}
-                    </SelectContent>
-                </Select>
-                <Button size="lg" className="h-14 text-base w-full" onClick={handleLogin} disabled={!selectedUid || isLoading}>
-                    <Shield className="mr-3"/>
-                    Login as {selectedUserDetails?.displayName || '...'}
-                </Button>
-            </CardContent>
-        </Card>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {isLoading ? <Skeleton className="h-36 w-full" /> : adminUser && (
+                <Card className="shadow-lg bg-card border-primary/20">
+                     <CardHeader>
+                        <CardTitle>Owner / Admin Login</CardTitle>
+                        <CardDescription>Administrative access.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div 
+                            className="flex items-center gap-4 p-4 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => handleLogin(adminUser.uid)}
+                        >
+                            <Avatar className="h-16 w-16">
+                                <AvatarImage src={adminUser.photoURL || undefined} />
+                                <AvatarFallback>{getInitials(adminUser.displayName)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-bold text-lg">{adminUser.displayName}</p>
+                                <p className="text-muted-foreground capitalize">{adminUser.role}</p>
+                            </div>
+                             <Button className="ml-auto">
+                                <Shield className="mr-2 h-5 w-5"/> Login
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
       </div>
     </div>
   );
