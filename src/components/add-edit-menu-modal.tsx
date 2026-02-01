@@ -35,9 +35,7 @@ const menuItemSchema = z.object({
     (a) => parseFloat(z.string().parse(a)),
     z.number().positive('Price must be positive')
   ),
-  imageUrl: z.string().min(1, "Image is required.").refine(val => val.startsWith('http') || val.startsWith('data:image'), {
-    message: 'Must be a valid URL or an uploaded image.'
-  }),
+  imageUrl: z.string().min(1, "Image is required."),
   imageHint: z.string().optional(),
   category: z.enum(menuItemCategories),
 });
