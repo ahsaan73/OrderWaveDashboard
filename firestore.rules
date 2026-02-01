@@ -7,39 +7,49 @@ service cloud.firestore {
     }
 
     function getRequestingUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      // Use exists() to avoid errors on non-existent user docs, like during signup/seeding
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
     }
 
     function isAdmin() {
-      return isAuthenticated() && getRequestingUserData().role == 'admin';
+      let userData = getRequestingUserData();
+      return isAuthenticated() && userData != null && userData.role == 'admin';
     }
 
     function isManagerOrAdmin() {
-        return isAuthenticated() && (getRequestingUserData().role == 'manager' || getRequestingUserData().role == 'admin');
+      let userData = getRequestingUserData();
+      return isAuthenticated() && userData != null && (userData.role == 'manager' || userData.role == 'admin');
     }
 
+    // Users must be publicly readable for the login page to work
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isAdmin();
-      // Allow user creation for the seeder script to work.
+      allow read: if true;
+      // Allow user creation ONLY for the seeder script to work.
+      // In a real app, this should be more secure (e.g., only by admins).
       allow create: if true;
       // Allow users to update their own profile (but not their role), and admins to update any profile.
-      allow update: if (request.auth.uid == userId && request.resource.data.role == resource.data.role) || isAdmin();
+      allow update: if (isAuthenticated() && request.auth.uid == userId && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    // Menu should be publicly readable
     match /menuItems/{menuItemId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isManagerOrAdmin();
     }
     
+    // Customers need to be able to create orders. Staff need to read/update them.
     match /orders/{orderId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow create: if true; // Anyone can create an order
+      allow read, update: if isAuthenticated(); // Only staff can view and update orders
+      allow delete: if isManagerOrAdmin();
     }
     
+    // Table info needs to be readable by customers to place orders.
+    // Status updates are handled by staff.
     match /tables/{tableId} {
-        allow read: if isAuthenticated();
-        allow write: if isAuthenticated();
+        allow read: if true;
+        allow write: if isAuthenticated(); // Waiters, Managers, Admins can update status
     }
     
     match /stockItems/{stockItemId} {
