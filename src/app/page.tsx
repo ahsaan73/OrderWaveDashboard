@@ -241,8 +241,8 @@ export default function Home() {
       <div className="flex flex-col gap-8">
         {isCashier ? (
              <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Cashier View</h1>
-                <p className="text-muted-foreground mt-2">Monitor table statuses, view live orders, and process payments.</p>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Restaurant Map</h1>
+                <p className="text-muted-foreground mt-2">Click a table to view its order and process payment.</p>
             </div>
         ) : (
             <>
@@ -318,7 +318,7 @@ export default function Home() {
 
 
         <div>
-          <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Restaurant Map</h2>
+          {!isCashier && <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Restaurant Map</h2>}
            <Card>
             <CardContent className="p-6">
               {isLoadingTables ? <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"> {Array.from({length: 10}).map((_,i) => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg"/>)} </div>: (
@@ -336,10 +336,12 @@ export default function Home() {
           </Card>
         </div>
         
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
-          {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} />}
-        </div>
+        {!isCashier && (
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
+            {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} />}
+          </div>
+        )}
         
         {!isCashier && (
              <Card className="text-center p-8 bg-card">
