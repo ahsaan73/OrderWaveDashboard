@@ -18,7 +18,7 @@ export async function GET() {
       }
       console.log("Menu items seeded.");
     } else {
-      console.log("Menu items already exist.");
+      console.log("Menu items already exist, skipping.");
     }
 
     // Seed Stock Items
@@ -30,7 +30,7 @@ export async function GET() {
         }
         console.log("Stock items seeded.");
     } else {
-        console.log("Stock items already exist.");
+        console.log("Stock items already exist, skipping.");
     }
 
     // Seed Tables
@@ -42,22 +42,16 @@ export async function GET() {
         }
         console.log("Tables seeded.");
     } else {
-        console.log("Tables already exist.");
+        console.log("Tables already exist, skipping.");
     }
 
-    // Seed Users
-    const usersCollection = collection(db, "users");
-    const usersSnapshot = await getDocs(usersCollection);
-    if (usersSnapshot.empty) {
-      for (const user of users) {
-        await setDoc(doc(db, "users", user.uid), user);
-      }
-      console.log("Users seeded.");
-    } else {
-      console.log("Users already exist.");
+    // Seed/Update Users (always)
+    for (const user of users) {
+      await setDoc(doc(db, "users", user.uid), user);
     }
+    console.log("Users seeded/updated.");
     
-    return NextResponse.json({ success: true, message: 'Database seeded successfully.' });
+    return NextResponse.json({ success: true, message: 'Database seeding process completed. Users are now up-to-date.' });
 
   } catch (error) {
     console.error("Error seeding database:", error);
