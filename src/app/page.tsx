@@ -241,12 +241,7 @@ export default function Home() {
     <DashboardLayout>
       <div className="flex flex-col gap-8">
         <>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard
-                    title="Sales Today"
-                    value={`PKR ${stats.moneyMadeToday.toLocaleString()}`}
-                    icon={<DollarSign className="text-green-500" />}
-                />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <StatCard
                     title="Total Orders Today"
                     value={stats.totalOrders.toString()}
@@ -263,19 +258,35 @@ export default function Home() {
                     icon={<Users className="text-purple-500" />}
                 />
             </div>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                <Card>
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Sales Today</CardTitle>
-                        <CardDescription>A wavy line graph showing sales from morning to night.</CardDescription>
+                         <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle>Sales Today</CardTitle>
+                                <CardDescription>Total sales from midnight until now.</CardDescription>
+                            </div>
+                            <div className="text-4xl font-bold font-headline text-right">
+                                PKR {stats.moneyMadeToday.toLocaleString()}
+                            </div>
+                        </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pl-2">
                     {isLoading ? <div className="h-[250px] w-full bg-muted animate-pulse rounded-lg" /> : (
                         <ChartContainer config={lineChartConfig} className="h-[250px] w-full">
                             <LineChart data={stats.salesByHour} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="hour" tickLine={false} axisLine={false} tickMargin={8} />
-                                <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `PKR ${value}`} />
+                                <YAxis 
+                                  tickLine={false} 
+                                  axisLine={false} 
+                                  tickMargin={8} 
+                                  tickFormatter={(value) => {
+                                      if (typeof value !== 'number' || value === 0) return 'PKR 0';
+                                      if (value >= 1000) return `PKR ${value / 1000}k`;
+                                      return `PKR ${value}`;
+                                  }}
+                                />
                                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
                                 <Line dataKey="sales" type="monotone" stroke="var(--color-sales)" strokeWidth={2} dot={false} />
                             </LineChart>
