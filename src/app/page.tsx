@@ -139,7 +139,7 @@ export default function Home() {
     const ordersLast24h = orders.filter(o => o.createdAt >= last24hTimestamp);
     const ordersPrevious24h = orders.filter(o => o.createdAt < last24hTimestamp);
     
-    const salesLast24h = ordersLast24h.reduce((sum, o) => sum + o.total, 0);
+    const salesLast24h = 0;
     const salesPrevious24h = ordersPrevious24h.reduce((sum, o) => sum + o.total, 0);
 
     let salesChangePercentage = 0;
