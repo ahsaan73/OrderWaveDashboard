@@ -41,7 +41,7 @@ service cloud.firestore {
     // Customers need to be able to create orders. Staff need to read/update them.
     match /orders/{orderId} {
       allow create: if true; // Anyone can create an order
-      allow read, update: if isAuthenticated(); // Only staff can view and update orders
+      allow read, update: if isAuthenticated(); // Any logged-in staff can view and update orders. UI handles specifics.
       allow delete: if isManagerOrAdmin();
     }
     
@@ -49,12 +49,13 @@ service cloud.firestore {
     // Status updates are handled by staff.
     match /tables/{tableId} {
         allow read: if true;
-        allow write: if isAuthenticated(); // Waiters, Managers, Admins can update status
+        // Only waiters, managers, or admins can update table status
+        allow write: if isAuthenticated() && getRequestingUserData().role in ['waiter', 'manager', 'admin'];
     }
     
+    // Stock items are sensitive and should only be read or written by managers and admins.
     match /stockItems/{stockItemId} {
-        allow read: if isAuthenticated();
-        allow write: if isManagerOrAdmin();
+        allow read, write: if isManagerOrAdmin();
     }
     
     match /inventoryLogs/{inventoryLogId} {
