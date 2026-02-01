@@ -1,55 +1,39 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChefHat } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import type { User } from '@/lib/types';
+import { useAuth } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const router = useRouter();
-  const firestore = useFirestore();
+  const auth = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-  
-  const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);
-
-  useEffect(() => {
-    // Clear any previous user on mount to ensure a clean login.
-    localStorage.removeItem('userUid');
-  }, []);
-
   const handleLogin = async () => {
-    if (!firestore || !users) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database. Please try again.' });
+    if (!email || !password) {
+      toast({ variant: 'destructive', title: 'Missing fields', description: 'Please enter both email and password.' });
       return;
     }
-    if (!email) {
-        toast({ variant: 'destructive', title: 'Email required', description: 'Please enter an email address.' });
-        return;
-    }
     setIsLoading(true);
-
-    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-
-    if (user) {
-      toast({ title: 'Login Successful', description: `Welcome, ${user.displayName}!` });
-      localStorage.setItem('userUid', user.uid);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Login Successful', description: 'Welcome back!' });
       router.push('/');
-    } else {
-      toast({ variant: 'destructive', title: 'Login Failed', description: 'User with that email not found.' });
+    } catch (error: any) {
+      console.error("Sign-in error", error);
+      toast({ variant: 'destructive', title: 'Login Failed', description: error.message || 'An unknown error occurred.' });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -62,29 +46,47 @@ export default function LoginPage() {
             <ChefHat className="w-10 h-10 text-primary-foreground" />
           </div>
           <CardTitle className="text-3xl font-headline">Islamabad Bites</CardTitle>
-          <CardDescription>Please sign in to continue. (No password needed)</CardDescription>
+          <CardDescription>Please sign in to continue.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-             <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder="manager@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
-                    required
-                />
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="manager@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
             </div>
-            <Button 
-                onClick={handleLogin} 
-                className="w-full mt-2 h-12 text-base" 
-                disabled={isLoading || usersLoading}
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <Button
+              onClick={handleLogin}
+              className="w-full mt-2 h-12 text-base"
+              disabled={isLoading}
             >
-                {isLoading || usersLoading ? 'Please wait...' : 'Sign In'}
+              {isLoading ? 'Please wait...' : 'Sign In'}
             </Button>
+             <div className="mt-4 text-center text-sm">
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="underline">
+                Sign up
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

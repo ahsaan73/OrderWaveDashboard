@@ -34,9 +34,10 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import { AiAdviceModal } from "./ai-advice-modal";
-import { useUser } from "@/firebase";
+import { useUser, useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ShareLinkModal } from "./share-link-modal";
+import { signOut } from "firebase/auth";
 
 const allMenuItems = (role?: string) => [
     { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin"] },
@@ -60,6 +61,7 @@ type AiSection = (typeof aiSections)[number];
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const auth = useAuth();
   const { user, loading } = useUser();
 
   const [activeSection, setActiveSection] = React.useState<AiSection | null>(
@@ -88,8 +90,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('userUid');
+  const handleLogout = async () => {
+    await signOut(auth);
     router.push('/login');
   }
 
