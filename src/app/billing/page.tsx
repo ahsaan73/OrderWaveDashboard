@@ -56,14 +56,14 @@ export default function BillingPage() {
   }
 
   const ordersQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     const todayStart = startOfToday();
     return query(
       collection(firestore, "orders"),
       where("createdAt", ">=", todayStart.getTime()),
       orderBy("createdAt", "desc")
     );
-  }, [firestore]);
+  }, [firestore, user]);
   
   const tablesQuery = useMemo(() => {
     if(!firestore) return null;

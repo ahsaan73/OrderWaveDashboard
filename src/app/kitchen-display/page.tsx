@@ -29,20 +29,20 @@ export default function KitchenDisplayPage() {
   const canUpdate = user?.role === 'kitchen';
 
   const ordersQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return query(
         collection(firestore, "orders"), 
         where('status', 'in', ['Waiting', 'Cooking'])
     );
-  }, [firestore]);
+  }, [firestore, user]);
   
   const doneOrdersQuery = useMemo(() => {
-      if (!firestore) return null;
+      if (!firestore || !user) return null;
       return query(
           collection(firestore, "orders"),
           where('status', '==', 'Done')
       )
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: activeOrders, isLoading: isLoadingActive } = useCollection<Order>(ordersQuery);
   const { data: doneOrdersData, isLoading: isLoadingDone } = useCollection<Order>(doneOrdersQuery);

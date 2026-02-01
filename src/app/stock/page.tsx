@@ -35,9 +35,9 @@ export default function StockPage() {
   }, [user, userLoading, router, isManager]);
 
   const stockQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'stockItems');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: stockItems, isLoading: dataLoading } = useCollection<StockItem>(stockQuery);
 

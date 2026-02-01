@@ -78,14 +78,14 @@ export default function Home() {
   }, [user, userLoading, router]);
 
   const ordersQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     const queryStartTime = startOfYesterday().getTime();
     return query(
       collection(firestore, "orders"),
       where("createdAt", ">=", queryStartTime),
       orderBy("createdAt", "desc")
     );
-  }, [firestore]);
+  }, [firestore, user]);
   
   const tablesQuery = useMemo(() => {
     if(!firestore) return null;
