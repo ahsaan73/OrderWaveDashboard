@@ -19,6 +19,7 @@ import type { MenuItem, MenuItemCategory } from '@/lib/types';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from './ui/textarea';
 
 interface AddEditMenuModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ const menuItemSchema = z.object({
     (a) => parseFloat(z.string().parse(a)),
     z.number().positive('Price must be positive')
   ),
+  description: z.string().optional(),
   imageUrl: z.string().min(1, "Image is required."),
   imageHint: z.string().optional(),
   category: z.enum(menuItemCategories),
@@ -56,6 +58,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     defaultValues: {
       name: '',
       price: 0,
+      description: '',
       imageUrl: '',
       imageHint: '',
       category: 'Burgers',
@@ -71,6 +74,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
           reset({
             name: item.name,
             price: item.price,
+            description: item.description,
             imageUrl: item.imageUrl,
             imageHint: item.imageHint,
             category: item.category
@@ -82,6 +86,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
           reset({
             name: '',
             price: 0,
+            description: '',
             imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
             imageHint: hint,
             category: initialCategory
@@ -104,6 +109,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     const savedItem = {
       name: data.name,
       price: data.price,
+      description: data.description || '',
       imageUrl: data.imageUrl,
       imageHint: data.imageHint || '',
       category: data.category,
@@ -151,6 +157,15 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
                 <Input id="price" type="number" step="0.01" {...register('price')} className="w-full" />
                 {errors.price && <p className="text-destructive text-xs mt-1">{errors.price.message}</p>}
               </div>
+            </div>
+             <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="description" className="text-right pt-2">
+                    Description
+                </Label>
+                <div className="col-span-3">
+                    <Textarea id="description" {...register('description')} className="w-full" placeholder="A short description of the item..."/>
+                    {errors.description && <p className="text-destructive text-xs mt-1">{errors.description.message}</p>}
+                </div>
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="category" className="text-right">

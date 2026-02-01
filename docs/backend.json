@@ -18,6 +18,7 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
+        "description": { "type": "string", "description": "A short description of the menu item." },
         "price": { "type": "number" },
         "imageUrl": { "type": "string", "format": "uri" },
         "imageHint": { "type": "string" },

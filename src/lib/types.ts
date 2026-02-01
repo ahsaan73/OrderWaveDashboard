@@ -33,6 +33,7 @@ export type MenuItemCategory = 'Burgers' | 'Sides' | 'Wraps' | 'Pizzas' | 'Drink
 
 export type MenuItem = FirebaseDocument & {
   name: string;
+  description: string;
   price: number;
   imageUrl: string;
   imageHint: string;

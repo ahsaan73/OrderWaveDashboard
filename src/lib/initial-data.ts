@@ -46,6 +46,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Spicy Zinger Burger',
     price: 850,
+    description: 'A crispy, spicy zinger fillet with fresh lettuce and our secret sauce in a soft bun.',
     imageUrl: imageMap.get('zesty-burger') || 'https://picsum.photos/seed/zesty-burger/400/400',
     imageHint: 'zinger burger',
     isAvailable: true,
@@ -54,6 +55,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Classic Beef Burger',
     price: 950,
+    description: 'A juicy beef patty with cheese, pickles, onions, and classic condiments.',
     imageUrl: 'https://picsum.photos/seed/beef-burger/400/400',
     imageHint: 'beef burger',
     isAvailable: true,
@@ -62,6 +64,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
     {
     name: 'Grilled Chicken Burger',
     price: 750,
+    description: 'Tender grilled chicken breast with fresh veggies and a light mayo.',
     imageUrl: 'https://picsum.photos/seed/chicken-burger/400/400',
     imageHint: 'chicken burger',
     isAvailable: true,
@@ -70,6 +73,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Masala Fries',
     price: 400,
+    description: 'Crispy fries sprinkled with our special blend of desi spices.',
     imageUrl: imageMap.get('crispy-fries') || 'https://picsum.photos/seed/crispy-fries/400/400',
     imageHint: 'masala fries',
     isAvailable: true,
@@ -78,6 +82,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
    {
     name: 'Garlic Bread',
     price: 350,
+    description: 'Toasted bread with a generous spread of garlic butter and herbs.',
     imageUrl: 'https://picsum.photos/seed/garlic-bread/400/400',
     imageHint: 'garlic bread',
     isAvailable: true,
@@ -86,6 +91,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Onion Rings',
     price: 350,
+    description: 'Golden-fried onion rings served with a tangy dipping sauce.',
     imageUrl: 'https://picsum.photos/seed/onion-rings/400/400',
     imageHint: 'onion rings',
     isAvailable: true,
@@ -94,6 +100,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Chicken Paratha Roll',
     price: 650,
+    description: 'Succulent chicken chunks wrapped in a flaky paratha with mint chutney.',
     imageUrl: imageMap.get('chicken-wrap') || 'https://picsum.photos/seed/chicken-wrap/400/400',
     imageHint: 'paratha roll',
     isAvailable: true,
@@ -102,6 +109,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
     {
     name: 'Beef Kebab Roll',
     price: 700,
+    description: 'Spicy seekh kebabs rolled in a soft paratha with onions and imli sauce.',
     imageUrl: 'https://picsum.photos/seed/beef-roll/400/400',
     imageHint: 'kebab roll',
     isAvailable: true,
@@ -110,6 +118,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Chicken Tikka Pizza',
     price: 1500,
+    description: 'A classic pizza topped with spicy chicken tikka, onions, and lots of cheese.',
     imageUrl: imageMap.get('veggie-pizza') || 'https://picsum.photos/seed/veggie-pizza/400/400',
     imageHint: 'tikka pizza',
     isAvailable: true,
@@ -118,6 +127,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Fajita Pizza',
     price: 1600,
+    description: 'A flavorful pizza with fajita-seasoned chicken, bell peppers, and onions.',
     imageUrl: 'https://picsum.photos/seed/fajita-pizza/400/400',
     imageHint: 'fajita pizza',
     isAvailable: true,
@@ -126,6 +136,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
     {
     name: 'Veggie Supreme Pizza',
     price: 1400,
+    description: 'Loaded with fresh vegetables like bell peppers, olives, mushrooms, and sweet corn.',
     imageUrl: 'https://picsum.photos/seed/veggie-supreme-pizza/400/400',
     imageHint: 'veggie pizza',
     isAvailable: true,
@@ -134,6 +145,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Creamy Chicken Pasta',
     price: 1200,
+    description: 'Penne pasta in a rich and creamy white sauce with grilled chicken.',
     imageUrl: 'https://picsum.photos/seed/chicken-pasta/400/400',
     imageHint: 'chicken pasta',
     isAvailable: true,
@@ -142,6 +154,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
     {
     name: 'Spicy Fettuccine',
     price: 1250,
+    description: 'Fettuccine pasta tossed in a spicy tomato sauce with a hint of red chili flakes.',
     imageUrl: 'https://picsum.photos/seed/spicy-pasta/400/400',
     imageHint: 'spicy pasta',
     isAvailable: true,
@@ -150,6 +163,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Mango Lassi',
     price: 450,
+    description: 'A sweet and refreshing yogurt-based mango smoothie.',
     imageUrl: imageMap.get('milkshake') || 'https://picsum.photos/seed/milkshake/400/400',
     imageHint: 'mango lassi',
     isAvailable: true,
@@ -158,6 +172,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Coke',
     price: 150,
+    description: 'An ice-cold can of Coca-Cola.',
     imageUrl: 'https://picsum.photos/seed/coke-can/400/400',
     imageHint: 'soda can',
     isAvailable: true,
@@ -166,6 +181,7 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {
     name: 'Mineral Water',
     price: 100,
+    description: 'A bottle of pure and refreshing mineral water.',
     imageUrl: 'https://picsum.photos/seed/water-bottle/400/400',
     imageHint: 'water bottle',
     isAvailable: true,
