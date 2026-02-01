@@ -46,6 +46,8 @@ export default function Home() {
   const receiptRef = useRef<HTMLDivElement>(null);
   const prevTablesRef = useRef<Table[]>();
 
+  const isCashier = user?.role === 'cashier';
+
   const playNotificationSound = () => {
     const context = new (window.AudioContext || (window as any).webkitAudioContext)();
     if (!context) return;
@@ -230,81 +232,90 @@ export default function Home() {
   const isLoading = isLoadingOrders || isLoadingTables || isLoadingMenuItems;
   const canManagePayment = user?.role === 'cashier' || user?.role === 'manager' || user?.role === 'admin';
 
-  if (userLoading || !user || !['manager', 'admin', 'cashier'].includes(user.role || '')) {
+  if (userLoading || !user) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Money Made Today"
-            value={`PKR ${stats.moneyMadeToday.toLocaleString()}`}
-            icon={<DollarSign className="text-green-500" />}
-          />
-          <StatCard
-            title="Total Orders Today"
-            value={stats.totalOrders.toString()}
-            icon={<ShoppingCart className="text-blue-500" />}
-          />
-           <StatCard
-            title="Active Orders"
-            value={stats.activeOrders.toString()}
-            icon={<Utensils className="text-yellow-500" />}
-          />
-           <StatCard
-            title="Guests Seated"
-            value={stats.seatedGuests.toString()}
-            icon={<Users className="text-purple-500" />}
-          />
-        </div>
+        {isCashier ? (
+             <div>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Cashier View</h1>
+                <p className="text-muted-foreground mt-2">Monitor table statuses, view live orders, and process payments.</p>
+            </div>
+        ) : (
+            <>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <StatCard
+                        title="Money Made Today"
+                        value={`PKR ${stats.moneyMadeToday.toLocaleString()}`}
+                        icon={<DollarSign className="text-green-500" />}
+                    />
+                    <StatCard
+                        title="Total Orders Today"
+                        value={stats.totalOrders.toString()}
+                        icon={<ShoppingCart className="text-blue-500" />}
+                    />
+                    <StatCard
+                        title="Active Orders"
+                        value={stats.activeOrders.toString()}
+                        icon={<Utensils className="text-yellow-500" />}
+                    />
+                    <StatCard
+                        title="Guests Seated"
+                        value={stats.seatedGuests.toString()}
+                        icon={<Users className="text-purple-500" />}
+                    />
+                </div>
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Sales Today</CardTitle>
+                            <CardDescription>A wavy line graph showing sales from morning to night.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                        {isLoading ? <div className="h-[250px] w-full bg-muted animate-pulse rounded-lg" /> : (
+                            <ChartContainer config={lineChartConfig} className="h-[250px] w-full">
+                                <LineChart data={stats.salesByHour} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="hour" tickLine={false} axisLine={false} tickMargin={8} />
+                                    <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `PKR ${value}`} />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                                    <Line dataKey="sales" type="monotone" stroke="var(--color-sales)" strokeWidth={2} dot={false} />
+                                </LineChart>
+                            </ChartContainer>
+                        )}
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Top Categories</CardTitle>
+                            <CardDescription>A circle chart showing what we sold most.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-1 pb-0">
+                            {isLoading ? <div className="h-[250px] w-full bg-muted animate-pulse rounded-lg" /> : (
+                            <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[250px]">
+                                <PieChart>
+                                    <ChartTooltip content={<ChartTooltipContent nameKey="sales" hideLabel />} />
+                                    <Pie data={stats.salesByCategory} dataKey="sales" nameKey="category" innerRadius={60} strokeWidth={5}>
+                                        {stats.salesByCategory.map((entry) => (
+                                            <Cell
+                                            key={entry.category}
+                                            fill={pieChartConfig[entry.category as keyof typeof pieChartConfig]?.color || 'hsl(var(--muted))'}
+                                            />
+                                        ))}
+                                    </Pie>
+                                    <ChartLegend content={<ChartLegendContent nameKey="category" />} />
+                                </PieChart>
+                            </ChartContainer>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </>
+        )}
 
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Sales Today</CardTitle>
-                    <CardDescription>A wavy line graph showing sales from morning to night.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   {isLoading ? <div className="h-[250px] w-full bg-muted animate-pulse rounded-lg" /> : (
-                    <ChartContainer config={lineChartConfig} className="h-[250px] w-full">
-                        <LineChart data={stats.salesByHour} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="hour" tickLine={false} axisLine={false} tickMargin={8} />
-                            <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `PKR ${value}`} />
-                            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
-                            <Line dataKey="sales" type="monotone" stroke="var(--color-sales)" strokeWidth={2} dot={false} />
-                        </LineChart>
-                    </ChartContainer>
-                   )}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Top Categories</CardTitle>
-                    <CardDescription>A circle chart showing what we sold most.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 pb-0">
-                    {isLoading ? <div className="h-[250px] w-full bg-muted animate-pulse rounded-lg" /> : (
-                     <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[250px]">
-                        <PieChart>
-                            <ChartTooltip content={<ChartTooltipContent nameKey="sales" hideLabel />} />
-                            <Pie data={stats.salesByCategory} dataKey="sales" nameKey="category" innerRadius={60} strokeWidth={5}>
-                                 {stats.salesByCategory.map((entry) => (
-                                    <Cell
-                                      key={entry.category}
-                                      fill={pieChartConfig[entry.category as keyof typeof pieChartConfig]?.color || 'hsl(var(--muted))'}
-                                    />
-                                 ))}
-                            </Pie>
-                             <ChartLegend content={<ChartLegendContent nameKey="category" />} />
-                        </PieChart>
-                     </ChartContainer>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
 
         <div>
           <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Restaurant Map</h2>
@@ -330,10 +341,12 @@ export default function Home() {
           {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} />}
         </div>
         
-        <Card className="text-center p-8 bg-card">
-            <CardTitle className="text-muted-foreground font-normal">Total Cash Today</CardTitle>
-            <p className="text-6xl font-bold font-headline mt-2">PKR {stats.moneyMadeToday.toLocaleString()}</p>
-        </Card>
+        {!isCashier && (
+             <Card className="text-center p-8 bg-card">
+                <CardTitle className="text-muted-foreground font-normal">Total Cash Today</CardTitle>
+                <p className="text-6xl font-bold font-headline mt-2">PKR {stats.moneyMadeToday.toLocaleString()}</p>
+            </Card>
+        )}
 
       </div>
        <Dialog open={!!selectedOrder} onOpenChange={(isOpen) => !isOpen && closeOrderModal()}>
