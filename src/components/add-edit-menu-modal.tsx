@@ -18,6 +18,7 @@ import { z } from 'zod';
 import type { MenuItem, MenuItemCategory } from '@/lib/types';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AddEditMenuModalProps {
   isOpen: boolean;
@@ -34,7 +35,9 @@ const menuItemSchema = z.object({
     (a) => parseFloat(z.string().parse(a)),
     z.number().positive('Price must be positive')
   ),
-  imageUrl: z.string().url('Must be a valid image URL'),
+  imageUrl: z.string().min(1, "Image is required.").refine(val => val.startsWith('http') || val.startsWith('data:image'), {
+    message: 'Must be a valid URL or an uploaded image.'
+  }),
   imageHint: z.string().optional(),
   category: z.enum(menuItemCategories),
 });
@@ -48,12 +51,21 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     reset,
     formState: { errors },
     watch,
-    control
+    control,
+    setValue,
   } = useForm<MenuItemFormData>({
     resolver: zodResolver(menuItemSchema),
+    defaultValues: {
+      name: '',
+      price: 0,
+      imageUrl: '',
+      imageHint: '',
+      category: 'Burgers',
+    },
   });
 
   const watchedImageUrl = watch("imageUrl");
+  const watchedCategory = watch('category');
 
   useEffect(() => {
     if (isOpen) {
@@ -66,16 +78,29 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
             category: item.category
           });
         } else {
+          const initialCategory = 'Burgers';
+          const seed = initialCategory.toLowerCase().replace(/\s/g, '-');
+          const hint = initialCategory.toLowerCase().replace(/s$/, '');
           reset({
             name: '',
             price: 0,
-            imageUrl: 'https://picsum.photos/seed/newitem/400/400',
-            imageHint: '',
-            category: 'Burgers'
+            imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
+            imageHint: hint,
+            category: initialCategory
           });
         }
     }
   }, [item, reset, isOpen]);
+
+  // Update image placeholder when category changes for a new item
+  useEffect(() => {
+    if (isOpen && !item && watchedCategory) {
+      const seed = watchedCategory.toLowerCase().replace(/\s/g, '-');
+      const hint = watchedCategory.toLowerCase().replace(/s$/, '');
+      setValue('imageUrl', `https://picsum.photos/seed/${seed}/400/400`, { shouldValidate: true });
+      setValue('imageHint', hint);
+    }
+  }, [watchedCategory, item, setValue, isOpen]);
 
   const onSubmit = (data: MenuItemFormData) => {
     const savedItem = {
@@ -89,9 +114,20 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     onSave(savedItem, item?.id);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue('imageUrl', reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{item ? 'Edit Food Sticker' : 'Add New Food Sticker'}</DialogTitle>
           <DialogDescription>
@@ -126,7 +162,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
                   control={control}
                   name="category"
                   render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
@@ -140,15 +176,35 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
               />
               {errors.category && <p className="col-start-2 col-span-3 text-destructive text-xs mt-1">{errors.category.message}</p>}
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="imageUrl" className="text-right">
-                Image URL
-              </Label>
-              <div className="col-span-3">
-                <Input id="imageUrl" {...register('imageUrl')} className="w-full" placeholder="https://picsum.photos/seed/..."/>
-                {errors.imageUrl && <p className="text-destructive text-xs mt-1">{errors.imageUrl.message}</p>}
-              </div>
-            </div>
+            
+            <Tabs defaultValue="url" className="col-span-4">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="url">Image URL</TabsTrigger>
+                    <TabsTrigger value="upload">Upload</TabsTrigger>
+                </TabsList>
+                <TabsContent value="url" className="pt-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="imageUrl" className="text-right">
+                            URL
+                        </Label>
+                        <div className="col-span-3">
+                            <Input id="imageUrl" {...register('imageUrl')} className="w-full" placeholder="https://picsum.photos/seed/..."/>
+                        </div>
+                    </div>
+                </TabsContent>
+                <TabsContent value="upload" className="pt-4">
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="file-upload" className="text-right">
+                            File
+                        </Label>
+                        <div className="col-span-3">
+                            <Input id="file-upload" type="file" accept="image/*" onChange={handleFileChange} />
+                        </div>
+                    </div>
+                </TabsContent>
+            </Tabs>
+            {errors.imageUrl && <p className="col-start-2 col-span-3 text-destructive text-xs -mt-2">{errors.imageUrl.message}</p>}
+
 
             {watchedImageUrl && !errors.imageUrl && (
                  <div className="grid grid-cols-4 items-center gap-4">
