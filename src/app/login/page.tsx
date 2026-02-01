@@ -72,26 +72,32 @@ export default function LoginPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                            {staffUsers?.map(user => (
-                                <Card key={user.uid} className="cursor-pointer hover:bg-muted/50 hover:shadow-lg transition-all" onClick={() => handleLogin(user.uid)}>
-                                    <CardContent className="flex flex-col items-center text-center gap-2 p-4">
-                                        <Avatar className="h-20 w-20">
-                                            <AvatarImage src={user.photoURL || undefined} />
-                                            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="font-semibold">{user.displayName}</p>
-                                            <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                            {staffUsers && staffUsers.length > 0 ? (
+                                staffUsers.map(user => (
+                                    <Card key={user.uid} className="cursor-pointer hover:bg-muted/50 hover:shadow-lg transition-all" onClick={() => handleLogin(user.uid)}>
+                                        <CardContent className="flex flex-col items-center text-center gap-2 p-4">
+                                            <Avatar className="h-20 w-20">
+                                                <AvatarImage src={user.photoURL || undefined} />
+                                                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-semibold">{user.displayName}</p>
+                                                <p className="text-sm text-muted-foreground capitalize">{user.role || 'No role assigned'}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            ) : (
+                                <div className="col-span-full text-center text-muted-foreground p-8">
+                                    No staff profiles found. An admin can add users on the 'User Management' page.
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardContent>
             </Card>
 
-            {isLoading ? <Skeleton className="h-36 w-full" /> : adminUser && (
+            {isLoading ? <Skeleton className="h-36 w-full" /> : adminUser ? (
                 <Card className="shadow-lg bg-card border-primary/20">
                      <CardHeader>
                         <CardTitle>Owner / Admin Login</CardTitle>
@@ -115,6 +121,18 @@ export default function LoginPage() {
                             </div>
                             <Shield className="h-8 w-8 text-primary"/>
                         </Button>
+                    </CardContent>
+                </Card>
+            ) : !isLoading && (
+                 <Card className="shadow-lg bg-card border-destructive/20">
+                     <CardHeader>
+                        <CardTitle>Owner / Admin Login</CardTitle>
+                        <CardDescription>Administrative access.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground text-center p-4">
+                            No admin profile found. The database may need to be seeded initially.
+                        </p>
                     </CardContent>
                 </Card>
             )}
