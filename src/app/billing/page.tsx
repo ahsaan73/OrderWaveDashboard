@@ -182,6 +182,13 @@ export default function BillingPage() {
               </DialogHeader>
               {selectedOrder && (
                 <div className="flex flex-col gap-4 py-4">
+                  {selectedOrder.orderType === 'Delivery' && (
+                    <div className="text-sm border-b pb-4 mb-4">
+                      <h3 className="font-semibold text-muted-foreground">Delivery Details</h3>
+                      {selectedOrder.phoneNumber && <p><strong>Phone:</strong> {selectedOrder.phoneNumber}</p>}
+                      {selectedOrder.address && <p className="mt-1"><strong>Address:</strong> {selectedOrder.address}</p>}
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-semibold mb-2 text-muted-foreground border-b pb-1">Items</h3>
                     <div className="space-y-2 max-h-60 overflow-y-auto">

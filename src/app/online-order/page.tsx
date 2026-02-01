@@ -11,10 +11,12 @@ import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
-import type { MenuItem, MenuItemCategory } from '@/lib/types';
+import type { MenuItem, MenuItemCategory, Order } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 
 type OrderItem = {
   item: MenuItem;
@@ -30,6 +32,9 @@ function OnlineOrderPageContent() {
   const [selectedCategory, setSelectedCategory] = useState<MenuItemCategory | 'All'>('All');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
+  const [orderType, setOrderType] = useState<'Pickup' | 'Delivery'>('Pickup');
+  const [address, setAddress] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const menuItemsQuery = useMemo(() => {
     if (!firestore) return null;
@@ -102,27 +107,44 @@ function OnlineOrderPageContent() {
         toast({ variant: 'destructive', title: 'Name Required', description: 'Please enter your name to place the order.'});
         return;
     }
+    if (orderType === 'Delivery') {
+        if(!phoneNumber.trim()){
+            toast({ variant: 'destructive', title: 'Phone Number Required', description: 'Please enter your phone number for delivery.'});
+            return;
+        }
+        if(!address.trim()){
+            toast({ variant: 'destructive', title: 'Address Required', description: 'Please enter your delivery address.'});
+            return;
+        }
+    }
     if (!firestore) {
         toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the restaurant.'});
         return;
     }
     
-    const newOrderPayload = {
+    const newOrderPayload: Omit<Order, 'id' | 'ref'> = {
         orderNumber: `#ON${Math.floor(Math.random() * 9000) + 1000}`,
-        customerName: `${customerName.trim()} (Online)`,
+        customerName: `${customerName.trim()} (${orderType})`,
         items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),
         status: 'Waiting',
         total: calculateTotal(),
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
         createdAt: Date.now(),
         paymentMethod: 'Card', // Assuming online orders are pre-paid
+        orderType: orderType,
+        ...(orderType === 'Delivery' && {
+            address: address.trim(),
+            phoneNumber: phoneNumber.trim(),
+        }),
     }
 
     try {
         await addDoc(collection(firestore, 'orders'), newOrderPayload);
-        toast({ title: "Order Sent!", description: `Your online order has been sent to the kitchen. We'll notify you when it's ready for pickup!` });
+        toast({ title: "Order Sent!", description: `Your ${orderType.toLowerCase()} order has been sent. We'll notify you when it's ready!` });
         setOrder([]);
         setCustomerName('');
+        setAddress('');
+        setPhoneNumber('');
         setIsConfirmModalOpen(false);
     } catch (error) {
         console.error("Error placing online order:", error);
@@ -141,7 +163,7 @@ function OnlineOrderPageContent() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-primary font-headline">Islamabad Bites</h1>
-            <p className="text-sm text-muted-foreground">Online Ordering for Pickup</p>
+            <p className="text-sm text-muted-foreground">Online Ordering</p>
           </div>
         </div>
         <div className="relative h-32 md:h-48 w-full">
@@ -269,7 +291,7 @@ function OnlineOrderPageContent() {
                     <span>PKR {calculateTotal().toFixed(2)}</span>
                 </div>
               <Button size="lg" className="w-full h-16 text-xl shiny-button" onClick={handleInitiateOrder}>
-                <ChefHat className="mr-2"/> Place Pickup Order
+                <ChefHat className="mr-2"/> Place Order
               </Button>
             </SheetFooter>
           </SheetContent>
@@ -280,16 +302,53 @@ function OnlineOrderPageContent() {
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Confirm Your Order</DialogTitle>
-                <DialogDescription>Please enter your name for the pickup order.</DialogDescription>
+                <DialogDescription>Please confirm your details to place the order.</DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-                <Label htmlFor="customer-name">Your Name</Label>
-                <Input 
-                    id="customer-name"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. John Doe"
-                />
+            <div className="grid gap-4 py-4">
+                <div>
+                    <Label htmlFor="customer-name">Your Name</Label>
+                    <Input 
+                        id="customer-name"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="e.g. John Doe"
+                    />
+                </div>
+                <div>
+                    <Label>Order Type</Label>
+                    <RadioGroup defaultValue="Pickup" value={orderType} onValueChange={(value: 'Pickup' | 'Delivery') => setOrderType(value)} className="flex gap-4 pt-2">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Pickup" id="r-pickup" />
+                            <Label htmlFor="r-pickup">Pickup</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Delivery" id="r-delivery" />
+                            <Label htmlFor="r-delivery">Home Delivery</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+                {orderType === 'Delivery' && (
+                    <div className="grid gap-4 animate-in fade-in">
+                        <div>
+                            <Label htmlFor="phone-number">Phone Number</Label>
+                            <Input 
+                                id="phone-number"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                placeholder="e.g. 0300-1234567"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="address">Delivery Address</Label>
+                            <Textarea 
+                                id="address"
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                                placeholder="Please enter your full address"
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
             <DialogFooter>
                 <Button variant="ghost" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import type { Order } from "@/lib/types";
+import { Home } from "lucide-react";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -45,7 +46,10 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
             <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 pb-2">
               <div className="grid gap-1">
                 <CardTitle className="text-base font-medium">{order.orderNumber}</CardTitle>
-                <CardDescription>{order.customerName}</CardDescription>
+                <CardDescription className="flex items-center gap-1.5">
+                  {order.orderType === 'Delivery' && <Home className="h-4 w-4" />}
+                  <span>{order.customerName}</span>
+                </CardDescription>
               </div>
               <div className={cn("text-xs font-semibold capitalize px-2 py-1 rounded-full", mobileStatusStyles[order.status])}>
                 {order.status.toLowerCase()}
@@ -87,7 +91,12 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
                 className={cn(isClickable && "cursor-pointer")}
               >
                 <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                <TableCell>{order.customerName}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {order.orderType === 'Delivery' && <Home className="h-4 w-4 text-muted-foreground" />}
+                    <span>{order.customerName}</span>
+                  </div>
+                </TableCell>
                 <TableCell>
                   {order.items.map((item) => `${item.name} (x${item.quantity})`).join(", ")}
                 </TableCell>

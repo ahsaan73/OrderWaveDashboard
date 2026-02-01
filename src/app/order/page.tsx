@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection, useDoc, useFirestore } from '@/firebase';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import type { MenuItem, Table, MenuItemCategory } from '@/lib/types';
+import type { MenuItem, Table, MenuItemCategory, Order } from '@/lib/types';
 
 
 type OrderItem = {
@@ -105,7 +105,7 @@ function OrderPageContent() {
         return;
     }
     
-    const newOrderPayload = {
+    const newOrderPayload: Omit<Order, 'id' | 'ref'> = {
         orderNumber: `#${Math.floor(Math.random() * 90000) + 10000}`,
         customerName: tableName || `Table ID: ${tableId}`,
         tableId,
@@ -114,6 +114,7 @@ function OrderPageContent() {
         total: calculateTotal(),
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
         createdAt: Date.now(),
+        orderType: 'Dine-in'
     }
 
     try {

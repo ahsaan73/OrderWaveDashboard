@@ -50,9 +50,22 @@
         "createdAt": { "type": "number" },
         "cookingStartedAt": { "type": "number", "description": "When the order started cooking (Unix timestamp)." },
         "paymentMethod": { "type": "string", "enum": ["Cash", "Card"] },
-        "tableId": { "type": "string" }
+        "tableId": { "type": "string" },
+        "orderType": {
+          "type": "string",
+          "enum": ["Pickup", "Delivery", "Dine-in"],
+          "description": "The type of order."
+        },
+        "address": {
+          "type": "string",
+          "description": "Delivery address for the order."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Customer's phone number for delivery."
+        }
       },
-      "required": ["orderNumber", "customerName", "items", "status", "total", "time", "createdAt"]
+      "required": ["orderNumber", "customerName", "items", "status", "total", "time", "createdAt", "orderType"]
     },
     "Table": {
       "title": "Table",

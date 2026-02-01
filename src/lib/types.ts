@@ -24,6 +24,9 @@ export type Order = FirebaseDocument & {
   cookingStartedAt?: number; // Unix timestamp in milliseconds
   tableId?: string;
   paymentMethod?: 'Cash' | 'Card';
+  orderType: 'Pickup' | 'Delivery' | 'Dine-in';
+  address?: string;
+  phoneNumber?: string;
 };
 
 export type MenuItemCategory = 'Burgers' | 'Sides' | 'Wraps' | 'Pizzas' | 'Drinks' | 'Pasta';

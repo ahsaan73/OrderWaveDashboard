@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, addDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, Order } from '@/lib/types';
 
 type OrderItem = {
   item: MenuItem;
@@ -29,7 +29,7 @@ export default function CashierPage() {
     if (!userLoading) {
       if (!user) {
         router.replace('/login');
-      } else if (!['manager', 'admin'].includes(user.role || '')) {
+      } else if (!['manager', 'admin', 'cashier'].includes(user.role || '')) {
         router.replace('/');
       }
     }
@@ -80,7 +80,7 @@ export default function CashierPage() {
     
     const total = calculateTotal();
 
-    const newOrder = {
+    const newOrder: Omit<Order, 'id'| 'ref'> = {
         orderNumber: `#${Math.floor(Math.random() * 90000) + 10000}`,
         customerName: 'Walk-in Customer',
         items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),
@@ -89,6 +89,7 @@ export default function CashierPage() {
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
         createdAt: Date.now(),
         paymentMethod: method,
+        orderType: 'Pickup',
     };
     
     try {
