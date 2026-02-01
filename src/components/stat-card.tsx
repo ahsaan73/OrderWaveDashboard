@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
@@ -13,6 +14,8 @@ interface StatCardProps {
 }
 
 export function StatCard({ title, value, icon, change }: StatCardProps) {
+  const isPositive = change ? change.startsWith('+') : false;
+
   return (
     <Card className="transition-all hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -25,7 +28,12 @@ export function StatCard({ title, value, icon, change }: StatCardProps) {
         <div className="text-4xl font-bold font-headline">{value}</div>
         {change && (
           <p className="text-xs text-muted-foreground mt-1">
-            <span className="text-green-600 font-semibold">{change}</span> vs last 24h
+            <span className={cn(
+                "font-semibold",
+                isPositive ? "text-green-600" : "text-destructive"
+            )}>
+              {change}
+            </span> vs last 24h
           </p>
         )}
       </CardContent>
