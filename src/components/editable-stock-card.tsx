@@ -18,13 +18,17 @@ interface EditableStockCardProps {
 
 export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: EditableStockCardProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedLevel, setEditedLevel] = useState(item.currentStock);
+  const [editedLevel, setEditedLevel] = useState(item.currentStock ?? 0);
 
-  const stockPercentage = item.totalStock > 0 ? (item.currentStock / item.totalStock) * 100 : 0;
-  const isLow = stockPercentage < item.threshold;
+  const currentStock = item.currentStock ?? 0;
+  const totalStock = item.totalStock ?? 0;
+  const threshold = item.threshold ?? 0;
+
+  const stockPercentage = totalStock > 0 ? (currentStock / totalStock) * 100 : 0;
+  const isLow = stockPercentage < threshold;
 
   let progressColorClass = '[&>div]:bg-chart-2'; // green
-  if (stockPercentage < 50 && stockPercentage >= item.threshold) {
+  if (stockPercentage < 50 && stockPercentage >= threshold) {
     progressColorClass = '[&>div]:bg-chart-4'; // yellow
   }
   if (isLow) {
@@ -33,14 +37,14 @@ export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: Editable
 
   const handleSave = () => {
     let newLevel = editedLevel;
-    if (newLevel > item.totalStock) newLevel = item.totalStock;
+    if (newLevel > totalStock) newLevel = totalStock;
     if (newLevel < 0) newLevel = 0;
     onUpdate(item, newLevel);
     setIsEditing(false);
   };
   
   const handleCancel = () => {
-    setEditedLevel(item.currentStock);
+    setEditedLevel(currentStock);
     setIsEditing(false);
   }
 
@@ -78,7 +82,7 @@ export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: Editable
                     value={editedLevel}
                     onChange={(e) => setEditedLevel(parseInt(e.target.value, 10) || 0)}
                     className="w-full h-9"
-                    max={item.totalStock}
+                    max={totalStock}
                     min={0}
                 />
                 <Button size="icon" className="h-9 w-9 bg-green-500 hover:bg-green-600 shrink-0" onClick={handleSave}><Check className="h-4 w-4" /></Button>
@@ -89,13 +93,13 @@ export function EditableStockCard({ item, onUpdate, onEdit, onDelete }: Editable
               className="text-2xl font-bold text-muted-foreground text-center cursor-pointer"
               onClick={() => setIsEditing(true)}
              >
-              {item.currentStock.toLocaleString()} <span className="text-lg">/ {item.totalStock.toLocaleString()} {item.unit}</span>
+              {currentStock.toLocaleString()} <span className="text-lg">/ {totalStock.toLocaleString()} {item.unit}</span>
             </p>
         )}
          {isLow && !isEditing && (
             <div className="flex items-center gap-2 text-destructive text-sm font-semibold">
                 <AlertTriangle className="h-4 w-4" />
-                <span>Low stock! Below {item.threshold}%.</span>
+                <span>Low stock! Below {threshold}%.</span>
             </div>
         )}
       </CardContent>
