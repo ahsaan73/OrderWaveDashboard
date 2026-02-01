@@ -1,142 +1,319 @@
 {
   "entities": {
-    "User": {
-      "title": "User",
-      "description": "A user of the application.",
-      "type": "object",
-      "properties": {
-        "uid": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "displayName": { "type": "string" },
-        "photoURL": { "type": "string", "format": "uri" },
-        "role": { "type": "string", "enum": ["manager", "cashier", "waiter", "admin", "kitchen"] }
-      },
-      "required": ["uid", "email"]
-    },
-    "MenuItem": {
-      "title": "Menu Item",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string", "description": "A short description of the menu item." },
-        "price": { "type": "number" },
-        "imageUrl": { "type": "string", "format": "uri" },
-        "imageHint": { "type": "string" },
-        "isAvailable": { "type": "boolean" },
-        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] }
-      },
-      "required": ["name", "price", "imageUrl", "isAvailable", "category"]
-    },
     "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Order",
       "type": "object",
+      "description": "Represents a customer order in the restaurant system.",
       "properties": {
-        "orderNumber": { "type": "string" },
-        "customerName": { "type": "string" },
-        "items": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order."
+        },
+        "orderTime": {
+          "type": "string",
+          "description": "Timestamp of when the order was placed.",
+          "format": "date-time"
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to Customer. (Relationship: Customer 1:N Order)"
+        },
+        "menuItemIds": {
           "type": "array",
+          "description": "References to MenuItems in the order. (Relationship: Order N:N MenuItem)",
           "items": {
-            "type": "object",
-            "properties": {
-              "name": { "type": "string" },
-              "quantity": { "type": "number" },
-              "price": { "type": "number" }
-            },
-            "required": ["name", "quantity", "price"]
+            "type": "string"
           }
         },
-        "status": { "type": "string", "enum": ["Waiting", "Cooking", "Done"] },
-        "total": { "type": "number" },
-        "time": { "type": "string" },
-        "createdAt": { "type": "number" },
-        "cookingStartedAt": { "type": "number", "description": "When the order started cooking (Unix timestamp)." },
-        "paymentMethod": { "type": "string", "enum": ["Cash", "Card"] },
-        "tableId": { "type": "string" },
-        "orderType": {
+        "status": {
           "type": "string",
-          "enum": ["Pickup", "Delivery", "Dine-in"],
-          "description": "The type of order."
+          "description": "Current status of the order (Waiting, Cooking, Done)."
         },
-        "address": {
-          "type": "string",
-          "description": "Delivery address for the order."
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "Customer's phone number for delivery."
+        "totalAmount": {
+          "type": "number",
+          "description": "Total amount of the order.",
+          "format": "number"
         }
       },
-      "required": ["orderNumber", "customerName", "items", "status", "total", "time", "createdAt", "orderType"]
+      "required": [
+        "id",
+        "orderTime",
+        "customerId",
+        "menuItemIds",
+        "status",
+        "totalAmount"
+      ]
     },
-    "Table": {
-      "title": "Table",
+    "MenuItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MenuItem",
       "type": "object",
+      "description": "Represents an item on the restaurant's menu.",
       "properties": {
-        "name": { "type": "string" },
-        "status": { "type": "string", "enum": ["Empty", "Seated", "Eating", "Needs Bill"] },
-        "guests": { "type": "number" },
-        "orderId": { "type": "string" },
-        "shape": { "type": "string", "enum": ["square", "circle"] }
-      },
-      "required": ["name", "status", "guests", "shape"]
-    },
-    "StockItem": {
-      "title": "Stock Item",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "currentStock": { "type": "number", "description": "Current quantity of the item in stock." },
-        "totalStock": { "type": "number", "description": "Total stock capacity or quantity after a full restock." },
-        "unit": { "type": "string", "enum": ["g", "ml", "pcs"], "description": "Unit of measurement for the stock item." },
-        "threshold": { "type": "number", "description": "The percentage below which stock is considered low." }
-      },
-      "required": ["name", "currentStock", "totalStock", "unit", "threshold"]
-    },
-    "InventoryLog": {
-        "title": "Inventory Log",
-        "description": "Tracks changes to inventory items.",
-        "type": "object",
-        "properties": {
-            "itemId": { "type": "string", "description": "ID of the StockItem that was changed." },
-            "itemName": { "type": "string", "description": "Name of the StockItem that was changed." },
-            "userId": { "type": "string", "description": "ID of the user who made the change." },
-            "userName": { "type": "string", "description": "Name of the user who made the change." },
-            "change": { "type": "number", "description": "The amount the stock changed by (can be positive or negative)." },
-            "oldStockLevel": { "type": "number", "description": "Stock level before the change." },
-            "newStockLevel": { "type": "number", "description": "Stock level after the change." },
-            "reason": { "type": "string", "description": "Reason for the stock change (e.g., 'Manual Addition', 'Order Fulfillment', 'Correction')." },
-            "timestamp": { "type": "number", "description": "When the change occurred (Unix timestamp)." }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the menu item."
         },
-        "required": ["itemId", "itemName", "userId", "userName", "change", "oldStockLevel", "newStockLevel", "reason", "timestamp"]
+        "name": {
+          "type": "string",
+          "description": "Name of the menu item."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the menu item."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price of the menu item.",
+          "format": "number"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the image for the menu item.",
+          "format": "uri"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the menu item (e.g., Appetizer, Main Course, Dessert)."
+        },
+        "ingredientIds": {
+          "type": "array",
+          "description": "References to Ingredients used in the menu item. (Relationship: MenuItem N:N Ingredient)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "price",
+        "imageUrl",
+        "category",
+        "ingredientIds"
+      ]
+    },
+    "Ingredient": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ingredient",
+      "type": "object",
+      "description": "Represents an ingredient used in the restaurant's dishes.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ingredient."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the ingredient."
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "Current stock quantity of the ingredient.",
+          "format": "number"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit of measurement for the ingredient (e.g., kg, g, ml)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "stockQuantity",
+        "unit"
+      ]
+    },
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
+      "type": "object",
+      "description": "Represents a customer of the restaurant.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the customer."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the customer."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the customer.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the customer."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone"
+      ]
+    },
+    "Staff": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Staff",
+      "type": "object",
+      "description": "Represents a staff member of the restaurant.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the staff member."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the staff member."
+        },
+        "position": {
+          "type": "string",
+          "description": "Job position of the staff member."
+        },
+        "wage": {
+          "type": "number",
+          "description": "Hourly wage of the staff member.",
+          "format": "number"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "position",
+        "wage"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/User" },
-      "description": "User profiles."
-    },
-    "/menuItems/{menuItemId}": {
-      "schema": { "$ref": "#/entities/MenuItem" },
-      "description": "List of all menu items."
-    },
-    "/orders/{orderId}": {
-      "schema": { "$ref": "#/entities/Order" },
-      "description": "All customer orders."
-    },
-    "/tables/{tableId}": {
-      "schema": { "$ref": "#/entities/Table" },
-      "description": "Restaurant tables."
-    },
-    "/stockItems/{stockItemId}": {
-      "schema": { "$ref": "#/entities/StockItem" },
-      "description": "Inventory stock levels."
-    },
-    "/inventoryLogs/{inventoryLogId}": {
-      "schema": { "$ref": "#/entities/InventoryLog" },
-      "description": "Logs of all changes to inventory stock."
-    }
+    "structure": [
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer profiles. Uses path-based ownership for customer data.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique ID of the customer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/customers/{customerId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores orders associated with a specific customer. Includes denormalized 'customerId' for authorization independence.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique ID of the customer."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique ID of the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/menuItems/{menuItemId}",
+        "definition": {
+          "entityName": "MenuItem",
+          "schema": {
+            "$ref": "#/backend/entities/MenuItem"
+          },
+          "description": "Stores menu items available in the restaurant.",
+          "params": [
+            {
+              "name": "menuItemId",
+              "description": "The unique ID of the menu item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ingredients/{ingredientId}",
+        "definition": {
+          "entityName": "Ingredient",
+          "schema": {
+            "$ref": "#/backend/entities/Ingredient"
+          },
+          "description": "Stores ingredients used in the restaurant.",
+          "params": [
+            {
+              "name": "ingredientId",
+              "description": "The unique ID of the ingredient."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/staff/{staffId}",
+        "definition": {
+          "entityName": "Staff",
+          "schema": {
+            "$ref": "#/backend/entities/Staff"
+          },
+          "description": "Stores staff member information.",
+          "params": [
+            {
+              "name": "staffId",
+              "description": "The unique ID of the staff member."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_staff/{staffId}",
+        "definition": {
+          "entityName": "Staff",
+          "schema": {
+            "$ref": "#/backend/entities/Staff"
+          },
+          "description": "Collection used to grant staff-level access. Document existence determines access.",
+          "params": [
+            {
+              "name": "staffId",
+              "description": "The unique ID of the staff member, used for role assignment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "Staff",
+          "schema": {
+            "$ref": "#/backend/entities/Staff"
+          },
+          "description": "Collection used to grant admin-level access. Document existence determines access.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique ID of the admin, used for role assignment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to be secure, scalable, and easily debuggable, adhering to the core principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages denormalization for authorization and structural segregation to simplify security rules.\n\n*   **Authorization Independence:** Customer data and their orders are stored under the `/customers/{customerId}` path, which ensures path-based ownership for easy management and security rules. The `customerId` is also stored on each order document to authorize reads. This setup removes the need for complex `get()` calls in security rules, thus enabling atomic operations and improving debuggability. Staff roles are managed using document existence in the `/roles_staff/{staffId}` collection, enabling role-based access control without relying on custom claims.\n*   **Clarity of Intent:** The path structure clearly reflects the relationships between entities. For example, orders belonging to a customer are nested under `/customers/{customerId}/orders/{orderId}` making it clear that each order belongs to a specific customer. The usage of existence checks in `/roles_staff/{staffId}` to grant access to specific staff functionality is another way to keep the authorization intent explicit.\n*   **DBAC (No Custom Claims):** Roles are stored directly in the database. Staff access is controlled by the presence of their IDs in the `/roles_staff/{staffId}` collection. This method avoids the complexity and potential security issues associated with custom claims.\n*   **QAPs (Rules are not Filters):** The structure allows for secure listing operations. Since orders are stored under the customer's ID (`/customers/{customerId}/orders/{orderId}`), listing orders for a specific customer is straightforward and secure, preventing unauthorized access to orders from other customers. Segregation of admin roles via the `/roles_admin/{adminId}` collection ensures that only admins can perform specific administrative tasks, thus adhering to the QAP principle.\n\nOrders are placed under the corresponding customer's ID to manage ownership efficiently, as each order is directly associated with its respective customer. The structure does not support collaborative data. Data is managed via ownership.\n\nSpecifically, this structure makes sure that reading of Orders follows authorization independence through path-based rules, and that listing operations are safe via Role-Based Authentication."
   }
 }
