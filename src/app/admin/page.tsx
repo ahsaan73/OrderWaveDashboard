@@ -2,9 +2,8 @@
 
 import { useMemo, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import type { User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,7 @@ export default function AdminPage() {
     }
   }, [user, userLoading, router]);
 
-  const usersQuery = useMemo(() => {
+  const usersQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'users');
   }, [firestore]);

@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Plus, Minus, ShoppingCart, ChefHat, Trash2, CircleDollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useCollection, useDoc, useFirestore } from '@/firebase';
+import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import type { MenuItem, Table, MenuItemCategory, Order } from '@/lib/types';
 
@@ -27,7 +27,7 @@ function OrderPageContent() {
   const tableId = searchParams.get('tableId');
   const firestore = useFirestore();
   
-  const tableRef = useMemo(() => {
+  const tableRef = useMemoFirebase(() => {
     if (!firestore || !tableId) return null;
     return doc(firestore, 'tables', tableId);
   }, [firestore, tableId]);
@@ -40,7 +40,7 @@ function OrderPageContent() {
   const [selectedCategory, setSelectedCategory] = useState<MenuItemCategory | 'All'>('All');
 
 
-  const menuItemsQuery = useMemo(() => {
+  const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);

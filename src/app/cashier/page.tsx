@@ -8,9 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PosItemCard } from '@/components/pos-item-card';
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, addDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import type { MenuItem, Order } from '@/lib/types';
 
 type OrderItem = {
@@ -35,7 +34,7 @@ export default function CashierPage() {
     }
   }, [user, userLoading, router]);
   
-  const menuItemsQuery = useMemo(() => {
+  const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);

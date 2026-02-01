@@ -4,9 +4,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { EditableStockCard } from '@/components/editable-stock-card';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc, addDoc, deleteDoc, getDoc, runTransaction } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import type { StockItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,7 @@ export default function StockPage() {
     }
   }, [user, userLoading, router, isManager]);
 
-  const stockQuery = useMemo(() => {
+  const stockQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'stockItems');
   }, [firestore, user]);

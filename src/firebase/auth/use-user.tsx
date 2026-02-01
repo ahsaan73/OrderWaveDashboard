@@ -1,8 +1,8 @@
 'use client';
 import type { User } from '@/lib/types';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useDoc } from '../firestore/use-doc';
-import { useFirestore } from '../provider';
+import { useFirestore, useMemoFirebase } from '../provider';
 import { doc } from 'firebase/firestore';
 
 export function useUser() {
@@ -19,7 +19,7 @@ export function useUser() {
         setInitialAuthCheck(true);
     }, []);
 
-    const userRef = useMemo(() => {
+    const userRef = useMemoFirebase(() => {
         if (!firestore || !uid) return null;
         return doc(firestore, 'users', uid);
     }, [firestore, uid]);

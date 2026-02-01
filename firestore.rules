@@ -1,228 +1,56 @@
-/**
- * This ruleset enforces a hybrid security model for a restaurant application,
- * combining strict user-ownership for customer data with role-based access control
- * for staff and administrative functions.
- *
- * Core Philosophy:
- * The rules prioritize authorization independence and clarity. Customers have exclusive
- * control over their personal data and orders. Staff and Admins are granted
- * elevated, read-only or full-write permissions on specific data collections
- * based on their roles, which are managed directly within the database.
- *
- * Data Structure:
- * - Customer data is strictly segregated under `/customers/{customerId}`, with
- *   orders nested in a subcollection (`/orders/{orderId}`).
- * - Publicly readable data like `/menuItems` and `/ingredients` are stored in
- *   top-level collections for easy access.
- * - Sensitive administrative data like `/staff` records and role assignments
- *   (`/roles_staff`, `/roles_admin`) are in protected top-level collections.
- *
- * Key Security Decisions:
- * - No User Listing: Listing documents in the top-level `/customers` collection
- *   is disallowed to protect user privacy.
- * - Role-Based Access (DBAC): Staff and Admin roles are determined by the
- *   existence of a user's UID as a document ID in the `/roles_staff` and
- *   `/roles_admin` collections, respectively. This avoids custom claims.
- * - Prototyping Flexibility: Data shape and type validation are intentionally
- *   omitted to allow for rapid development. Validation is strictly limited to
- *   fields critical for authorization and relational integrity (e.g., ensuring
- *   an order's `customerId` field matches its parent path).
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --------------------------------------------------------------------
-    // Helper Functions
-    // --------------------------------------------------------------------
-
-    /**
-     * Checks if the user is authenticated.
-     */
-    function isSignedIn() {
+    // Helper functions
+    function isAuth() {
       return request.auth != null;
     }
-
-    /**
-     * Checks if the authenticated user's UID matches the provided userId.
-     * This is the foundation of the user-ownership model.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isRole(role) {
+      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
     }
-
-    /**
-     * Checks if the user has an 'admin' role.
-     * Role is granted if a document with the user's UID exists in /roles_admin.
-     */
+    function isOneOfRoles(roles) {
+      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
+    }
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isRole('admin');
+    }
+    function isManager() {
+      return isOneOfRoles(['admin', 'manager']);
     }
 
-    /**
-     * Checks if the user has a 'staff' role.
-     * Role is granted if a document with the user's UID exists in /roles_staff.
-     */
-    function isStaff() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_staff/$(request.auth.uid));
+    // Publicly readable collections
+    match /menuItems/{itemId} {
+      allow read: if true;
+      allow write: if isManager();
+    }
+    match /tables/{tableId} {
+      allow read: if true;
+      allow write: if isOneOfRoles(['admin', 'manager', 'waiter']);
+    }
+    
+    // User profiles can be read by anyone for the login screen, but only written by the user themselves or an admin.
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isAuth();
+      allow update: if isAuth() && (request.auth.uid == userId || isAdmin());
     }
 
-    /**
-     * Validates that a document exists before an update or delete operation.
-     * This prevents requests from modifying non-existent data.
-     */
-    function documentExists() {
-      return resource != null;
+    // Orders can be created by anyone, but only read/updated by staff.
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if isOneOfRoles(['admin', 'manager', 'cashier', 'kitchen', 'waiter']);
     }
 
-    /**
-     * Validates that the `id` field within a new customer document matches
-     * the document's ID in the path, ensuring relational integrity on creation.
-     */
-    function isCreatingOwnCustomerProfile(customerId) {
-      return isOwner(customerId) && request.resource.data.id == customerId;
+    // Stock items require manager/admin privileges.
+    match /stockItems/{itemId} {
+      allow read, write: if isManager();
     }
 
-    /**
-     * Enforces immutability of the customer `id` field on update.
-     */
-    function isCustomerProfileDataConsistent() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates that the `customerId` field within a new order document matches
-     * the customerId from the path, ensuring orders are linked correctly.
-     */
-    function isCreatingOwnOrder(customerId) {
-      return isOwner(customerId) && request.resource.data.customerId == customerId;
-    }
-
-    /**
-     * Enforces immutability of the `customerId` field on order updates.
-     */
-    function isOrderDataConsistent() {
-      return request.resource.data.customerId == resource.data.customerId;
-    }
-
-
-    // --------------------------------------------------------------------
-    // Collection Rules
-    // --------------------------------------------------------------------
-
-    /**
-     * @description Manages customer profiles. Each customer can create their own
-     *   profile and has exclusive read/write access to it.
-     * @path /customers/{customerId}
-     * @allow (create) A new user with UID 'user123' can create their own profile at `/customers/user123`.
-     * @deny (get) User 'user456' cannot read the profile of 'user123'.
-     * @deny (list) No user can list all documents in the `/customers` collection.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
-     */
-    match /customers/{customerId} {
-      allow get: if isOwner(customerId);
-      allow list: if false;
-      allow create: if isCreatingOwnCustomerProfile(customerId);
-      allow update: if isOwner(customerId) && documentExists() && isCustomerProfileDataConsistent();
-      allow delete: if isOwner(customerId) && documentExists();
-
-      /**
-       * @description Manages orders for a specific customer. A customer can manage
-       *   their own orders. Staff can view and update all orders, and Admins
-       *   have full control.
-       * @path /customers/{customerId}/orders/{orderId}
-       * @allow (create) Customer 'user123' can create a new order in their own subcollection.
-       * @allow (update) A staff member can update the status of any order.
-       * @deny (get) Customer 'user456' cannot read an order belonging to 'user123'.
-       * @principle Enforces inherited ownership from the path, with role-based overrides for staff/admins.
-       */
-      match /orders/{orderId} {
-        allow get: if isOwner(customerId) || isStaff() || isAdmin();
-        allow list: if isOwner(customerId) || isStaff() || isAdmin();
-        allow create: if isCreatingOwnOrder(customerId);
-        allow update: if (isOwner(customerId) || isStaff() || isAdmin()) && documentExists() && isOrderDataConsistent();
-        allow delete: if (isOwner(customerId) || isAdmin()) && documentExists();
-      }
-    }
-
-    /**
-     * @description Publicly readable collection of menu items. Only Admins
-     *   can create, modify, or delete menu items.
-     * @path /menuItems/{menuItemId}
-     * @allow (get, list) Any user, signed-in or anonymous, can read the menu.
-     * @deny (create) A non-admin user cannot add a new menu item.
-     * @principle Implements public-read access with restricted, role-based writes.
-     */
-    match /menuItems/{menuItemId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin() && documentExists();
-      allow delete: if isAdmin() && documentExists();
-    }
-
-    /**
-     * @description Publicly readable collection of ingredients. Only Admins
-     *   can manage the ingredient list and stock.
-     * @path /ingredients/{ingredientId}
-     * @allow (get, list) Any user, signed-in or anonymous, can read ingredient info.
-     * @deny (update) A staff member cannot update an ingredient's stock quantity.
-     * @principle Implements public-read access with restricted, role-based writes.
-     */
-    match /ingredients/{ingredientId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin() && documentExists();
-      allow delete: if isAdmin() && documentExists();
-    }
-
-    /**
-     * @description Stores sensitive staff information, including wages. Access is
-     *   strictly limited to users with the Admin role.
-     * @path /staff/{staffId}
-     * @allow (get, list, create, update, delete) An Admin can fully manage staff records.
-     * @deny (get) A staff member cannot read another staff member's record.
-     * @principle Enforces strict role-based access for highly sensitive data.
-     */
-    match /staff/{staffId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin() && documentExists();
-      allow delete: if isAdmin() && documentExists();
-    }
-
-    /**
-     * @description Manages staff role assignments. Document existence grants
-     *   the 'staff' role. Only Admins can modify these assignments.
-     * @path /roles_staff/{staffId}
-     * @allow (create, delete) An Admin can add or remove a user from the staff role.
-     * @deny (get, list, create, delete) Any non-admin user cannot access this collection.
-     * @principle Secures the role-granting mechanism itself via higher-privilege roles.
-     */
-    match /roles_staff/{staffId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if false;
-      allow delete: if isAdmin() && documentExists();
-    }
-
-    /**
-     * @description Manages admin role assignments. Document existence grants
-     *   the 'admin' role. Only Admins can modify these assignments.
-     * @path /roles_admin/{adminId}
-     * @allow (create, delete) An Admin can add or remove another user from the admin role.
-     * @deny (get, list, create, delete) Any non-admin user cannot access this collection.
-     * @principle Secures the role-granting mechanism itself.
-     */
-    match /roles_admin/{adminId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if false;
-      allow delete: if isAdmin() && documentExists();
+    // Inventory logs are write-only for managers/admins to ensure audit trail integrity.
+    match /inventoryLogs/{logId} {
+      allow read: if isManager();
+      allow create: if isManager();
+      allow update, delete: if false;
     }
   }
 }

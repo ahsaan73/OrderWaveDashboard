@@ -3,9 +3,8 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TableCard } from '@/components/table-card';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import type { Table } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -43,7 +42,7 @@ export default function WaiterPage() {
     }
   }, [user, userLoading, router]);
 
-  const tablesQuery = useMemo(() => {
+  const tablesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "tables"), orderBy("name"));
   }, [firestore]);

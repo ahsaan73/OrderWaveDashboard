@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Order, Table } from '@/lib/types';
 import { collection, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { startOfToday } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -55,7 +54,7 @@ export default function BillingPage() {
     router.push('/login');
   }
 
-  const ordersQuery = useMemo(() => {
+  const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     const todayStart = startOfToday();
     return query(
@@ -65,7 +64,7 @@ export default function BillingPage() {
     );
   }, [firestore, user]);
   
-  const tablesQuery = useMemo(() => {
+  const tablesQuery = useMemoFirebase(() => {
     if(!firestore) return null;
     return query(collection(firestore, "tables"), orderBy("name"));
   }, [firestore]);

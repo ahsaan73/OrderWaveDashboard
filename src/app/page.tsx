@@ -13,10 +13,9 @@ import { TableCard } from "@/components/table-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { useCollection } from "@/firebase/firestore/use-collection";
 import type { Order, Table, MenuItem } from "@/lib/types";
 import { collection, query, where, orderBy, doc, updateDoc } from "firebase/firestore";
-import { useFirestore, useUser } from "@/firebase";
+import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { startOfToday, getHours, startOfYesterday } from 'date-fns';
 import { useRouter } from "next/navigation";
@@ -77,7 +76,7 @@ export default function Home() {
     }
   }, [user, userLoading, router]);
 
-  const ordersQuery = useMemo(() => {
+  const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     const queryStartTime = startOfYesterday().getTime();
     return query(
@@ -87,12 +86,12 @@ export default function Home() {
     );
   }, [firestore, user]);
   
-  const tablesQuery = useMemo(() => {
+  const tablesQuery = useMemoFirebase(() => {
     if(!firestore) return null;
     return query(collection(firestore, "tables"), orderBy("name"));
   }, [firestore]);
 
-  const menuItemsQuery = useMemo(() => {
+  const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);

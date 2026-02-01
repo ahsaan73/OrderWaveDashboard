@@ -7,9 +7,8 @@ import { MenuItemCard } from '@/components/menu-item-card';
 import { AddEditMenuModal } from '@/components/add-edit-menu-modal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import type { MenuItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
@@ -27,7 +26,7 @@ export default function MenuPage() {
     }
   }, [user, userLoading, router]);
 
-  const menuItemsQuery = useMemo(() => {
+  const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);
@@ -148,5 +147,3 @@ export default function MenuPage() {
     </DashboardLayout>
   );
 }
-
-    

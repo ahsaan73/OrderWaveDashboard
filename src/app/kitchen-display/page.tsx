@@ -5,9 +5,8 @@ import Link from "next/link";
 import { OrderCard } from "@/components/order-card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { useCollection } from "@/firebase/firestore/use-collection";
 import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from "@/firebase";
+import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import type { Order } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -28,7 +27,7 @@ export default function KitchenDisplayPage() {
 
   const canUpdate = user?.role === 'kitchen';
 
-  const ordersQuery = useMemo(() => {
+  const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, "orders"), 
@@ -36,7 +35,7 @@ export default function KitchenDisplayPage() {
     );
   }, [firestore, user]);
   
-  const doneOrdersQuery = useMemo(() => {
+  const doneOrdersQuery = useMemoFirebase(() => {
       if (!firestore || !user) return null;
       return query(
           collection(firestore, "orders"),

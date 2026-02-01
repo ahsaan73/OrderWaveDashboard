@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Plus } from 'lucide-react';
 import { QrCodeModal } from '@/components/qr-code-modal';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy, addDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import type { Table } from '@/lib/types';
 import { AddEditTableModal } from '@/components/add-edit-table-modal';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +28,7 @@ export default function TableCodesPage() {
   }, [user, userLoading, router]);
 
   const firestore = useFirestore();
-  const tablesQuery = useMemo(() => {
+  const tablesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'tables'), orderBy('name'));
   }, [firestore]);
