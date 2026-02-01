@@ -78,10 +78,10 @@ export default function Home() {
 
   const ordersQuery = useMemo(() => {
     if (!firestore) return null;
-    const last48Hours = Date.now() - 48 * 60 * 60 * 1000;
+    const todayStart = startOfToday();
     return query(
       collection(firestore, "orders"),
-      where("createdAt", ">=", last48Hours),
+      where("createdAt", ">=", todayStart.getTime()),
       orderBy("createdAt", "desc")
     );
   }, [firestore]);
@@ -127,39 +127,13 @@ export default function Home() {
         seatedGuests: 0,
         salesByHour: [],
         salesByCategory: [],
-        salesLast24h: 0,
-        salesPercentageChange: undefined,
     };
     
-    const todayStart = startOfToday();
-    const todaysOrders = orders.filter(o => o.createdAt >= todayStart.getTime());
+    const todaysOrders = orders;
     
     const activeOrders = todaysOrders.filter(o => o.status === 'Cooking' || o.status === 'Waiting');
     const seatedGuests = tables?.filter(t => t.status !== 'Empty').reduce((acc, t) => acc + (t.guests || 0), 0) || 0;
     const moneyMadeToday = todaysOrders.reduce((sum, o) => sum + o.total, 0);
-
-    const now = Date.now();
-    const last24hTimestamp = now - 24 * 60 * 60 * 1000;
-
-    const salesLast24h = orders
-        .filter(o => o.createdAt >= last24hTimestamp)
-        .reduce((sum, o) => sum + o.total, 0);
-    
-    const salesPrevious24h = orders
-        .filter(o => o.createdAt < last24hTimestamp)
-        .reduce((sum, o) => sum + o.total, 0);
-
-    let percentageChange = 0;
-    if (salesPrevious24h > 0) {
-        percentageChange = ((salesLast24h - salesPrevious24h) / salesPrevious24h) * 100;
-    } else if (salesLast24h > 0) {
-        percentageChange = 100;
-    }
-
-    let salesPercentageChange: string | undefined = undefined;
-    if (salesPrevious24h > 0 || salesLast24h > 0) {
-        salesPercentageChange = `${percentageChange > 0 ? '+' : ''}${percentageChange.toFixed(1)}%`;
-    }
 
     const hourlySales = Array.from({ length: 24 }, (_, i) => ({ hour: i, sales: 0 }));
     todaysOrders.forEach(order => {
@@ -198,8 +172,6 @@ export default function Home() {
       seatedGuests: seatedGuests,
       salesByHour,
       salesByCategory,
-      salesLast24h,
-      salesPercentageChange,
     }
 
   }, [orders, tables, menuItems]);
@@ -271,10 +243,9 @@ export default function Home() {
         <>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatCard
-                    title="Sales (Last 24h)"
-                    value={`PKR ${stats.salesLast24h.toLocaleString()}`}
+                    title="Sales Today"
+                    value={`PKR ${stats.moneyMadeToday.toLocaleString()}`}
                     icon={<DollarSign className="text-green-500" />}
-                    change={stats.salesPercentageChange}
                 />
                 <StatCard
                     title="Total Orders Today"
@@ -360,11 +331,6 @@ export default function Home() {
               <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
               {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} />}
             </div>
-            
-             <Card className="text-center p-8 bg-card">
-                <CardTitle className="text-muted-foreground font-normal">Total Cash Today</CardTitle>
-                <p className="text-6xl font-bold font-headline mt-2">PKR {stats.moneyMadeToday.toLocaleString()}</p>
-            </Card>
         </>
       </div>
        <Dialog open={!!selectedOrder} onOpenChange={(isOpen) => !isOpen && closeOrderModal()}>
