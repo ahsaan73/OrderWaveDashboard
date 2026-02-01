@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Minus, ShoppingCart, ChefHat, Trash2 } from 'lucide-react';
+import { Plus, Minus, ShoppingCart, ChefHat, Trash2, CircleDollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection, useDoc, useFirestore } from '@/firebase';
@@ -119,9 +119,9 @@ function OrderPageContent() {
     try {
         const newOrderRef = await addDoc(collection(firestore, 'orders'), newOrderPayload);
 
-        // Update table status
+        // Update table status to 'Seated' (Yellow light)
         if (tableRef) {
-          await updateDoc(tableRef, { status: 'Eating', orderId: newOrderRef.id });
+          await updateDoc(tableRef, { status: 'Seated', orderId: newOrderRef.id });
         }
 
         toast({ title: "Order Sent!", description: `Your order for ${tableName || 'your table'} has been sent to the kitchen. We'll bring it to your table shortly!` });
@@ -129,6 +129,24 @@ function OrderPageContent() {
     } catch (error) {
         console.error("Error placing order:", error);
         toast({ variant: 'destructive', title: 'Error', description: 'There was a problem placing your order.'});
+    }
+  };
+  
+  const handleRequestBill = async () => {
+    if (!tableRef) return;
+    try {
+      await updateDoc(tableRef, { status: 'Needs Bill' });
+      toast({
+        title: "Bill Requested",
+        description: "Your waiter has been notified and will bring your bill shortly.",
+      });
+    } catch (error) {
+      console.error("Error requesting bill:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not request the bill.",
+      });
     }
   };
 
@@ -159,7 +177,14 @@ function OrderPageContent() {
       </header>
 
       <main className="container mx-auto p-4 pb-32">
-        <h2 className="text-3xl font-bold tracking-tight font-headline mb-6">Our Menu</h2>
+        <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold tracking-tight font-headline">Our Menu</h2>
+            {table?.status === 'Eating' && (
+                <Button onClick={handleRequestBill} className="shiny-button">
+                    <CircleDollarSign className="mr-2 h-5 w-5"/> Pay My Bill
+                </Button>
+            )}
+        </div>
         
         <div className="mb-6">
           <ScrollArea className="w-full whitespace-nowrap">

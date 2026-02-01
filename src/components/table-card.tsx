@@ -19,7 +19,7 @@ const statusConfig = {
     Seated: {
         icon: Users,
         className: "bg-chart-4/10 text-chart-4 border-chart-4/20", // Yellow
-        label: "Ordering"
+        label: "Waiting"
     },
     Eating: {
         icon: Utensils,
