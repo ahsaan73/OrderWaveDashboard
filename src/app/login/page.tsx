@@ -97,23 +97,24 @@ export default function LoginPage() {
                         <CardTitle>Owner / Admin Login</CardTitle>
                         <CardDescription>Administrative access.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <div 
-                            className="flex items-center gap-4 p-4 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                    <CardContent className="p-0">
+                        <Button
+                            variant="ghost"
+                            className="w-full h-auto p-6 rounded-t-none rounded-b-lg justify-between hover:bg-primary/10"
                             onClick={() => handleLogin(adminUser.uid)}
                         >
-                            <Avatar className="h-16 w-16">
-                                <AvatarImage src={adminUser.photoURL || undefined} />
-                                <AvatarFallback>{getInitials(adminUser.displayName)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="font-bold text-lg">{adminUser.displayName}</p>
-                                <p className="text-muted-foreground capitalize">{adminUser.role}</p>
+                            <div className="flex items-center gap-4 text-left">
+                                <Avatar className="h-16 w-16">
+                                    <AvatarImage src={adminUser.photoURL || undefined} />
+                                    <AvatarFallback>{getInitials(adminUser.displayName)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-bold text-lg">{adminUser.displayName}</p>
+                                    <p className="text-muted-foreground capitalize">{adminUser.role}</p>
+                                </div>
                             </div>
-                             <Button className="ml-auto">
-                                <Shield className="mr-2 h-5 w-5"/> Login
-                            </Button>
-                        </div>
+                            <Shield className="h-8 w-8 text-primary"/>
+                        </Button>
                     </CardContent>
                 </Card>
             )}
