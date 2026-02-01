@@ -6,16 +6,17 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import type { MenuItem } from '@/lib/types';
 
 interface MenuItemCardProps {
   item: MenuItem;
   onToggleAvailability: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-export function MenuItemCard({ item, onToggleAvailability, onEdit }: MenuItemCardProps) {
+export function MenuItemCard({ item, onToggleAvailability, onEdit, onDelete }: MenuItemCardProps) {
   return (
     <Card className={cn("flex flex-col overflow-hidden transition-all hover:shadow-xl", !item.isAvailable && "opacity-60 bg-muted/50")}>
       <CardHeader className="p-0 relative">
@@ -27,10 +28,16 @@ export function MenuItemCard({ item, onToggleAvailability, onEdit }: MenuItemCar
           className="aspect-square object-cover"
           data-ai-hint={item.imageHint}
         />
-         <Button size="icon" className="absolute top-2 right-2 rounded-full" onClick={onEdit}>
-            <Pencil className="h-4 w-4" />
-            <span className="sr-only">Edit Item</span>
-         </Button>
+         <div className="absolute top-2 right-2 flex gap-2">
+            <Button size="icon" className="rounded-full" onClick={onEdit}>
+                <Pencil className="h-4 w-4" />
+                <span className="sr-only">Edit Item</span>
+            </Button>
+            <Button variant="destructive" size="icon" className="rounded-full" onClick={onDelete}>
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete Item</span>
+            </Button>
+         </div>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-xl font-bold mb-1">{item.name}</CardTitle>

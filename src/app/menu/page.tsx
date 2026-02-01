@@ -8,10 +8,11 @@ import { AddEditMenuModal } from '@/components/add-edit-menu-modal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import type { MenuItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
 
 
 export default function MenuPage() {
@@ -35,6 +36,8 @@ export default function MenuPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
 
   const handleToggleAvailability = async (id: string, isAvailable: boolean) => {
     if (!firestore) return;
@@ -78,6 +81,25 @@ export default function MenuPage() {
     }
   };
 
+  const handleOpenDeleteAlert = (item: MenuItem) => {
+    setItemToDelete(item);
+    setIsDeleteAlertOpen(true);
+  };
+
+  const handleDeleteItem = async () => {
+    if (!firestore || !itemToDelete) return;
+    try {
+      const itemRef = doc(firestore, 'menuItems', itemToDelete.id);
+      await deleteDoc(itemRef);
+      toast({ title: 'Success', description: `"${itemToDelete.name}" was deleted.` });
+      setIsDeleteAlertOpen(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not delete menu item.' });
+    }
+  };
+
   const isLoading = userLoading || dataLoading;
 
   if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
@@ -106,6 +128,7 @@ export default function MenuPage() {
               item={item}
               onToggleAvailability={() => handleToggleAvailability(item.id, item.isAvailable)}
               onEdit={() => handleOpenEditModal(item)}
+              onDelete={() => handleOpenDeleteAlert(item)}
             />
           ))}
         </div>
@@ -115,6 +138,12 @@ export default function MenuPage() {
         setIsOpen={setIsModalOpen}
         item={editingItem}
         onSave={handleSaveItem}
+      />
+      <DeleteConfirmationModal
+        isOpen={isDeleteAlertOpen}
+        onOpenChange={setIsDeleteAlertOpen}
+        onConfirm={handleDeleteItem}
+        itemName={itemToDelete?.name || 'the selected item'}
       />
     </DashboardLayout>
   );
