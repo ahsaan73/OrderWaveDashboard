@@ -5,7 +5,7 @@ import { OrdersTable } from "@/components/orders-table";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { DollarSign, ShoppingCart, Users, Utensils, Printer } from "lucide-react";
+import { ShoppingCart, Users, Utensils, Printer } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -18,7 +18,7 @@ import type { Order, Table, MenuItem } from "@/lib/types";
 import { collection, query, where, orderBy, doc, updateDoc } from "firebase/firestore";
 import { useFirestore, useUser } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { startOfToday, getHours } from 'date-fns';
+import { startOfToday, getHours, startOfYesterday } from 'date-fns';
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -79,10 +79,10 @@ export default function Home() {
 
   const ordersQuery = useMemo(() => {
     if (!firestore) return null;
-    const last48Hours = Date.now() - 48 * 60 * 60 * 1000;
+    const queryStartTime = startOfYesterday().getTime();
     return query(
       collection(firestore, "orders"),
-      where("createdAt", ">=", last48Hours),
+      where("createdAt", ">=", queryStartTime),
       orderBy("createdAt", "desc")
     );
   }, [firestore]);
@@ -128,7 +128,7 @@ export default function Home() {
     
     if (!orders || !menuItems || !tables) {
       return {
-        salesLast24h: 0,
+        salesToday: 0,
         salesChangePercentage: 0,
         totalOrders: 0,
         activeOrders: 0,
@@ -139,22 +139,18 @@ export default function Home() {
       };
     }
 
-    const now = Date.now();
-    const last24h = now - 24 * 60 * 60 * 1000;
-    const last48h = now - 48 * 60 * 60 * 1000;
-    
     const todayStart = startOfToday().getTime();
+    const yesterdayStart = startOfYesterday().getTime();
 
-    const ordersLast24h = orders.filter(o => o.createdAt >= last24h);
-    const ordersPrev24h = orders.filter(o => o.createdAt >= last48h && o.createdAt < last24h);
     const todaysOrders = orders.filter(o => o.createdAt >= todayStart);
+    const yesterdaysOrders = orders.filter(o => o.createdAt >= yesterdayStart && o.createdAt < todayStart);
 
-    const salesLast24h = ordersLast24h.reduce((sum, order) => sum + order.total, 0);
-    const salesPrev24h = ordersPrev24h.reduce((sum, order) => sum + order.total, 0);
-
-    const salesChangePercentage = salesPrev24h > 0 
-      ? ((salesLast24h - salesPrev24h) / salesPrev24h) * 100 
-      : salesLast24h > 0 ? 100 : 0;
+    const salesToday = todaysOrders.reduce((sum, order) => sum + order.total, 0);
+    const salesYesterday = yesterdaysOrders.reduce((sum, order) => sum + order.total, 0);
+    
+    const salesChangePercentage = salesYesterday > 0 
+      ? ((salesToday - salesYesterday) / salesYesterday) * 100 
+      : salesToday > 0 ? 100 : 0;
 
     const totalOrders = todaysOrders.length;
     const activeOrders = todaysOrders.filter(o => o.status === 'Waiting' || o.status === 'Cooking').length;
@@ -192,7 +188,7 @@ export default function Home() {
     }
 
     return {
-      salesLast24h,
+      salesToday,
       salesChangePercentage,
       totalOrders,
       activeOrders,
@@ -291,18 +287,18 @@ export default function Home() {
                     <CardHeader>
                          <div className="flex justify-between items-start">
                             <div>
-                                <CardTitle>Sales (Last 24h)</CardTitle>
+                                <CardTitle>Sales Today</CardTitle>
                                 <CardDescription>
                                     <span className={cn(
                                         "font-semibold",
                                         stats.salesChangePercentage >= 0 ? "text-green-600" : "text-destructive"
                                     )}>
                                       {stats.salesChangePercentage >= 0 ? '+' : ''}{stats.salesChangePercentage.toFixed(1)}%
-                                    </span> vs previous 24h
+                                    </span> vs yesterday
                                 </CardDescription>
                             </div>
                             <div className="text-4xl font-bold font-headline text-right">
-                                PKR {stats.salesLast24h.toLocaleString()}
+                                PKR {stats.salesToday.toLocaleString()}
                             </div>
                         </div>
                     </CardHeader>
