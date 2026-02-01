@@ -52,7 +52,11 @@ export default function KitchenDisplayPage() {
     if (!firestore || !canUpdate) return;
     const orderRef = doc(firestore, 'orders', orderId);
     try {
-      await updateDoc(orderRef, { status: newStatus });
+      const updatePayload: { status: Order['status'], cookingStartedAt?: number } = { status: newStatus };
+      if (newStatus === 'Cooking') {
+        updatePayload.cookingStartedAt = Date.now();
+      }
+      await updateDoc(orderRef, updatePayload);
     } catch (error) {
       console.error("Error updating order status:", error);
       toast({

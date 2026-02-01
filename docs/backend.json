@@ -48,6 +48,7 @@
         "total": { "type": "number" },
         "time": { "type": "string" },
         "createdAt": { "type": "number" },
+        "cookingStartedAt": { "type": "number", "description": "When the order started cooking (Unix timestamp)." },
         "paymentMethod": { "type": "string", "enum": ["Cash", "Card"] },
         "tableId": { "type": "string" }
       },

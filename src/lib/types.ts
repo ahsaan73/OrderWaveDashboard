@@ -21,6 +21,7 @@ export type Order = FirebaseDocument & {
   total: number;
   time: string;
   createdAt: number; // Unix timestamp in milliseconds
+  cookingStartedAt?: number; // Unix timestamp in milliseconds
   tableId?: string;
   paymentMethod?: 'Cash' | 'Card';
 };

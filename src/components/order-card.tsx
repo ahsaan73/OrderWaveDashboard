@@ -32,10 +32,17 @@ export function OrderCard({ order, onUpdateStatus, canUpdate = false }: OrderCar
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
-    if (order.status === 'Done') return;
+    if (order.status === 'Done') {
+        setElapsedTime(0);
+        return;
+    }
+
+    const startTime = order.status === 'Cooking' && order.cookingStartedAt 
+        ? order.cookingStartedAt 
+        : order.createdAt;
 
     const updateTimer = () => {
-      const seconds = (Date.now() - order.createdAt) / 1000;
+      const seconds = (Date.now() - startTime) / 1000;
       setElapsedTime(seconds);
     };
 
@@ -43,7 +50,7 @@ export function OrderCard({ order, onUpdateStatus, canUpdate = false }: OrderCar
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [order.createdAt, order.status]);
+  }, [order.createdAt, order.status, order.cookingStartedAt]);
   
   const isOverdue = 
     (order.status === 'Waiting' && elapsedTime > WAITING_THRESHOLD * 60) ||
