@@ -41,7 +41,7 @@ import { ShareLinkModal } from "./share-link-modal";
 const allMenuItems = (role?: string) => [
     { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin"] },
     { id: "Billing", label: "Billing", href: "/billing", icon: DollarSign, roles: ["manager", "admin", "cashier"] },
-    { id: "Cashier", label: "New Walk-in", icon: ShoppingCart, href: "/cashier", roles: ["manager", "admin"] },
+    { id: "Cashier", label: "New Walk-in", icon: ShoppingCart, href: "/cashier", roles: ["manager", "admin", "cashier"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager", "admin"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
     { id: "Stock", label: role === 'admin' ? "Stock" : "Manage Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
@@ -89,7 +89,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userRole');
+    localStorage.removeItem('userUid');
     router.push('/login');
   }
 

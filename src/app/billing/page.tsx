@@ -51,7 +51,7 @@ export default function BillingPage() {
   }, [user, userLoading, router]);
   
   const handleLogout = () => {
-    localStorage.removeItem('userRole');
+    localStorage.removeItem('userUid');
     router.push('/login');
   }
 
