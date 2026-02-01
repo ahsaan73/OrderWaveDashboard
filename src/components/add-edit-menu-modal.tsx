@@ -99,7 +99,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     if (isOpen && !item && watchedCategory) {
       const seed = watchedCategory.toLowerCase().replace(/\s/g, '-');
       const hint = watchedCategory.toLowerCase().replace(/s$/, '');
-      setValue('imageUrl', `https://picsum.photos/seed/${seed}/400/400`, { shouldValidate: true });
+      setValue('imageUrl', `https://picsum.photos/seed/${seed}/400/400`);
       setValue('imageHint', hint);
     }
   }, [watchedCategory, item, setValue, isOpen]);
@@ -122,7 +122,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setValue('imageUrl', reader.result as string, { shouldValidate: true });
+        setValue('imageUrl', reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -246,5 +246,3 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     </Dialog>
   );
 }
-
-    
