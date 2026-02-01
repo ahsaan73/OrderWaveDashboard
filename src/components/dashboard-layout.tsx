@@ -17,6 +17,7 @@ import {
   LogOut,
   Home,
   DollarSign,
+  Link as LinkIcon,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -35,15 +36,17 @@ import { Button } from "./ui/button";
 import { AiAdviceModal } from "./ai-advice-modal";
 import { useUser } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { ShareLinkModal } from "./share-link-modal";
 
 const allMenuItems = (role?: string) => [
     { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin"] },
-    { id: "Billing", label: "Billing", href: "/billing", icon: DollarSign, roles: ["manager", "admin"] },
+    { id: "Billing", label: "Billing", href: "/billing", icon: DollarSign, roles: ["manager", "admin", "cashier"] },
     { id: "Cashier", label: "New Walk-in", icon: ShoppingCart, href: "/cashier", roles: ["manager", "admin"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager", "admin"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
     { id: "Stock", label: role === 'admin' ? "Stock" : "Manage Stock", icon: Boxes, href: "/stock", roles: ["manager", "admin"] },
     { id: "TableCodes", label: "Table Codes", icon: QrCode, href: "/table-codes", roles: ["manager", "admin"] },
+    { id: "OnlineOrdering", label: "Online Ordering", href: "#", icon: LinkIcon, roles: ["manager", "admin"] },
     { id: "Admin", label: "User Management", icon: UserCog, href: "/admin", roles: ["admin"] },
     { id: "KitchenDisplay", label: "Kitchen Display", icon: Tv, href: "/kitchen-display", roles: ["manager", "admin", "kitchen"] },
     { id: "KitchenAI", label: "Kitchen AI", icon: ChefHat, href: "#", roles: ["manager", "admin"] }, // AI context
@@ -62,6 +65,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     null
   );
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const onlineOrderUrl = `${origin}/online-order`;
+
 
   React.useEffect(() => {
     if (!loading && !user) {
@@ -74,6 +81,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       setActiveSection(id as AiSection);
     } else {
       setActiveSection(null);
+    }
+    if (id === 'OnlineOrdering') {
+        setIsShareModalOpen(true);
     }
   };
 
@@ -176,6 +186,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
         </SidebarInset>
       </div>
+      {isManagerOrAdmin && (
+        <ShareLinkModal
+            isOpen={isShareModalOpen}
+            setIsOpen={setIsShareModalOpen}
+            title="Online Ordering Link"
+            description="Share this link with your customers for online orders."
+            url={onlineOrderUrl}
+        />
+      )}
       {activeSection && isManagerOrAdmin && (
         <AiAdviceModal
           isOpen={isModalOpen}
