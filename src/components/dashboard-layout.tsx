@@ -16,6 +16,7 @@ import {
   UserCog,
   LogOut,
   Home,
+  DollarSign,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -36,7 +37,8 @@ import { useUser } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const allMenuItems = (role?: string) => [
-    { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin", "cashier"] },
+    { id: "Dashboard", label: "Dashboard", href: "/", icon: Home, roles: ["manager", "admin"] },
+    { id: "Billing", label: "Billing", href: "/billing", icon: DollarSign, roles: ["manager", "admin"] },
     { id: "Cashier", label: "New Walk-in", icon: ShoppingCart, href: "/cashier", roles: ["manager", "admin"] },
     { id: "Waiter", label: "Table View", icon: ClipboardList, href: "/waiter", roles: ["waiter", "manager", "admin"] },
     { id: "Menu", label: "Edit Menu", icon: BookMarked, href: "/menu", roles: ["manager", "admin"] },
