@@ -12,11 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { StockItem } from '@/lib/types';
 import { Slider } from './ui/slider';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
 
 interface AddEditStockModalProps {
   isOpen: boolean;
@@ -27,7 +28,15 @@ interface AddEditStockModalProps {
 
 const stockItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  stockLevel: z.number().min(0).max(100),
+  currentStock: z.preprocess(
+    (a) => parseInt(z.string().parse(a), 10),
+    z.number().min(0, 'Stock cannot be negative.')
+  ),
+  totalStock: z.preprocess(
+    (a) => parseInt(z.string().parse(a), 10),
+    z.number().positive('Total stock must be positive.')
+  ),
+  unit: z.enum(['g', 'ml', 'pcs']),
   threshold: z.number().min(0).max(100),
 });
 
@@ -46,12 +55,10 @@ export function AddEditStockModal({ isOpen, setIsOpen, item, onSave }: AddEditSt
     resolver: zodResolver(stockItemSchema),
     defaultValues: {
       name: '',
-      stockLevel: 50,
-      threshold: 20
+      threshold: 20,
     }
   });
   
-  const watchedStockLevel = watch("stockLevel");
   const watchedThreshold = watch("threshold");
 
   useEffect(() => {
@@ -59,13 +66,17 @@ export function AddEditStockModal({ isOpen, setIsOpen, item, onSave }: AddEditSt
         if (item) {
           reset({
             name: item.name,
-            stockLevel: item.stockLevel,
+            currentStock: item.currentStock,
+            totalStock: item.totalStock,
+            unit: item.unit,
             threshold: item.threshold,
           });
         } else {
           reset({
             name: '',
-            stockLevel: 50,
+            currentStock: 0,
+            totalStock: undefined,
+            unit: 'g',
             threshold: 20,
           });
         }
@@ -86,7 +97,7 @@ export function AddEditStockModal({ isOpen, setIsOpen, item, onSave }: AddEditSt
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
                 Name
@@ -96,25 +107,47 @@ export function AddEditStockModal({ isOpen, setIsOpen, item, onSave }: AddEditSt
                 {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
               </div>
             </div>
-            
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="stockLevel" className="text-right pt-2">
-                Stock
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="currentStock" className="text-right">
+                Current Qty
               </Label>
               <div className="col-span-3">
-                <div className="flex items-center gap-2">
-                    <Slider
-                        id="stockLevel"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={[watchedStockLevel]}
-                        onValueChange={(value) => setValue('stockLevel', value[0])}
-                    />
-                    <span className="font-bold text-lg tabular-nums w-12 text-center">{watchedStockLevel}%</span>
-                </div>
-                 {errors.stockLevel && <p className="text-destructive text-xs mt-1">{errors.stockLevel.message}</p>}
+                <Input id="currentStock" type="number" {...register('currentStock')} className="w-full" />
+                {errors.currentStock && <p className="text-destructive text-xs mt-1">{errors.currentStock.message}</p>}
               </div>
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="totalStock" className="text-right">
+                Total Qty
+              </Label>
+              <div className="col-span-3">
+                <Input id="totalStock" type="number" {...register('totalStock')} className="w-full" />
+                {errors.totalStock && <p className="text-destructive text-xs mt-1">{errors.totalStock.message}</p>}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="unit" className="text-right">
+                Unit
+              </Label>
+              <Controller
+                  control={control}
+                  name="unit"
+                  render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="g">Grams (g)</SelectItem>
+                        <SelectItem value="ml">Milliliters (ml)</SelectItem>
+                        <SelectItem value="pcs">Pieces (pcs)</SelectItem>
+                      </SelectContent>
+                  </Select>
+                  )}
+              />
             </div>
             
             <div className="grid grid-cols-4 items-start gap-4">
@@ -133,7 +166,7 @@ export function AddEditStockModal({ isOpen, setIsOpen, item, onSave }: AddEditSt
                     />
                     <span className="font-bold text-lg tabular-nums w-12 text-center text-destructive">{watchedThreshold}%</span>
                 </div>
-                 <p className="text-xs text-muted-foreground mt-1">The "danger zone" number for reordering.</p>
+                 <p className="text-xs text-muted-foreground mt-1">The "danger zone" percentage for reordering.</p>
                  {errors.threshold && <p className="text-destructive text-xs mt-1">{errors.threshold.message}</p>}
               </div>
             </div>

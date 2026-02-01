@@ -85,10 +85,12 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "stockLevel": { "type": "number" },
-        "threshold": { "type": "number" }
+        "currentStock": { "type": "number", "description": "Current quantity of the item in stock." },
+        "totalStock": { "type": "number", "description": "Total stock capacity or quantity after a full restock." },
+        "unit": { "type": "string", "enum": ["g", "ml", "pcs"], "description": "Unit of measurement for the stock item." },
+        "threshold": { "type": "number", "description": "The percentage below which stock is considered low." }
       },
-      "required": ["name", "stockLevel", "threshold"]
+      "required": ["name", "currentStock", "totalStock", "unit", "threshold"]
     },
     "InventoryLog": {
         "title": "Inventory Log",
@@ -99,11 +101,13 @@
             "itemName": { "type": "string", "description": "Name of the StockItem that was changed." },
             "userId": { "type": "string", "description": "ID of the user who made the change." },
             "userName": { "type": "string", "description": "Name of the user who made the change." },
+            "change": { "type": "number", "description": "The amount the stock changed by (can be positive or negative)." },
             "oldStockLevel": { "type": "number", "description": "Stock level before the change." },
             "newStockLevel": { "type": "number", "description": "Stock level after the change." },
+            "reason": { "type": "string", "description": "Reason for the stock change (e.g., 'Manual Addition', 'Order Fulfillment', 'Correction')." },
             "timestamp": { "type": "number", "description": "When the change occurred (Unix timestamp)." }
         },
-        "required": ["itemId", "itemName", "userId", "userName", "oldStockLevel", "newStockLevel", "timestamp"]
+        "required": ["itemId", "itemName", "userId", "userName", "change", "oldStockLevel", "newStockLevel", "reason", "timestamp"]
     }
   },
   "auth": {

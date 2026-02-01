@@ -191,14 +191,16 @@ export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
 
 
 export const stockItems: Omit<StockItem, 'id' | 'ref'>[] = [
-    { name: 'Tomatoes', stockLevel: 80, threshold: 20 },
-    { name: 'Flour', stockLevel: 40, threshold: 20 },
-    { name: 'Cheese', stockLevel: 15, threshold: 20 },
-    { name: 'Chicken Patties', stockLevel: 95, threshold: 25 },
-    { name: 'Burger Buns', stockLevel: 50, threshold: 25 },
-    { name: 'Lettuce', stockLevel: 10, threshold: 25 },
-    { name: 'Onions', stockLevel: 60, threshold: 20 },
-    { name: 'Potatoes', stockLevel: 75, threshold: 30 },
+    { name: 'Tomatoes', currentStock: 8000, totalStock: 10000, unit: 'g', threshold: 20 },
+    { name: 'Pizza Dough', currentStock: 20000, totalStock: 50000, unit: 'g', threshold: 20 },
+    { name: 'Cheese', currentStock: 4000, totalStock: 20000, unit: 'g', threshold: 20 },
+    { name: 'Chicken Patties', currentStock: 95, totalStock: 100, unit: 'pcs', threshold: 25 },
+    { name: 'Burger Buns', currentStock: 50, totalStock: 100, unit: 'pcs', threshold: 25 },
+    { name: 'Lettuce', currentStock: 1000, totalStock: 5000, unit: 'g', threshold: 25 },
+    { name: 'Onions', currentStock: 6000, totalStock: 10000, unit: 'g', threshold: 20 },
+    { name: 'Potatoes', currentStock: 15000, totalStock: 20000, unit: 'g', threshold: 30 },
+    { name: 'Cooking Oil', currentStock: 2000, totalStock: 10000, unit: 'ml', threshold: 15 },
+    { name: 'Mayonnaise', currentStock: 3000, totalStock: 5000, unit: 'g', threshold: 20 },
 ];
 
 export const tables: Omit<Table, 'id' | 'ref'>[] = [

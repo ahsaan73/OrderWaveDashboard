@@ -43,7 +43,9 @@ export type MenuItem = FirebaseDocument & {
 
 export type StockItem = FirebaseDocument & {
   name: string;
-  stockLevel: number; // Percentage from 0 to 100
+  currentStock: number;
+  totalStock: number;
+  unit: 'g' | 'ml' | 'pcs';
   threshold: number; // Percentage below which it is considered low
 };
 
@@ -52,8 +54,10 @@ export type InventoryLog = FirebaseDocument & {
     itemName: string;
     userId: string;
     userName: string;
+    change: number;
     oldStockLevel: number;
     newStockLevel: number;
+    reason: 'Manual Addition' | 'Order Fulfillment' | 'Correction';
     timestamp: number;
 };
 
