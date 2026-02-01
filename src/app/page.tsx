@@ -15,10 +15,10 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import type { Order, Table, MenuItem } from "@/lib/types";
-import { collection, query, where, orderBy, limit, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, doc, updateDoc } from "firebase/firestore";
 import { useFirestore, useUser } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { startOfToday, endOfToday, getHours } from 'date-fns';
+import { startOfToday, getHours } from 'date-fns';
 import { useRouter } from "next/navigation";
 
 
@@ -79,7 +79,12 @@ export default function Home() {
 
   const ordersQuery = useMemo(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "orders"), orderBy("createdAt", "desc"), limit(50));
+    const todayStart = startOfToday();
+    return query(
+      collection(firestore, "orders"),
+      where("createdAt", ">=", todayStart.getTime()),
+      orderBy("createdAt", "desc")
+    );
   }, [firestore]);
   
   const tablesQuery = useMemo(() => {
@@ -125,10 +130,7 @@ export default function Home() {
         salesByCategory: [],
     };
     
-    const todayStart = startOfToday();
-    const todayEnd = endOfToday();
-
-    const todaysOrders = orders.filter(o => o.createdAt >= todayStart.getTime() && o.createdAt <= todayEnd.getTime());
+    const todaysOrders = orders;
     const activeOrders = orders.filter(o => o.status === 'Cooking' || o.status === 'Waiting');
     const seatedGuests = tables?.filter(t => t.status !== 'Empty').reduce((acc, t) => acc + (t.guests || 0), 0) || 0;
     const moneyMadeToday = todaysOrders.reduce((sum, o) => sum + o.total, 0);
