@@ -97,13 +97,12 @@ export default function AdminPage() {
                             <Select 
                                 defaultValue={u.role} 
                                 onValueChange={(value: User['role']) => handleRoleChange(u.uid, value)}
-                                disabled={u.uid === user?.uid} // Can't change your own role
+                                disabled={u.uid === user?.uid || u.role === 'admin'} // Can't change your own role or other admins
                             >
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="admin">Admin</SelectItem>
                                     <SelectItem value="manager">Manager</SelectItem>
                                     <SelectItem value="cashier">Cashier</SelectItem>
                                     <SelectItem value="waiter">Waiter</SelectItem>
