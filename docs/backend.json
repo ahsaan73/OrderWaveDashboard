@@ -1,168 +1,184 @@
 {
   "entities": {
-    "User": {
-      "title": "User",
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
       "type": "object",
-      "description": "Represents a user of the application.",
+      "description": "Represents a customer order.",
       "properties": {
-        "uid": {
+        "id": {
           "type": "string",
-          "description": "The user's unique ID."
+          "description": "Unique identifier for the order."
         },
-        "email": {
+        "orderTime": {
           "type": "string",
-          "description": "The user's email address."
+          "description": "The date and time the order was placed.",
+          "format": "date-time"
         },
-        "displayName": {
+        "status": {
           "type": "string",
-          "description": "The user's display name."
+          "description": "The current status of the order (Waiting, Cooking, Done).",
+          "format": "string"
         },
-        "photoURL": {
-          "type": "string",
-          "description": "URL for the user's profile photo."
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount of the order."
         },
-        "role": {
+        "menuItemIds": {
+          "type": "array",
+          "description": "References to MenuItems. (Relationship: Order N:N MenuItem)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "customerId": {
           "type": "string",
-          "description": "The user's role, which determines their permissions."
+          "description": "Reference to Customer. (Relationship: Customer 1:N Order)"
         }
       },
       "required": [
-        "uid"
+        "id",
+        "orderTime",
+        "status",
+        "totalAmount",
+        "menuItemIds",
+        "customerId"
       ]
     },
     "MenuItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "MenuItem",
       "type": "object",
       "description": "Represents an item on the restaurant's menu.",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the menu item."
+        },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "The name of the menu item."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the menu item."
         },
         "price": {
-          "type": "number"
+          "type": "number",
+          "description": "The price of the menu item."
         },
-        "category": {
-          "type": "string"
-        },
-        "isAvailable": {
-          "type": "boolean"
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of image of the menu item.",
+          "format": "uri"
         }
       },
       "required": [
+        "id",
         "name",
+        "description",
         "price",
-        "category",
-        "isAvailable"
+        "imageUrl"
       ]
     },
-    "Order": {
-      "title": "Order",
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
       "type": "object",
-      "description": "Represents a customer's order.",
+      "description": "Represents a customer.",
       "properties": {
-        "status": {
-          "type": "string"
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the customer."
         },
-        "total": {
-          "type": "number"
-        },
-        "createdAt": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "status",
-        "total",
-        "createdAt"
-      ]
-    },
-    "Table": {
-      "title": "Table",
-      "type": "object",
-      "description": "Represents a table in the restaurant.",
-      "properties": {
         "name": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
+          "type": "string",
+          "description": "The name of the customer."
         }
       },
       "required": [
-        "name",
-        "status"
-      ]
-    },
-    "StockItem": {
-      "title": "StockItem",
-      "type": "object",
-      "description": "Represents an item in the restaurant's stock.",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "currentStock": {
-          "type": "number"
-        },
-        "totalStock": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "name",
-        "currentStock",
-        "totalStock"
+        "id",
+        "name"
       ]
     }
   },
   "auth": {
     "providers": [
-      "google.com"
+      "password",
+      "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}",
+        "path": "/customers/{customerId}",
         "definition": {
-          "entityName": "User",
-          "description": "Stores user profiles."
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer data. Used for profile information and authentication.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique identifier for the customer, matching the Firebase Auth UID."
+            }
+          ]
         }
       },
       {
-        "path": "/menuItems/{menuItemId}",
-        "definition": {
-          "entityName": "MenuItem",
-          "description": "Stores all menu items."
-        }
-      },
-      {
-        "path": "/orders/{orderId}",
+        "path": "/customers/{customerId}/orders/{orderId}",
         "definition": {
           "entityName": "Order",
-          "description": "Stores customer orders."
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores orders associated with a customer. Includes denormalized 'customerId' for authorization independence.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique identifier for the customer."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier for the order."
+            }
+          ]
         }
       },
       {
-        "path": "/tables/{tableId}",
+        "path": "/menu_items/{menuItemId}",
         "definition": {
-          "entityName": "Table",
-          "description": "Stores restaurant table information."
-        }
-      },
-      {
-        "path": "/stockItems/{stockItemId}",
-        "definition": {
-          "entityName": "StockItem",
-          "description": "Stores inventory and stock items."
+          "entityName": "MenuItem",
+          "schema": {
+            "$ref": "#/backend/entities/MenuItem"
+          },
+          "description": "Stores menu items available in the restaurant.",
+          "params": [
+            {
+              "name": "menuItemId",
+              "description": "The unique identifier for the menu item."
+            }
+          ]
         }
       },
       {
         "path": "/roles_staff/{uid}",
         "definition": {
-          "description": "Contains UIDs of staff members for role-based access control."
+          "entityName": "StaffRole",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Indicates Staff Roles.  Existence over content.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "Firebase Auth UID of the staff member."
+            }
+          ]
         }
       }
-    ]
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability for the ZestyDash application. It leverages path-based ownership for customer-related data and a membership map approach for collaborative data, specifically for staff roles. Denormalization is heavily used to avoid `get()` calls in security rules. The structure also supports the required QAPs. The segregation into separate collections based on ownership/access patterns is key to rule simplicity.\n\n1.  **Orders:** Orders are stored under the customer's document (`/customers/{customerId}/orders/{orderId}`). This establishes clear ownership. The `customerId` is denormalized to the order document itself, enabling rules to be based solely on `request.auth.uid` and data within the document, without requiring `get()` calls.\n2.  **Menu Items:** Menu items are stored in a top-level collection `/menu_items/{menuItemId}`.  Since menu items are globally accessible, no user-specific ownership is needed.  `list` operations are inherently secure.\n3.  **Customers:** Customers are stored in the `/customers/{customerId}` collection. Orders will be nested under each customer document.\n4. **Staff Roles:** A separate collection `/roles_staff/{uid}` is used to manage staff roles. The existence of a document is used to authorize staff actions.  This avoids complex content-based checks in rules.\n\nThis design avoids hierarchical authorization dependencies. Each collection stands alone with respect to security rules. This dramatically simplifies the rules and ensures atomic operations. The structure enables secure `list` operations and maintains data integrity through clear ownership and explicit state modeling."
   }
 }
