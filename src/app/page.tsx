@@ -121,77 +121,31 @@ export default function Home() {
 
 
   const stats = useMemo(() => {
-    if (!orders || !tables || !menuItems) return { 
-        salesLast24h: 0,
-        salesChangePercentage: 0,
-        totalOrders: 0, 
-        activeOrders: 0, 
-        seatedGuests: 0,
-        salesByHour: [],
-        salesByCategory: [],
-    };
-    
-    const now = Date.now();
-    const todayStartTimestamp = startOfToday().getTime();
-    const last24hTimestamp = now - 24 * 60 * 60 * 1000;
-
-    const todaysOrders = orders.filter(o => o.createdAt >= todayStartTimestamp);
-    const ordersLast24h = orders.filter(o => o.createdAt >= last24hTimestamp);
-    const ordersPrevious24h = orders.filter(o => o.createdAt < last24hTimestamp);
-    
-    const salesLast24h = 0;
-    const salesPrevious24h = ordersPrevious24h.reduce((sum, o) => sum + o.total, 0);
-
-    let salesChangePercentage = 0;
-    if (salesPrevious24h > 0) {
-        salesChangePercentage = ((salesLast24h - salesPrevious24h) / salesPrevious24h) * 100;
-    } else if (salesLast24h > 0) {
-        salesChangePercentage = 100;
-    }
-    
-    const activeOrders = todaysOrders.filter(o => o.status === 'Cooking' || o.status === 'Waiting');
-    const seatedGuests = tables?.filter(t => t.status !== 'Empty').reduce((acc, t) => acc + (t.guests || 0), 0) || 0;
-
-    const hourlySales = Array.from({ length: 24 }, (_, i) => ({ hour: i, sales: 0 }));
-    todaysOrders.forEach(order => {
-        const hour = getHours(new Date(order.createdAt));
-        hourlySales[hour].sales += order.total;
-    });
-
-    const salesByHour = hourlySales.map((h, index) => ({
-        hour: `${index % 12 === 0 ? 12 : index % 12} ${index < 12 ? 'AM' : 'PM'}`,
-        sales: h.sales,
+    const salesByHour = Array.from({ length: 24 }, (_, i) => ({
+      hour: `${i % 12 === 0 ? 12 : i % 12} ${i < 12 ? 'AM' : 'PM'}`,
+      sales: 0,
     })).slice(8, 22);
 
-
-    const menuItemMap = new Map(menuItems.map(item => [item.name, item]));
-    const categorySales: { [key: string]: number } = {};
-    todaysOrders.forEach(order => {
-        order.items.forEach(item => {
-            const menuItemDetails = menuItemMap.get(item.name);
-            if (menuItemDetails && menuItemDetails.category) {
-                const category = menuItemDetails.category;
-                categorySales[category] = (categorySales[category] || 0) + (item.price * item.quantity);
-            }
-        });
-    });
-
-    const salesByCategory = Object.keys(categorySales).map(category => ({
-        category,
-        sales: categorySales[category],
-    }));
-
     return {
-      salesLast24h,
-      salesChangePercentage,
-      totalOrders: todaysOrders.length,
-      activeOrders: activeOrders.length,
-      seatedGuests: seatedGuests,
+      salesLast24h: 0,
+      salesChangePercentage: 0,
+      totalOrders: 0,
+      activeOrders: 0,
+      seatedGuests: 0,
       salesByHour,
-      salesByCategory,
-    }
+      salesByCategory: [],
+    };
+  }, []);
 
-  }, [orders, tables, menuItems]);
+  const emptyTables = useMemo(() => {
+    if (!tables) return [];
+    return tables.map(table => ({
+      ...table,
+      status: 'Empty' as const,
+      guests: 0,
+    }));
+  }, [tables]);
+
 
   const handleTableClick = (table: Table) => {
     if ((table.status === 'Eating' || table.status === 'Needs Bill') && table.orderId) {
@@ -349,7 +303,7 @@ export default function Home() {
                 <CardContent className="p-6">
                   {isLoadingTables ? <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"> {Array.from({length: 10}).map((_,i) => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg"/>)} </div>: (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {tables?.map(table => (
+                    {emptyTables?.map(table => (
                       <div key={table.id} onClick={() => handleTableClick(table)} className="cursor-pointer">
                         <TableCard 
                             table={table} 
@@ -364,7 +318,7 @@ export default function Home() {
             
             <div>
               <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
-              {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} />}
+              {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={[]} />}
             </div>
         </>
       </div>
