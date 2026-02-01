@@ -14,6 +14,7 @@ import type { Order } from "@/lib/types";
 
 interface OrdersTableProps {
   orders: Order[];
+  onOrderClick?: (order: Order) => void;
 }
 
 const mobileStatusStyles: { [key in Order['status']]: string } = {
@@ -29,13 +30,18 @@ const desktopStatusStyles: { [key in Order['status']]: string } = {
 };
 
 
-export function OrdersTable({ orders }: OrdersTableProps) {
+export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
+  const isClickable = !!onOrderClick;
   return (
     <>
       {/* Mobile View: List of Cards */}
       <div className="grid gap-4 md:hidden">
         {orders.map((order) => (
-          <Card key={order.id}>
+          <Card 
+            key={order.id}
+            onClick={() => onOrderClick?.(order)}
+            className={cn(isClickable && "cursor-pointer hover:bg-muted/50")}
+          >
             <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 pb-2">
               <div className="grid gap-1">
                 <CardTitle className="text-base font-medium">{order.orderNumber}</CardTitle>
@@ -75,7 +81,11 @@ export function OrdersTable({ orders }: OrdersTableProps) {
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.id}>
+              <TableRow 
+                key={order.id}
+                onClick={() => onOrderClick?.(order)}
+                className={cn(isClickable && "cursor-pointer")}
+              >
                 <TableCell className="font-medium">{order.orderNumber}</TableCell>
                 <TableCell>{order.customerName}</TableCell>
                 <TableCell>

@@ -174,6 +174,11 @@ export default function Home() {
 
   }, [orders, tables, menuItems]);
 
+  const handleOrderClick = (order: Order) => {
+    if (isCashier) {
+      setSelectedOrder(order);
+    }
+  };
 
   const handleTableClick = (table: Table) => {
     if ((table.status === 'Eating' || table.status === 'Needs Bill') && table.orderId) {
@@ -240,10 +245,13 @@ export default function Home() {
     <DashboardLayout>
       <div className="flex flex-col gap-8">
         {isCashier ? (
-             <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Restaurant Map</h1>
-                <p className="text-muted-foreground mt-2">Click a table to view its order and process payment.</p>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Live Orders</h1>
+            <p className="text-muted-foreground mt-2">Click on an order to view its details and process payment.</p>
+            <div className="mt-6">
+              {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} onOrderClick={handleOrderClick} />}
             </div>
+          </div>
         ) : (
             <>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -313,41 +321,35 @@ export default function Home() {
                         </CardContent>
                     </Card>
                 </div>
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Restaurant Map</h2>
+                   <Card>
+                    <CardContent className="p-6">
+                      {isLoadingTables ? <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"> {Array.from({length: 10}).map((_,i) => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg"/>)} </div>: (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        {tables?.map(table => (
+                          <div key={table.id} onClick={() => handleTableClick(table)} className="cursor-pointer">
+                            <TableCard 
+                                table={table} 
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
+                  {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} />}
+                </div>
+                
+                 <Card className="text-center p-8 bg-card">
+                    <CardTitle className="text-muted-foreground font-normal">Total Cash Today</CardTitle>
+                    <p className="text-6xl font-bold font-headline mt-2">PKR {stats.moneyMadeToday.toLocaleString()}</p>
+                </Card>
             </>
-        )}
-
-
-        <div>
-          {!isCashier && <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Restaurant Map</h2>}
-           <Card>
-            <CardContent className="p-6">
-              {isLoadingTables ? <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"> {Array.from({length: 10}).map((_,i) => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg"/>)} </div>: (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {tables?.map(table => (
-                  <div key={table.id} onClick={() => handleTableClick(table)} className="cursor-pointer">
-                    <TableCard 
-                        table={table} 
-                    />
-                  </div>
-                ))}
-              </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        
-        {!isCashier && (
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
-            {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={orders || []} />}
-          </div>
-        )}
-        
-        {!isCashier && (
-             <Card className="text-center p-8 bg-card">
-                <CardTitle className="text-muted-foreground font-normal">Total Cash Today</CardTitle>
-                <p className="text-6xl font-bold font-headline mt-2">PKR {stats.moneyMadeToday.toLocaleString()}</p>
-            </Card>
         )}
 
       </div>
@@ -355,7 +357,7 @@ export default function Home() {
         <DialogContent>
             <div ref={receiptRef} className="receipt">
               <DialogHeader>
-                <DialogTitle>Order: {tables?.find(t => t.orderId === selectedOrder?.id)?.name}</DialogTitle>
+                <DialogTitle>Order: {tables?.find(t => t.orderId === selectedOrder?.id)?.name || selectedOrder?.customerName}</DialogTitle>
                 <DialogDescription>
                   Date: {selectedOrder && new Date(selectedOrder.createdAt).toLocaleDateString()} - {selectedOrder?.time}
                 </DialogDescription>
@@ -384,7 +386,7 @@ export default function Home() {
              {canManagePayment && selectedOrder && (
                 <DialogFooter className="!justify-end gap-2 mt-4">
                     <Button variant="outline" onClick={handlePrint}><Printer className="mr-2"/> Print Bill</Button>
-                    <Button onClick={() => handleMarkAsPaid(selectedOrder)}>Mark as Paid (Cash)</Button>
+                    {selectedOrder.tableId && <Button onClick={() => handleMarkAsPaid(selectedOrder)}>Mark as Paid (Cash)</Button>}
                 </DialogFooter>
             )}
         </DialogContent>
