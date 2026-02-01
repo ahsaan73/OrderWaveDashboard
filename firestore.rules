@@ -1,10 +1,56 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Rules are wide open for this demo.
-    // In a real application, you would secure these endpoints.
-    match /{document=**} {
-      allow read, write: if true;
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getRequestingUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getRequestingUserData().role == 'admin';
+    }
+
+    function isManagerOrAdmin() {
+        return isAuthenticated() && (getRequestingUserData().role == 'manager' || getRequestingUserData().role == 'admin');
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId || isAdmin();
+      // Allow user creation for the seeder script to work.
+      allow create: if true;
+      // Allow users to update their own profile (but not their role), and admins to update any profile.
+      allow update: if (request.auth.uid == userId && request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /menuItems/{menuItemId} {
+      allow read: if isAuthenticated();
+      allow write: if isManagerOrAdmin();
+    }
+    
+    match /orders/{orderId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /tables/{tableId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated();
+    }
+    
+    match /stockItems/{stockItemId} {
+        allow read: if isAuthenticated();
+        allow write: if isManagerOrAdmin();
+    }
+    
+    match /inventoryLogs/{inventoryLogId} {
+        allow read: if isManagerOrAdmin();
+        allow create: if isManagerOrAdmin();
+        allow update, delete: if false; // Logs should be immutable
     }
   }
 }
