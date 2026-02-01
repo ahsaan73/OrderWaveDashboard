@@ -28,7 +28,7 @@ const statusConfig = {
     },
     'Needs Bill': {
         icon: CircleDollarSign,
-        className: "bg-primary/10 text-primary border-primary/20 animate-pulse",
+        className: "bg-chart-3/10 text-chart-3 border-chart-3/20 animate-pulse",
         label: "Needs Bill"
     }
 }
