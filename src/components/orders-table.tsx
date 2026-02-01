@@ -10,12 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
-import type { Order } from "@/lib/types";
+import type { Order, Table as TableType } from "@/lib/types";
 import { Home } from "lucide-react";
 
 interface OrdersTableProps {
   orders: Order[];
-  onOrderClick?: (order: Order) => void;
+  onOrderClick?: (table: TableType) => void;
 }
 
 const mobileStatusStyles: { [key in Order['status']]: string } = {
@@ -40,7 +40,7 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
         {orders.map((order) => (
           <Card 
             key={order.id}
-            onClick={() => onOrderClick?.(order)}
+            onClick={() => onOrderClick?.(order as any)}
             className={cn(isClickable && "cursor-pointer hover:bg-muted/50")}
           >
             <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 pb-2">
@@ -87,7 +87,7 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
             {orders.map((order) => (
               <TableRow 
                 key={order.id}
-                onClick={() => onOrderClick?.(order)}
+                onClick={() => onOrderClick?.(order as any)}
                 className={cn(isClickable && "cursor-pointer")}
               >
                 <TableCell className="font-medium">{order.orderNumber}</TableCell>

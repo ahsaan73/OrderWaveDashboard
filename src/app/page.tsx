@@ -121,30 +121,87 @@ export default function Home() {
 
 
   const stats = useMemo(() => {
-    const salesByHour = Array.from({ length: 24 }, (_, i) => ({
-      hour: `${i % 12 === 0 ? 12 : i % 12} ${i < 12 ? 'AM' : 'PM'}`,
+    const emptySalesByHour = Array.from({ length: 14 }, (_, i) => ({
+      hour: `${(i + 8) % 12 === 0 ? 12 : (i + 8) % 12} ${(i + 8) < 12 ? 'AM' : 'PM'}`,
       sales: 0,
-    })).slice(8, 22);
+    }));
+    
+    if (!orders || !menuItems || !tables) {
+      return {
+        salesLast24h: 0,
+        salesChangePercentage: 0,
+        totalOrders: 0,
+        activeOrders: 0,
+        seatedGuests: 0,
+        salesByHour: emptySalesByHour,
+        salesByCategory: [],
+        todaysOrders: [],
+      };
+    }
+
+    const now = Date.now();
+    const last24h = now - 24 * 60 * 60 * 1000;
+    const last48h = now - 48 * 60 * 60 * 1000;
+    
+    const todayStart = startOfToday().getTime();
+
+    const ordersLast24h = orders.filter(o => o.createdAt >= last24h);
+    const ordersPrev24h = orders.filter(o => o.createdAt >= last48h && o.createdAt < last24h);
+    const todaysOrders = orders.filter(o => o.createdAt >= todayStart);
+
+    const salesLast24h = ordersLast24h.reduce((sum, order) => sum + order.total, 0);
+    const salesPrev24h = ordersPrev24h.reduce((sum, order) => sum + order.total, 0);
+
+    const salesChangePercentage = salesPrev24h > 0 
+      ? ((salesLast24h - salesPrev24h) / salesPrev24h) * 100 
+      : salesLast24h > 0 ? 100 : 0;
+
+    const totalOrders = todaysOrders.length;
+    const activeOrders = todaysOrders.filter(o => o.status === 'Waiting' || o.status === 'Cooking').length;
+    const seatedGuests = tables.reduce((sum, table) => sum + (table.status !== 'Empty' ? table.guests : 0), 0);
+    
+    // Sales by hour for today
+    const salesByHour = [...emptySalesByHour];
+    todaysOrders.forEach(order => {
+        const hour = getHours(new Date(order.createdAt));
+        if (hour >= 8 && hour < 22) { // 8 AM to 9:59 PM
+            const index = hour - 8;
+            salesByHour[index].sales += order.total;
+        }
+    });
+
+    // Sales by category for today
+    const salesByCategory: { category: string; sales: number }[] = [];
+    const categoryMap = new Map<string, number>();
+
+    todaysOrders.forEach(order => {
+      order.items.forEach(item => {
+        const menuItem = menuItems.find(mi => mi.name === item.name);
+        if (menuItem) {
+          const category = menuItem.category;
+          const currentSales = categoryMap.get(category) || 0;
+          categoryMap.set(category, currentSales + item.price * item.quantity);
+        }
+      });
+    });
+    
+    for (const [category, sales] of categoryMap.entries()) {
+      if (pieChartConfig[category as keyof typeof pieChartConfig]) {
+          salesByCategory.push({ category, sales });
+      }
+    }
 
     return {
-      salesLast24h: 0,
-      salesChangePercentage: 0,
-      totalOrders: 0,
-      activeOrders: 0,
-      seatedGuests: 0,
+      salesLast24h,
+      salesChangePercentage,
+      totalOrders,
+      activeOrders,
+      seatedGuests,
       salesByHour,
-      salesByCategory: [],
+      salesByCategory,
+      todaysOrders,
     };
-  }, []);
-
-  const emptyTables = useMemo(() => {
-    if (!tables) return [];
-    return tables.map(table => ({
-      ...table,
-      status: 'Empty' as const,
-      guests: 0,
-    }));
-  }, [tables]);
+  }, [orders, menuItems, tables]);
 
 
   const handleTableClick = (table: Table) => {
@@ -303,8 +360,8 @@ export default function Home() {
                 <CardContent className="p-6">
                   {isLoadingTables ? <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"> {Array.from({length: 10}).map((_,i) => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg"/>)} </div>: (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {emptyTables?.map(table => (
-                      <div key={table.id} onClick={() => handleTableClick(table)} className="cursor-pointer">
+                    {tables?.map(table => (
+                      <div key={table.id} onClick={() => handleTableClick(table)} className={cn(isClickable(table) && "cursor-pointer")}>
                         <TableCard 
                             table={table} 
                         />
@@ -318,7 +375,7 @@ export default function Home() {
             
             <div>
               <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Live Orders</h2>
-              {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={[]} />}
+              {isLoadingOrders ? <Card><CardContent className="p-6"><div className="h-64 w-full bg-muted animate-pulse rounded-lg"/></CardContent></Card> : <OrdersTable orders={stats.todaysOrders} onOrderClick={handleTableClick} />}
             </div>
         </>
       </div>
@@ -369,4 +426,8 @@ export default function Home() {
       </Dialog>
     </DashboardLayout>
   );
+
+  function isClickable(table: Table) {
+    return (table.status === 'Eating' || table.status === 'Needs Bill') && table.orderId;
+  }
 }
