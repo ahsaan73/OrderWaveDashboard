@@ -1,56 +1,138 @@
+/**
+ * Core Philosophy: This ruleset implements a role-based access control (RBAC) system for a restaurant management app.
+ * It establishes two primary roles: the general public (unauthenticated users) and authenticated staff members.
+ * Public users have read-only access to the menu, while staff members have broad permissions to manage operational data like orders, stock, and revenue.
+ *
+ * Data Structure: The data is organized into a flat structure with several root-level collections.
+ * A dedicated collection, `/roles_staff`, is used to manage staff privileges. A user is considered "staff" if a document with their UID exists in this collection.
+ * This "Existence over Content" pattern simplifies security rules and improves performance by avoiding reads of document content.
+ *
+ * Key Security Decisions:
+ * - Public vs. Staff Access: `/menu_items` is the only publicly readable collection. All other collections (`orders`, `stock_items`, etc.) require staff authentication for any access.
+ * - Staff Role Management: The `/roles_staff` collection is read-only from the client. This is a critical security measure to prevent privilege escalation. Staff roles must be managed by a trusted server-side process (e.g., a Cloud Function or an admin dashboard).
+ * - Default Deny: All operations are denied by default unless explicitly allowed by a rule.
+ * - Authentication Providers: The `auth/operation-not-allowed` error mentioned in the request indicates that the required sign-in providers (e.g., Anonymous, Email/Password) are not enabled in the Firebase Authentication console. You MUST enable these providers in your Firebase project settings for the app to function correctly.
+ *
+ * Denormalization for Authorization: This ruleset relies on the `/roles_staff/{uid}` collection to grant access. This is a form of denormalization where a user's role (staff status) is stored in a way that is fast and cheap for security rules to check using `exists()`, avoiding slow and costly `get()` calls to other documents.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
-    function isAuth() {
+
+    // Helper functions for concise and readable rules
+    function isSignedIn() {
       return request.auth != null;
     }
-    function isRole(role) {
-      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
-    }
-    function isOneOfRoles(roles) {
-      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
-    }
-    function isAdmin() {
-      return isRole('admin');
-    }
-    function isManager() {
-      return isOneOfRoles(['admin', 'manager']);
+
+    /**
+     * Checks if the currently authenticated user is a staff member.
+     * This is determined by the existence of a document with the user's UID in the /roles_staff collection.
+     */
+    function isStaff() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_staff/$(request.auth.uid));
     }
 
-    // Publicly readable collections
-    match /menuItems/{itemId} {
-      allow read: if true;
-      allow write: if isManager();
-    }
-    match /tables/{tableId} {
-      allow read: if true;
-      allow write: if isOneOfRoles(['admin', 'manager', 'waiter']);
-    }
-    
-    // User profiles can be read by anyone for the login screen, but only written by the user themselves or an admin.
-    match /users/{userId} {
-      allow read: if true;
-      allow create: if isAuth();
-      allow update: if isAuth() && (request.auth.uid == userId || isAdmin());
+    /**
+     * A robust check for state-changing operations (update, delete) by staff.
+     * It verifies the user is staff AND the document they are trying to modify already exists.
+     */
+    function isExistingStaffRequest() {
+      return isStaff() && resource != null;
     }
 
-    // Orders can be created by anyone, but only read/updated by staff.
+    /**
+     * @description Publicly readable menu items. Only staff can create, update, or delete menu items.
+     * @path /menu_items/{menuItemId}
+     * @allow (get) Any user, signed in or not, can retrieve a specific menu item.
+     * @allow (create) A staff member (auth.uid exists in /roles_staff) can create a new menu item.
+     * @deny (update) An anonymous user or a non-staff customer cannot update a menu item.
+     * @principle Implements public read access for general information, with writes restricted to privileged roles.
+     */
+    match /menu_items/{menuItemId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isStaff();
+      allow update: if isExistingStaffRequest();
+      allow delete: if isExistingStaffRequest();
+    }
+
+    /**
+     * @description Customer orders. Only staff members can view or manage orders.
+     * @path /orders/{orderId}
+     * @allow (get) A staff member can read any order document.
+     * @allow (create) A staff member can create a new order.
+     * @deny (list) An anonymous user cannot list all orders.
+     * @principle Restricts access to sensitive operational data to authorized staff members.
+     */
     match /orders/{orderId} {
-      allow create: if true;
-      allow read, update, delete: if isOneOfRoles(['admin', 'manager', 'cashier', 'kitchen', 'waiter']);
+      allow get: if isStaff();
+      allow list: if isStaff();
+      allow create: if isStaff();
+      allow update: if isExistingStaffRequest();
+      allow delete: if isExistingStaffRequest();
     }
 
-    // Stock items require manager/admin privileges.
-    match /stockItems/{itemId} {
-      allow read, write: if isManager();
+    /**
+     * @description Staff member profiles. This data is sensitive and only accessible by other staff.
+     * @path /staff_members/{staffMemberId}
+     * @allow (get) A staff member can view the profile of another staff member.
+     * @allow (create) A staff member can create a new staff profile.
+     * @deny (get) A non-staff user cannot read staff member details.
+     * @principle Protects internal employee information, limiting access to authenticated peers.
+     */
+    match /staff_members/{staffMemberId} {
+      allow get: if isStaff();
+      allow list: if isStaff();
+      allow create: if isStaff();
+      allow update: if isExistingStaffRequest();
+      allow delete: if isExistingStaffRequest();
     }
 
-    // Inventory logs are write-only for managers/admins to ensure audit trail integrity.
-    match /inventoryLogs/{logId} {
-      allow read: if isManager();
-      allow create: if isManager();
-      allow update, delete: if false;
+    /**
+     * @description Restaurant stock and inventory. Only staff members can view or manage stock items.
+     * @path /stock_items/{stockItemId}
+     * @allow (list) A staff member can list all items in the inventory.
+     * @allow (update) A staff member can update the quantity of a stock item.
+     * @deny (delete) A non-staff user cannot delete a stock item.
+     * @principle Restricts access to sensitive operational data to authorized staff members.
+     */
+    match /stock_items/{stockItemId} {
+      allow get: if isStaff();
+      allow list: if isStaff();
+      allow create: if isStaff();
+      allow update: if isExistingStaffRequest();
+      allow delete: if isExistingStaffRequest();
+    }
+
+    /**
+     * @description Daily revenue records. This is sensitive financial data only accessible by staff.
+     * @path /revenue/{revenueId}
+     * @allow (get) A staff member can read a specific revenue entry.
+     * @allow (create) A staff member can log a new revenue entry.
+     * @deny (list) An anonymous user cannot list all revenue records.
+     * @principle Secures sensitive financial data by restricting all access to authorized staff.
+     */
+    match /revenue/{revenueId} {
+      allow get: if isStaff();
+      allow list: if isStaff();
+      allow create: if isStaff();
+      allow update: if isExistingStaffRequest();
+      allow delete: if isExistingStaffRequest();
+    }
+
+    /**
+     * @description Manages staff roles using an "Existence over Content" pattern.
+     * @path /roles_staff/{uid}
+     * @allow (get) A staff member can check if another user is also staff.
+     * @deny (create) No user can grant staff privileges from the client-side to prevent privilege escalation.
+     * @principle This collection is a read-only lookup table for authorization. Writes must be performed by a trusted backend service.
+     */
+    match /roles_staff/{uid} {
+      allow get: if isStaff();
+      allow list: if isStaff();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }

@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Order",
       "type": "object",
-      "description": "Represents a customer order in the restaurant system.",
+      "description": "Represents a customer order.",
       "properties": {
         "id": {
           "type": "string",
@@ -12,36 +12,31 @@
         },
         "orderTime": {
           "type": "string",
-          "description": "Timestamp of when the order was placed.",
+          "description": "The timestamp of when the order was placed.",
           "format": "date-time"
         },
-        "customerId": {
+        "status": {
           "type": "string",
-          "description": "Reference to Customer. (Relationship: Customer 1:N Order)"
+          "description": "The current status of the order (Waiting, Cooking, Done).",
+          "format": "string"
         },
-        "menuItemIds": {
+        "items": {
           "type": "array",
-          "description": "References to MenuItems in the order. (Relationship: Order N:N MenuItem)",
+          "description": "A list of the menu items in the order.",
           "items": {
             "type": "string"
           }
         },
-        "status": {
-          "type": "string",
-          "description": "Current status of the order (Waiting, Cooking, Done)."
-        },
         "totalAmount": {
           "type": "number",
-          "description": "Total amount of the order.",
-          "format": "number"
+          "description": "The total amount of the order."
         }
       },
       "required": [
         "id",
         "orderTime",
-        "customerId",
-        "menuItemIds",
         "status",
+        "items",
         "totalAmount"
       ]
     },
@@ -57,32 +52,24 @@
         },
         "name": {
           "type": "string",
-          "description": "Name of the menu item."
+          "description": "The name of the menu item."
         },
         "description": {
           "type": "string",
-          "description": "Description of the menu item."
+          "description": "A description of the menu item."
         },
         "price": {
           "type": "number",
-          "description": "Price of the menu item.",
-          "format": "number"
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the image for the menu item.",
-          "format": "uri"
+          "description": "The price of the menu item."
         },
         "category": {
           "type": "string",
-          "description": "Category of the menu item (e.g., Appetizer, Main Course, Dessert)."
+          "description": "The category that the menu item belongs to."
         },
-        "ingredientIds": {
-          "type": "array",
-          "description": "References to Ingredients used in the menu item. (Relationship: MenuItem N:N Ingredient)",
-          "items": {
-            "type": "string"
-          }
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of an image representing the menu item.",
+          "format": "uri"
         }
       },
       "required": [
@@ -90,78 +77,15 @@
         "name",
         "description",
         "price",
-        "imageUrl",
         "category",
-        "ingredientIds"
+        "imageUrl"
       ]
     },
-    "Ingredient": {
+    "StaffMember": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Ingredient",
+      "title": "StaffMember",
       "type": "object",
-      "description": "Represents an ingredient used in the restaurant's dishes.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ingredient."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the ingredient."
-        },
-        "stockQuantity": {
-          "type": "number",
-          "description": "Current stock quantity of the ingredient.",
-          "format": "number"
-        },
-        "unit": {
-          "type": "string",
-          "description": "Unit of measurement for the ingredient (e.g., kg, g, ml)."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "stockQuantity",
-        "unit"
-      ]
-    },
-    "Customer": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Customer",
-      "type": "object",
-      "description": "Represents a customer of the restaurant.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the customer."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the customer."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the customer.",
-          "format": "email"
-        },
-        "phone": {
-          "type": "string",
-          "description": "Phone number of the customer."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "email",
-        "phone"
-      ]
-    },
-    "Staff": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Staff",
-      "type": "object",
-      "description": "Represents a staff member of the restaurant.",
+      "description": "Represents a staff member.",
       "properties": {
         "id": {
           "type": "string",
@@ -169,150 +93,186 @@
         },
         "name": {
           "type": "string",
-          "description": "Name of the staff member."
+          "description": "The name of the staff member."
         },
         "position": {
           "type": "string",
-          "description": "Job position of the staff member."
+          "description": "The position of the staff member (e.g., chef, server)."
         },
-        "wage": {
+        "hourlyRate": {
           "type": "number",
-          "description": "Hourly wage of the staff member.",
-          "format": "number"
+          "description": "The hourly rate of the staff member."
         }
       },
       "required": [
         "id",
         "name",
         "position",
-        "wage"
+        "hourlyRate"
+      ]
+    },
+    "StockItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StockItem",
+      "type": "object",
+      "description": "Represents an item in the restaurant's stock.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the stock item."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the stock item."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the stock item in stock."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the stock item (e.g., kg, liter)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "quantity",
+        "unit"
+      ]
+    },
+    "Revenue": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Revenue",
+      "type": "object",
+      "description": "Represents the revenue made in a day.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the revenue entry, can be the date"
+        },
+        "date": {
+          "type": "string",
+          "description": "The date the revenue was made.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of revenue made on the date."
+        }
+      },
+      "required": [
+        "id",
+        "date",
+        "amount"
       ]
     }
   },
   "auth": {
     "providers": [
-      "google.com"
+      "password",
+      "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/customers/{customerId}",
-        "definition": {
-          "entityName": "Customer",
-          "schema": {
-            "$ref": "#/backend/entities/Customer"
-          },
-          "description": "Stores customer profiles. Uses path-based ownership for customer data.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "The unique ID of the customer."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/customers/{customerId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores orders associated with a specific customer. Includes denormalized 'customerId' for authorization independence.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "The unique ID of the customer."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique ID of the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/menuItems/{menuItemId}",
+        "path": "/menu_items/{menuItemId}",
         "definition": {
           "entityName": "MenuItem",
           "schema": {
             "$ref": "#/backend/entities/MenuItem"
           },
-          "description": "Stores menu items available in the restaurant.",
+          "description": "Stores menu items. Publicly readable, editable by staff.",
           "params": [
             {
               "name": "menuItemId",
-              "description": "The unique ID of the menu item."
+              "description": "Unique identifier for the menu item."
             }
           ]
         }
       },
       {
-        "path": "/ingredients/{ingredientId}",
+        "path": "/orders/{orderId}",
         "definition": {
-          "entityName": "Ingredient",
+          "entityName": "Order",
           "schema": {
-            "$ref": "#/backend/entities/Ingredient"
+            "$ref": "#/backend/entities/Order"
           },
-          "description": "Stores ingredients used in the restaurant.",
+          "description": "Stores order information. Staff can read/write all orders.",
           "params": [
             {
-              "name": "ingredientId",
-              "description": "The unique ID of the ingredient."
+              "name": "orderId",
+              "description": "Unique identifier for the order."
             }
           ]
         }
       },
       {
-        "path": "/staff/{staffId}",
+        "path": "/staff_members/{staffMemberId}",
         "definition": {
-          "entityName": "Staff",
+          "entityName": "StaffMember",
           "schema": {
-            "$ref": "#/backend/entities/Staff"
+            "$ref": "#/backend/entities/StaffMember"
           },
-          "description": "Stores staff member information.",
+          "description": "Stores staff member information. Accessible to authorized staff.",
           "params": [
             {
-              "name": "staffId",
-              "description": "The unique ID of the staff member."
+              "name": "staffMemberId",
+              "description": "Unique identifier for the staff member."
             }
           ]
         }
       },
       {
-        "path": "/roles_staff/{staffId}",
+        "path": "/stock_items/{stockItemId}",
         "definition": {
-          "entityName": "Staff",
+          "entityName": "StockItem",
           "schema": {
-            "$ref": "#/backend/entities/Staff"
+            "$ref": "#/backend/entities/StockItem"
           },
-          "description": "Collection used to grant staff-level access. Document existence determines access.",
+          "description": "Stores stock item information. Accessible and modifiable by staff.",
           "params": [
             {
-              "name": "staffId",
-              "description": "The unique ID of the staff member, used for role assignment."
+              "name": "stockItemId",
+              "description": "Unique identifier for the stock item."
             }
           ]
         }
       },
       {
-        "path": "/roles_admin/{adminId}",
+        "path": "/revenue/{revenueId}",
         "definition": {
-          "entityName": "Staff",
+          "entityName": "Revenue",
           "schema": {
-            "$ref": "#/backend/entities/Staff"
+            "$ref": "#/backend/entities/Revenue"
           },
-          "description": "Collection used to grant admin-level access. Document existence determines access.",
+          "description": "Stores daily revenue data. Accessible to authorized staff.",
           "params": [
             {
-              "name": "adminId",
-              "description": "The unique ID of the admin, used for role assignment."
+              "name": "revenueId",
+              "description": "Unique identifier for the revenue entry (date)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_staff/{uid}",
+        "definition": {
+          "entityName": "StaffMember",
+          "schema": {
+            "$ref": "#/backend/entities/StaffMember"
+          },
+          "description": "Stores the UIDs of staff members for role-based access control.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "User ID of the staff member."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to be secure, scalable, and easily debuggable, adhering to the core principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages denormalization for authorization and structural segregation to simplify security rules.\n\n*   **Authorization Independence:** Customer data and their orders are stored under the `/customers/{customerId}` path, which ensures path-based ownership for easy management and security rules. The `customerId` is also stored on each order document to authorize reads. This setup removes the need for complex `get()` calls in security rules, thus enabling atomic operations and improving debuggability. Staff roles are managed using document existence in the `/roles_staff/{staffId}` collection, enabling role-based access control without relying on custom claims.\n*   **Clarity of Intent:** The path structure clearly reflects the relationships between entities. For example, orders belonging to a customer are nested under `/customers/{customerId}/orders/{orderId}` making it clear that each order belongs to a specific customer. The usage of existence checks in `/roles_staff/{staffId}` to grant access to specific staff functionality is another way to keep the authorization intent explicit.\n*   **DBAC (No Custom Claims):** Roles are stored directly in the database. Staff access is controlled by the presence of their IDs in the `/roles_staff/{staffId}` collection. This method avoids the complexity and potential security issues associated with custom claims.\n*   **QAPs (Rules are not Filters):** The structure allows for secure listing operations. Since orders are stored under the customer's ID (`/customers/{customerId}/orders/{orderId}`), listing orders for a specific customer is straightforward and secure, preventing unauthorized access to orders from other customers. Segregation of admin roles via the `/roles_admin/{adminId}` collection ensures that only admins can perform specific administrative tasks, thus adhering to the QAP principle.\n\nOrders are placed under the corresponding customer's ID to manage ownership efficiently, as each order is directly associated with its respective customer. The structure does not support collaborative data. Data is managed via ownership.\n\nSpecifically, this structure makes sure that reading of Orders follows authorization independence through path-based rules, and that listing operations are safe via Role-Based Authentication."
+    "reasoning": "The Firestore structure is designed to support the ZestyDash application's features, focusing on real-time data updates and secure access. It prioritizes Authorization Independence by avoiding hierarchical dependencies in security rules. The structure is segregated to ensure homogeneous security postures for each collection.\n\n*   `/menu_items`: Stores the restaurant's menu items. Publicly readable, editable by staff.\n*   `/orders/{orderId}`: Stores order information. Staff can read/write all orders. Customers could, in principle, have access to their order through a `users/{userId}/orders/{orderId}` subcollection with denormalized `userId` property on each order.\n*   `/staff_members/{staffMemberId}`: Stores staff member information. Only accessible to authorized staff (e.g., managers). A separate `/roles_staff` collection is used to manage staff privileges, using Existence over Content for rules.\n*   `/stock_items/{stockItemId}`: Stores stock item information. Accessible and modifiable by staff.\n*   `/revenue/{revenueId}`: Stores daily revenue data. Accessible to authorized staff.\n*   `/roles_staff/{uid}`: This collection uses the Existence over Content principle and stores the UIDs of staff members. This is used in the security rules to grant staff access to certain features.\n\n**Authorization Independence and QAPs:**\n\nAuthorization Independence is achieved by avoiding `get()` calls in security rules. Roles are determined by membership in the `/roles_staff` collection, or by denormalized fields. This allows for atomic operations and simplifies security rule logic.\n\nQAPs (Rules are not Filters) are supported through structural segregation. Each collection has a clear and consistent security posture, making `list` operations secure. For example, listing menu items is public, while listing staff members requires staff privileges enforced via the `/roles_staff` collection."
   }
 }
