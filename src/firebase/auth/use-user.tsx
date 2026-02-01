@@ -7,37 +7,16 @@ import { doc } from 'firebase/firestore';
 
 export function useUser() {
     const [uid, setUid] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [initialAuthCheck, setInitialAuthCheck] = useState(false);
     const firestore = useFirestore();
 
     useEffect(() => {
         // This code runs only on the client.
-        let storedUid = localStorage.getItem('userUid');
-        
+        const storedUid = localStorage.getItem('userUid');
         if (storedUid) {
             setUid(storedUid);
-        } else {
-            // Handle backwards compatibility with old role-based login
-            const storedRole = localStorage.getItem('userRole') as string | null;
-            if (storedRole) {
-                // Map old role to a default UID for that role.
-                const roleToUidMap: Record<string, string> = {
-                    admin: 'demoadmin',
-                    manager: 'demomanager',
-                    cashier: 'cashier-1',
-                    waiter: 'waiter-1',
-                    kitchen: 'kitchen-1',
-                };
-                const newUid = roleToUidMap[storedRole];
-                if (newUid) {
-                    localStorage.setItem('userUid', newUid);
-                    localStorage.removeItem('userRole');
-                    setUid(newUid);
-                }
-            }
         }
-        // If no UID is found by this point, we're done with initial loading.
-        setLoading(false);
+        setInitialAuthCheck(true);
     }, []);
 
     const userRef = useMemo(() => {
@@ -47,8 +26,9 @@ export function useUser() {
 
     const { data: user, isLoading: isDocLoading, error } = useDoc<User>(userRef);
 
-    // Final loading state depends on both finding a UID on mount and then fetching the doc.
-    const isAuthLoading = loading || (!!uid && isDocLoading);
+    // The overall loading state is true until the initial check is done AND
+    // if there's a UID, we are also waiting for the document to load.
+    const loading = !initialAuthCheck || (!!uid && isDocLoading);
 
-    return { user, loading: isAuthLoading, error };
+    return { user, loading, error };
 }
