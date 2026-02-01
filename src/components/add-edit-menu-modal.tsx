@@ -25,7 +25,7 @@ interface AddEditMenuModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   item: MenuItem | null;
-  onSave: (item: Omit<MenuItem, 'id'>, id?: string) => void;
+  onSave: (item: Omit<MenuItem, 'id' | 'ref'>, id?: string) => void;
 }
 
 const menuItemCategories: readonly [MenuItemCategory, ...MenuItemCategory[]] = ['Burgers', 'Sides', 'Wraps', 'Pizzas', 'Drinks', 'Pasta'];
@@ -57,7 +57,6 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     resolver: zodResolver(menuItemSchema),
     defaultValues: {
       name: '',
-      price: 0,
       description: '',
       imageUrl: '',
       imageHint: '',
@@ -85,7 +84,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
           const hint = initialCategory.toLowerCase().replace(/s$/, '');
           reset({
             name: '',
-            price: 0,
+            price: undefined,
             description: '',
             imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
             imageHint: hint,
@@ -106,7 +105,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
   }, [watchedCategory, item, setValue, isOpen]);
 
   const onSubmit = (data: MenuItemFormData) => {
-    const savedItem = {
+    const savedItem: Omit<MenuItem, 'id' | 'ref'> = {
       name: data.name,
       price: data.price,
       description: data.description || '',
@@ -247,3 +246,5 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     </Dialog>
   );
 }
+
+    

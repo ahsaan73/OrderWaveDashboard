@@ -57,7 +57,7 @@ export default function MenuPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveItem = async (item: Omit<MenuItem, 'id'>, id?: string) => {
+  const handleSaveItem = async (item: Omit<MenuItem, 'id' | 'ref'>, id?: string) => {
     if (!firestore) return;
     try {
         if (id) {
@@ -119,3 +119,5 @@ export default function MenuPage() {
     </DashboardLayout>
   );
 }
+
+    
