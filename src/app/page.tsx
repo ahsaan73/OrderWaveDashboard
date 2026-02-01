@@ -20,6 +20,7 @@ import { useFirestore, useUser } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { startOfToday, getHours } from 'date-fns';
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 
 const lineChartConfig = {
@@ -78,10 +79,10 @@ export default function Home() {
 
   const ordersQuery = useMemo(() => {
     if (!firestore) return null;
-    const todayStart = startOfToday();
+    const last48Hours = Date.now() - 48 * 60 * 60 * 1000;
     return query(
       collection(firestore, "orders"),
-      where("createdAt", ">=", todayStart.getTime()),
+      where("createdAt", ">=", last48Hours),
       orderBy("createdAt", "desc")
     );
   }, [firestore]);
@@ -121,7 +122,8 @@ export default function Home() {
 
   const stats = useMemo(() => {
     if (!orders || !tables || !menuItems) return { 
-        moneyMadeToday: 0, 
+        salesLast24h: 0,
+        salesChangePercentage: 0,
         totalOrders: 0, 
         activeOrders: 0, 
         seatedGuests: 0,
@@ -129,11 +131,26 @@ export default function Home() {
         salesByCategory: [],
     };
     
-    const todaysOrders = orders;
+    const now = Date.now();
+    const todayStartTimestamp = startOfToday().getTime();
+    const last24hTimestamp = now - 24 * 60 * 60 * 1000;
+
+    const todaysOrders = orders.filter(o => o.createdAt >= todayStartTimestamp);
+    const ordersLast24h = orders.filter(o => o.createdAt >= last24hTimestamp);
+    const ordersPrevious24h = orders.filter(o => o.createdAt < last24hTimestamp);
+    
+    const salesLast24h = ordersLast24h.reduce((sum, o) => sum + o.total, 0);
+    const salesPrevious24h = ordersPrevious24h.reduce((sum, o) => sum + o.total, 0);
+
+    let salesChangePercentage = 0;
+    if (salesPrevious24h > 0) {
+        salesChangePercentage = ((salesLast24h - salesPrevious24h) / salesPrevious24h) * 100;
+    } else if (salesLast24h > 0) {
+        salesChangePercentage = 100;
+    }
     
     const activeOrders = todaysOrders.filter(o => o.status === 'Cooking' || o.status === 'Waiting');
     const seatedGuests = tables?.filter(t => t.status !== 'Empty').reduce((acc, t) => acc + (t.guests || 0), 0) || 0;
-    const moneyMadeToday = todaysOrders.reduce((sum, o) => sum + o.total, 0);
 
     const hourlySales = Array.from({ length: 24 }, (_, i) => ({ hour: i, sales: 0 }));
     todaysOrders.forEach(order => {
@@ -164,9 +181,9 @@ export default function Home() {
         sales: categorySales[category],
     }));
 
-
     return {
-      moneyMadeToday,
+      salesLast24h,
+      salesChangePercentage,
       totalOrders: todaysOrders.length,
       activeOrders: activeOrders.length,
       seatedGuests: seatedGuests,
@@ -263,11 +280,18 @@ export default function Home() {
                     <CardHeader>
                          <div className="flex justify-between items-start">
                             <div>
-                                <CardTitle>Sales Today</CardTitle>
-                                <CardDescription>Total sales from midnight until now.</CardDescription>
+                                <CardTitle>Sales (Last 24h)</CardTitle>
+                                <CardDescription>
+                                    <span className={cn(
+                                        "font-semibold",
+                                        stats.salesChangePercentage >= 0 ? "text-green-600" : "text-destructive"
+                                    )}>
+                                      {stats.salesChangePercentage >= 0 ? '+' : ''}{stats.salesChangePercentage.toFixed(1)}%
+                                    </span> vs previous 24h
+                                </CardDescription>
                             </div>
                             <div className="text-4xl font-bold font-headline text-right">
-                                PKR {stats.moneyMadeToday.toLocaleString()}
+                                PKR {stats.salesLast24h.toLocaleString()}
                             </div>
                         </div>
                     </CardHeader>
