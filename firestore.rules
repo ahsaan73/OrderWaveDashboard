@@ -57,7 +57,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if request.auth.uid == userId;
-      allow update: if isAdmin() || request.auth.uid == userId;
+      // An admin can update any field. A user can update their own profile,
+      // but cannot change their own role.
+      allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
     }
   }
 }
