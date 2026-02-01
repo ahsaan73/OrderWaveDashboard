@@ -50,7 +50,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if request.auth != null;
+      // Allow read for login simulation, but secure writes.
+      allow read: if true; 
       allow create: if request.auth.uid == userId;
       allow update: if isAdmin() || request.auth.uid == userId;
     }

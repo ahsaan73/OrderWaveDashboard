@@ -6,59 +6,50 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ChefHat } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useFirestore } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
-        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.657-3.356-11.303-8H6.306C9.656,39.663,16.318,44,24,44z" />
-        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C39.901,35.636,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
-    </svg>
-);
-
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { User } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function LoginPage() {
   const router = useRouter();
-  const auth = useAuth();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+  
+  const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);
 
   useEffect(() => {
     // Clear any previous user on mount to ensure a clean login.
     localStorage.removeItem('userUid');
   }, []);
 
-  const handleGoogleSignIn = async () => {
-    if (!auth || !firestore) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Firebase not initialized. Please try again.' });
+  const handleLogin = async () => {
+    if (!firestore || !users) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database. Please try again.' });
       return;
     }
+    if (!email) {
+        toast({ variant: 'destructive', title: 'Email required', description: 'Please enter an email address.' });
+        return;
+    }
     setIsLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
 
-      // Create or update user document in Firestore.
-      // { merge: true } ensures we don't overwrite existing data like roles.
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-      }, { merge: true });
+    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
 
+    if (user) {
       toast({ title: 'Login Successful', description: `Welcome, ${user.displayName}!` });
       localStorage.setItem('userUid', user.uid);
       router.push('/');
-
-    } catch (error: any) {
-      console.error("Google Sign-In Error", error);
-      toast({ variant: 'destructive', title: 'Login Failed', description: error.message || 'An error occurred during sign-in.' });
+    } else {
+      toast({ variant: 'destructive', title: 'Login Failed', description: 'User with that email not found.' });
       setIsLoading(false);
     }
   };
@@ -71,22 +62,30 @@ export default function LoginPage() {
             <ChefHat className="w-10 h-10 text-primary-foreground" />
           </div>
           <CardTitle className="text-3xl font-headline">Islamabad Bites</CardTitle>
-          <CardDescription>Please sign in to continue.</CardDescription>
+          <CardDescription>Please sign in to continue. (No password needed)</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={handleGoogleSignIn} 
-            className="w-full mt-2 h-12 text-base" 
-            disabled={isLoading}
-            variant="outline"
-          >
-            {isLoading ? 'Please wait...' : (
-                <>
-                    <GoogleIcon className="mr-2" />
-                    Sign in with Google
-                </>
-            )}
-          </Button>
+          <div className="grid gap-4">
+             <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                    id="email"
+                    type="email"
+                    placeholder="manager@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
+                    required
+                />
+            </div>
+            <Button 
+                onClick={handleLogin} 
+                className="w-full mt-2 h-12 text-base" 
+                disabled={isLoading || usersLoading}
+            >
+                {isLoading || usersLoading ? 'Please wait...' : 'Sign In'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
