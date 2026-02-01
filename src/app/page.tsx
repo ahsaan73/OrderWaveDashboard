@@ -5,17 +5,19 @@ import { OrdersTable } from "@/components/orders-table";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { DollarSign, ShoppingCart, Users, Utensils } from "lucide-react";
+import { DollarSign, ShoppingCart, Users, Utensils, Printer } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { TableCard } from "@/components/table-card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import type { Order, Table, MenuItem } from "@/lib/types";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, doc, updateDoc } from "firebase/firestore";
 import { useFirestore, useUser } from "@/firebase";
+import { useToast } from "@/hooks/use-toast";
 import { startOfToday, endOfToday, getHours } from 'date-fns';
 import { useRouter } from "next/navigation";
 
@@ -40,14 +42,31 @@ export default function Home() {
   const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const prevTablesRef = useRef<Table[]>();
+
+  const playNotificationSound = () => {
+    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (!context) return;
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, context.currentTime);
+    gainNode.gain.setValueAtTime(0.5, context.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.5);
+    oscillator.start(context.currentTime);
+    oscillator.stop(context.currentTime + 0.5);
+  };
 
   useEffect(() => {
     if (!userLoading) {
       if (user) {
         if (user.role === 'waiter') router.replace('/waiter');
-        else if (user.role === 'cashier') router.replace('/cashier');
         else if (user.role === 'kitchen') router.replace('/kitchen-display');
-        else if (!['manager', 'admin'].includes(user.role || '')) {
+        else if (!['manager', 'admin', 'cashier'].includes(user.role || '')) {
           router.replace('/login');
         }
       } else {
@@ -76,6 +95,23 @@ export default function Home() {
   const { data: menuItems, isLoading: isLoadingMenuItems } = useCollection<MenuItem>(menuItemsQuery);
   
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  
+  useEffect(() => {
+    if (tables && prevTablesRef.current) {
+        const prevNeedsBill = new Set(prevTablesRef.current.filter(t => t.status === 'Needs Bill').map(t => t.id));
+        
+        let soundPlayed = false;
+        tables.forEach(table => {
+            if (table.status === 'Needs Bill' && !prevNeedsBill.has(table.id) && !soundPlayed) {
+                playNotificationSound();
+                toast({ title: "Bill Requested", description: `${table.name} is ready to pay.`})
+                soundPlayed = true; 
+            }
+        });
+    }
+    prevTablesRef.current = tables;
+  }, [tables, toast]);
+
 
   const stats = useMemo(() => {
     if (!orders || !tables || !menuItems) return { 
@@ -95,7 +131,6 @@ export default function Home() {
     const seatedGuests = tables?.filter(t => t.status !== 'Empty').reduce((acc, t) => acc + (t.guests || 0), 0) || 0;
     const moneyMadeToday = todaysOrders.reduce((sum, o) => sum + o.total, 0);
 
-    // Sales by hour
     const hourlySales = Array.from({ length: 24 }, (_, i) => ({ hour: i, sales: 0 }));
     todaysOrders.forEach(order => {
         const hour = getHours(new Date(order.createdAt));
@@ -105,10 +140,9 @@ export default function Home() {
     const salesByHour = hourlySales.map((h, index) => ({
         hour: `${index % 12 === 0 ? 12 : index % 12} ${index < 12 ? 'AM' : 'PM'}`,
         sales: h.sales,
-    })).slice(8, 22); // From 8am to 10pm for more coverage
+    })).slice(8, 22);
 
 
-    // Sales by category
     const menuItemMap = new Map(menuItems.map(item => [item.name, item]));
     const categorySales: { [key: string]: number } = {};
     todaysOrders.forEach(order => {
@@ -151,10 +185,52 @@ export default function Home() {
   const closeOrderModal = () => {
     setSelectedOrder(null);
   }
+
+  const handleMarkAsPaid = async (order: Order) => {
+    if (!firestore || !order.tableId) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not process payment. Table not found.' });
+        return;
+    }
+
+    const tableRef = doc(firestore, 'tables', order.tableId);
+    try {
+        await updateDoc(tableRef, {
+            status: 'Empty',
+            guests: 0,
+            orderId: '',
+        });
+        toast({ title: 'Payment Confirmed', description: `Table ${tables?.find(t => t.id === order.tableId)?.name} is now empty.` });
+        closeOrderModal();
+    } catch (error) {
+        console.error("Error marking table as paid:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not update table status.' });
+    }
+  };
+
+  const handlePrint = () => {
+    const printContent = receiptRef.current;
+    if (printContent) {
+        const printWindow = window.open('', '', 'height=600,width=800');
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Print Bill</title>');
+            printWindow.document.write('<style> body { font-family: sans-serif; } .receipt { width: 300px; margin: auto; } h2, h3 { text-align: center; } table { width: 100%; border-collapse: collapse; } th, td { padding: 8px; text-align: left; } .total { font-weight: bold; } </style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+    }
+  };
   
   const isLoading = isLoadingOrders || isLoadingTables || isLoadingMenuItems;
+  const canManagePayment = user?.role === 'cashier' || user?.role === 'manager' || user?.role === 'admin';
 
-  if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
+  if (userLoading || !user || !['manager', 'admin', 'cashier'].includes(user.role || '')) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
@@ -262,31 +338,40 @@ export default function Home() {
       </div>
        <Dialog open={!!selectedOrder} onOpenChange={(isOpen) => !isOpen && closeOrderModal()}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Order for {tables?.find(t => t.orderId === selectedOrder?.id)?.name}</DialogTitle>
-            <DialogDescription>
-              Details for the current table order.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="flex flex-col gap-4 py-4">
-              <div>
-                <h3 className="font-semibold mb-2 text-muted-foreground">Items</h3>
-                <div className="space-y-2">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span>{item.name} <span className="text-muted-foreground">x{item.quantity}</span></span>
+            <div ref={receiptRef} className="receipt">
+              <DialogHeader>
+                <DialogTitle>Order: {tables?.find(t => t.orderId === selectedOrder?.id)?.name}</DialogTitle>
+                <DialogDescription>
+                  Date: {selectedOrder && new Date(selectedOrder.createdAt).toLocaleDateString()} - {selectedOrder?.time}
+                </DialogDescription>
+              </DialogHeader>
+              {selectedOrder && (
+                <div className="flex flex-col gap-4 py-4">
+                  <div>
+                    <h3 className="font-semibold mb-2 text-muted-foreground border-b pb-1">Items</h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {selectedOrder.items.map((item, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span>{item.name} <span className="text-muted-foreground">x{item.quantity}</span></span>
+                          <span>PKR {(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center font-bold text-lg">
+                    <span>Total Due:</span>
+                    <span>PKR {selectedOrder.total.toFixed(2)}</span>
+                  </div>
                 </div>
-              </div>
-              <Separator />
-              <div className="flex justify-between items-center font-bold text-lg">
-                <span>Total Due:</span>
-                <span>PKR {selectedOrder.total.toFixed(2)}</span>
-              </div>
+              )}
             </div>
-          )}
+             {canManagePayment && selectedOrder && (
+                <DialogFooter className="!justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={handlePrint}><Printer className="mr-2"/> Print Bill</Button>
+                    <Button onClick={() => handleMarkAsPaid(selectedOrder)}>Mark as Paid (Cash)</Button>
+                </DialogFooter>
+            )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>

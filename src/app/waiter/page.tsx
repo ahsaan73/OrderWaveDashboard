@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TableCard } from '@/components/table-card';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -16,6 +16,22 @@ export default function WaiterPage() {
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const prevTablesRef = useRef<Table[]>();
+
+  const playNotificationSound = () => {
+    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (!context) return;
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, context.currentTime);
+    gainNode.gain.setValueAtTime(0.5, context.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.5);
+    oscillator.start(context.currentTime);
+    oscillator.stop(context.currentTime + 0.5);
+  };
 
   useEffect(() => {
     if (!userLoading) {
@@ -34,6 +50,21 @@ export default function WaiterPage() {
 
   const { data: tables, isLoading: dataLoading } = useCollection<Table>(tablesQuery);
 
+  useEffect(() => {
+    if (tables && prevTablesRef.current) {
+        const prevNeedsBill = new Set(prevTablesRef.current.filter(t => t.status === 'Needs Bill').map(t => t.id));
+        
+        let soundPlayed = false;
+        tables.forEach(table => {
+            if (table.status === 'Needs Bill' && !prevNeedsBill.has(table.id) && !soundPlayed) {
+                playNotificationSound();
+                toast({ title: "Bill Requested", description: `${table.name} is ready to pay.`})
+                soundPlayed = true; 
+            }
+        });
+    }
+    prevTablesRef.current = tables;
+  }, [tables, toast]);
 
   const handleTableStatusChange = async (tableId: string, currentStatus: Table['status']) => {
     if (!firestore) return;
@@ -56,7 +87,7 @@ export default function WaiterPage() {
 
     if (currentStatus === 'Empty' && nextStatus === 'Seated') {
       const guestCountStr = window.prompt(`Enter number of guests for table:`, "2");
-      if (guestCountStr === null) return; // User cancelled
+      if (guestCountStr === null) return;
       const guestCount = parseInt(guestCountStr, 10);
       if (isNaN(guestCount) || guestCount <= 0) {
         toast({ variant: 'destructive', title: 'Invalid Input', description: 'Please enter a valid number of guests.'});
