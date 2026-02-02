@@ -57,7 +57,7 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
             </CardHeader>
             <CardContent className="p-4 pt-0">
                <div className="text-sm text-muted-foreground mb-2 truncate">
-                {order.items.map((item) => `${item.name} (x${item.quantity})`).join(", ")}
+                {order.items.map((item) => `${item.name}${item.size && item.size !== 'Regular' ? ` (${item.size})` : ''} (x${item.quantity})`).join(", ")}
               </div>
               <div className="flex justify-between items-baseline">
                 <span className="text-sm text-muted-foreground">{order.time}</span>
@@ -98,7 +98,7 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {order.items.map((item) => `${item.name} (x${item.quantity})`).join(", ")}
+                  {order.items.map((item) => `${item.name}${item.size && item.size !== 'Regular' ? ` (${item.size})` : ''} (x${item.quantity})`).join(", ")}
                 </TableCell>
                 <TableCell>{order.time}</TableCell>
                 <TableCell className="text-right">

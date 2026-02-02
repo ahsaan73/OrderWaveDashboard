@@ -404,7 +404,7 @@ export default function Home() {
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {selectedOrder.items.map((item, index) => (
                         <div key={index} className="flex justify-between">
-                          <span>{item.name} <span className="text-muted-foreground">x{item.quantity}</span></span>
+                          <span>{item.name}{item.size && item.size !== 'Regular' ? ` (${item.size})` : ''} <span className="text-muted-foreground">x{item.quantity}</span></span>
                           <span>PKR {(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}

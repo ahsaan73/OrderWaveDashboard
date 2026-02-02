@@ -89,7 +89,7 @@ export function OrderCard({ order, onUpdateStatus, canUpdate = false }: OrderCar
         <ul className="space-y-2 text-center">
           {order.items.map((item, index) => (
             <li key={index} className="flex flex-col">
-              <span className="text-4xl font-bold leading-tight">{item.name}</span>
+              <span className="text-4xl font-bold leading-tight">{item.name}{item.size && item.size !== 'Regular' ? ` (${item.size})` : ''}</span>
               <span className="text-2xl font-bold text-yellow-400">x{item.quantity}</span>
             </li>
           ))}

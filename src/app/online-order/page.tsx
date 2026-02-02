@@ -125,7 +125,7 @@ function OnlineOrderPageContent() {
     const newOrderPayload: Omit<Order, 'id' | 'ref'> = {
         orderNumber: `#ON${Math.floor(Math.random() * 9000) + 1000}`,
         customerName: `${customerName.trim()} (${orderType})`,
-        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),
+        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price, size: oi.item.size })),
         status: 'Waiting',
         total: calculateTotal(),
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
@@ -221,7 +221,7 @@ function OnlineOrderPageContent() {
                     data-ai-hint={item.imageHint}
                 />
                 <div className="flex-grow">
-                    <h3 className="font-bold text-lg">{item.name}</h3>
+                    <h3 className="font-bold text-lg">{item.name}{item.size && item.size !== 'Regular' ? ` (${item.size})` : ''}</h3>
                     <p className="text-muted-foreground text-sm">PKR {item.price.toFixed(2)}</p>
                 </div>
                 <Button size="icon" className="rounded-full h-12 w-12" onClick={() => handleAddItem(item)}>
@@ -265,7 +265,7 @@ function OnlineOrderPageContent() {
                     <div key={item.id} className="flex items-start">
                       <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="w-16 h-16 rounded-md object-cover mr-4" />
                       <div className="flex-grow">
-                        <p className="font-semibold">{item.name}</p>
+                        <p className="font-semibold">{item.name}{item.size && item.size !== 'Regular' ? ` (${item.size})` : ''}</p>
                         <p className="text-sm text-primary font-semibold">PKR {item.price.toFixed(2)}</p>
                          <div className="flex items-center gap-2 mt-2">
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleRemoveItem(item.id)}><Minus className="h-3 w-3" /></Button>

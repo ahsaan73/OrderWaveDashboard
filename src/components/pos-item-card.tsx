@@ -35,7 +35,7 @@ export function PosItemCard({ item, onSelect }: PosItemCardProps) {
         )}
       </div>
       <CardContent className="p-3">
-        <h3 className="font-bold text-md truncate">{item.name}</h3>
+        <h3 className="font-bold text-md truncate">{item.name}{item.size && item.size !== 'Regular' ? ` (${item.size})` : ''}</h3>
         <p className="text-sm font-semibold text-primary">PKR {item.price.toFixed(2)}</p>
       </CardContent>
     </Card>

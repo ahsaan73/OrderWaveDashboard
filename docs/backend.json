@@ -46,7 +46,8 @@
             "properties": {
               "name": { "type": "string" },
               "quantity": { "type": "number" },
-              "price": { "type": "number" }
+              "price": { "type": "number" },
+              "size": { "type": "string" }
             },
             "required": ["name", "quantity", "price"]
           }
@@ -76,7 +77,12 @@
         "imageUrl": { "type": "string", "format": "uri" },
         "imageHint": { "type": "string" },
         "isAvailable": { "type": "boolean" },
-        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] }
+        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] },
+        "size": {
+            "type": "string",
+            "description": "The size of the menu item, if applicable (e.g., for pizzas).",
+            "enum": ["Regular", "Small", "Large", "Party"]
+        }
       },
       "required": ["name", "price", "imageUrl", "isAvailable", "category"]
     },

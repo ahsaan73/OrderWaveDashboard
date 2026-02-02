@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { MenuItem, MenuItemCategory, StockItem, RecipeIngredient, MenuItemRecipe } from '@/lib/types';
+import type { MenuItem, MenuItemCategory, StockItem, RecipeIngredient, MenuItemRecipe, MenuItemSize } from '@/lib/types';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -35,14 +35,16 @@ interface AddEditMenuModalProps {
 }
 
 const menuItemCategories: readonly [MenuItemCategory, ...MenuItemCategory[]] = ['Burgers', 'Sides', 'Wraps', 'Pizzas', 'Drinks', 'Pasta'];
+const menuItemSizes: readonly [MenuItemSize, ...MenuItemSize[]] = ['Regular', 'Small', 'Large', 'Party'];
 
 const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   price: z.coerce.number().positive('Price must be a positive number.'),
   description: z.string().optional(),
-  imageUrl: z.string().min(1, "Image is required."),
+  imageUrl: z.string().url("Please enter a valid image URL.").min(1, "Image is required."),
   imageHint: z.string().optional(),
   category: z.enum(menuItemCategories),
+  size: z.enum(menuItemSizes).optional(),
   recipe: z.array(z.object({
     stockItemId: z.string().min(1, 'Ingredient is required.'),
     quantity: z.coerce.number().positive('Quantity must be a positive number.'),
@@ -70,6 +72,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
       imageUrl: '',
       imageHint: '',
       category: 'Burgers',
+      size: 'Regular',
       recipe: [],
     },
   });
@@ -105,6 +108,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
           imageUrl: item.imageUrl,
           imageHint: item.imageHint,
           category: item.category,
+          size: item.size || 'Regular',
           recipe: [], // Start with empty recipe, will be populated by second effect
         });
       } else {
@@ -119,6 +123,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
           imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
           imageHint: hint,
           category: initialCategory,
+          size: 'Regular',
           recipe: [],
         });
       }
@@ -150,6 +155,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
       imageUrl: data.imageUrl,
       imageHint: data.imageHint || '',
       category: data.category,
+      size: data.size,
       isAvailable: item?.isAvailable ?? true,
       recipe: data.recipe,
     };
@@ -244,6 +250,27 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
                   )}
               />
               {errors.category && <p className="col-start-2 col-span-3 text-destructive text-xs mt-1">{errors.category.message}</p>}
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="size" className="text-right">
+                Size
+              </Label>
+              <Controller
+                control={control}
+                name="size"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value || 'Regular'}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select a size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {menuItemSizes.map(size => (
+                          <SelectItem key={size} value={size}>{size}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
             
             <Tabs defaultValue="url" className="col-span-4">

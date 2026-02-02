@@ -13,10 +13,19 @@ export type User = FirebaseDocument & {
   role?: 'manager' | 'cashier' | 'waiter' | 'admin' | 'kitchen';
 };
 
+export type MenuItemSize = 'Regular' | 'Small' | 'Large' | 'Party';
+
+export type OrderItemDetail = {
+  name: string;
+  quantity: number;
+  price: number;
+  size?: MenuItemSize;
+};
+
 export type Order = FirebaseDocument & {
   orderNumber: string;
   customerName: string;
-  items: { name: string; quantity: number, price: number }[];
+  items: OrderItemDetail[];
   status: 'Waiting' | 'Cooking' | 'Done';
   total: number;
   time: string;
@@ -45,6 +54,7 @@ export type MenuItem = FirebaseDocument & {
   imageHint: string;
   isAvailable: boolean;
   category: MenuItemCategory;
+  size?: MenuItemSize;
 };
 
 export type MenuItemRecipe = FirebaseDocument & {

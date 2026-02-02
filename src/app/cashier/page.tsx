@@ -92,7 +92,7 @@ export default function CashierPage() {
     const newOrder: Omit<Order, 'id'| 'ref'> = {
         orderNumber: `#${Math.floor(Math.random() * 90000) + 10000}`,
         customerName: 'Walk-in Customer',
-        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price })),
+        items: order.map(oi => ({ name: oi.item.name, quantity: oi.quantity, price: oi.item.price, size: oi.item.size })),
         status: 'Waiting',
         total: total,
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
@@ -152,7 +152,7 @@ export default function CashierPage() {
                             {order.map(({ item, quantity }) => (
                                 <div key={item.id} className="flex items-center">
                                     <div className="flex-grow">
-                                        <p className="font-semibold">{item.name}</p>
+                                        <p className="font-semibold">{item.name}{item.size && item.size !== 'Regular' ? ` (${item.size})` : ''}</p>
                                         <p className="text-sm text-muted-foreground">PKR {item.price.toFixed(2)} x {quantity}</p>
                                     </div>
                                     <p className="font-bold">PKR {(item.price * quantity).toFixed(2)}</p>
