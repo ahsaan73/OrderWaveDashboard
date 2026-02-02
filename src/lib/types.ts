@@ -45,7 +45,10 @@ export type MenuItem = FirebaseDocument & {
   imageHint: string;
   isAvailable: boolean;
   category: MenuItemCategory;
-  recipe?: RecipeIngredient[];
+};
+
+export type MenuItemRecipe = FirebaseDocument & {
+    recipe: RecipeIngredient[];
 };
 
 export type StockItem = FirebaseDocument & {

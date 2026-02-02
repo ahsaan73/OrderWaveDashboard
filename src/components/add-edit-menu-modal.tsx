@@ -15,19 +15,22 @@ import { Label } from '@/components/ui/label';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { MenuItem, MenuItemCategory, StockItem } from '@/lib/types';
+import type { MenuItem, MenuItemCategory, StockItem, RecipeIngredient, MenuItemRecipe } from '@/lib/types';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Trash2 } from 'lucide-react';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Skeleton } from './ui/skeleton';
 
 interface AddEditMenuModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   item: MenuItem | null;
-  onSave: (item: Omit<MenuItem, 'id' | 'ref'>, id?: string) => void;
+  onSave: (item: Omit<MenuItem, 'id' | 'ref'> & { recipe?: RecipeIngredient[] }, id?: string) => void;
   stockItems: StockItem[];
 }
 
@@ -49,6 +52,8 @@ const menuItemSchema = z.object({
 type MenuItemFormData = z.infer<typeof menuItemSchema>;
 
 export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }: AddEditMenuModalProps) {
+  const firestore = useFirestore();
+
   const {
     register,
     handleSubmit,
@@ -74,6 +79,13 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
     name: "recipe",
   });
 
+  const recipeRef = useMemoFirebase(() => {
+    if (!firestore || !item?.id) return null;
+    return doc(firestore, 'menuItemRecipes', item.id);
+  }, [firestore, item]);
+  
+  const { data: recipeData, isLoading: recipeLoading } = useDoc<MenuItemRecipe>(recipeRef);
+
   const [ingredient, setIngredient] = useState('');
   const [quantity, setQuantity] = useState('');
 
@@ -81,34 +93,44 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
   const watchedCategory = watch('category');
   const watchedRecipe = watch('recipe');
 
+  // Effect to reset form when modal opens or item changes
   useEffect(() => {
     if (isOpen) {
-        if (item) {
-          reset({
-            name: item.name,
-            price: item.price,
-            description: item.description,
-            imageUrl: item.imageUrl,
-            imageHint: item.imageHint,
-            category: item.category,
-            recipe: item.recipe || [],
-          });
-        } else {
-          const initialCategory = 'Burgers';
-          const seed = initialCategory.toLowerCase().replace(/\s/g, '-');
-          const hint = initialCategory.toLowerCase().replace(/s$/, '');
-          reset({
-            name: '',
-            price: undefined,
-            description: '',
-            imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
-            imageHint: hint,
-            category: initialCategory,
-            recipe: [],
-          });
-        }
+      if (item) {
+        // For existing items, reset with public data first
+        reset({
+          name: item.name,
+          price: item.price,
+          description: item.description,
+          imageUrl: item.imageUrl,
+          imageHint: item.imageHint,
+          category: item.category,
+          recipe: [], // Start with empty recipe, will be populated by second effect
+        });
+      } else {
+        // For new items, reset with default values
+        const initialCategory = 'Burgers';
+        const seed = initialCategory.toLowerCase().replace(/\s/g, '-');
+        const hint = initialCategory.toLowerCase().replace(/s$/, '');
+        reset({
+          name: '',
+          price: undefined,
+          description: '',
+          imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
+          imageHint: hint,
+          category: initialCategory,
+          recipe: [],
+        });
+      }
     }
   }, [item, reset, isOpen]);
+
+  // Effect to populate recipe once it's loaded for an existing item
+  useEffect(() => {
+    if (isOpen && item && recipeData) {
+      setValue('recipe', recipeData.recipe || []);
+    }
+  }, [isOpen, item, recipeData, setValue]);
 
   // Update image placeholder when category changes for a new item
   useEffect(() => {
@@ -121,7 +143,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
   }, [watchedCategory, item, setValue, isOpen]);
 
   const onSubmit = (data: MenuItemFormData) => {
-    const savedItem: Omit<MenuItem, 'id' | 'ref'> = {
+    const savedItem: Omit<MenuItem, 'id' | 'ref'> & { recipe?: RecipeIngredient[] } = {
       name: data.name,
       price: data.price,
       description: data.description || '',
@@ -277,42 +299,51 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
             {/* Recipe Section */}
             <div className="col-span-4 grid gap-4">
                  <h3 className="text-lg font-medium">Recipe</h3>
-                 <div className="grid grid-cols-4 items-start gap-4">
-                    <Label className="text-right pt-2">
-                        Ingredients
-                    </Label>
-                    <div className="col-span-3 space-y-4">
-                        {fields.map((field, index) => (
-                            <div key={field.id} className="flex items-center gap-2">
-                                <span className="font-semibold flex-1">{getIngredientName(field.stockItemId)}</span>
-                                <span className="w-24">{(field.quantity)} {getIngredientUnit(field.stockItemId)}</span>
-                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="text-destructive h-4 w-4"/></Button>
+                 {recipeLoading && item ? (
+                    <div className="col-start-2 col-span-3 space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                    </div>
+                 ) : (
+                    <>
+                        <div className="grid grid-cols-4 items-start gap-4">
+                            <Label className="text-right pt-2">
+                                Ingredients
+                            </Label>
+                            <div className="col-span-3 space-y-4">
+                                {fields.map((field, index) => (
+                                    <div key={field.id} className="flex items-center gap-2">
+                                        <span className="font-semibold flex-1">{getIngredientName(field.stockItemId)}</span>
+                                        <span className="w-24">{(field.quantity)} {getIngredientUnit(field.stockItemId)}</span>
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="text-destructive h-4 w-4"/></Button>
+                                    </div>
+                                ))}
+                                {watchedRecipe?.length === 0 && <p className="text-sm text-muted-foreground">No ingredients added yet.</p>}
                             </div>
-                        ))}
-                         {watchedRecipe?.length === 0 && <p className="text-sm text-muted-foreground">No ingredients added yet.</p>}
-                    </div>
-                </div>
-                 <div className="grid grid-cols-4 items-end gap-4">
-                     <Label htmlFor="ingredient" className="text-right">
-                        Add Ingredient
-                    </Label>
-                    <div className="col-span-3 grid grid-cols-3 gap-2">
-                        <Select value={ingredient} onValueChange={setIngredient}>
-                             <SelectTrigger className="col-span-2">
-                                <SelectValue placeholder="Select ingredient" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {stockItems.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        <Input id="quantity" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Qty" className="w-full" type="number"/>
-                    </div>
-                 </div>
-                 <div className="grid grid-cols-4 items-center gap-4">
-                    <div className="col-start-2 col-span-3">
-                         <Button type="button" variant="secondary" onClick={handleAddIngredient}>Add to Recipe</Button>
-                    </div>
-                 </div>
+                        </div>
+                        <div className="grid grid-cols-4 items-end gap-4">
+                            <Label htmlFor="ingredient" className="text-right">
+                                Add Ingredient
+                            </Label>
+                            <div className="col-span-3 grid grid-cols-3 gap-2">
+                                <Select value={ingredient} onValueChange={setIngredient}>
+                                    <SelectTrigger className="col-span-2">
+                                        <SelectValue placeholder="Select ingredient" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {stockItems.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <Input id="quantity" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Qty" className="w-full" type="number"/>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="col-start-2 col-span-3">
+                                <Button type="button" variant="secondary" onClick={handleAddIngredient}>Add to Recipe</Button>
+                            </div>
+                        </div>
+                    </>
+                 )}
             </div>
           </div>
         </form>

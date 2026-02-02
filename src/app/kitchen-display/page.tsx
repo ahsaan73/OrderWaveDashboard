@@ -5,9 +5,9 @@ import Link from "next/link";
 import { OrderCard } from "@/components/order-card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { collection, query, where, doc, updateDoc, getDoc, runTransaction, addDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, getDoc, runTransaction, addDoc, setDoc } from 'firebase/firestore';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import type { Order, MenuItem, StockItem } from "@/lib/types";
+import type { Order, MenuItem, StockItem, MenuItemRecipe } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -57,10 +57,16 @@ export default function KitchenDisplayPage() {
       return collection(firestore, 'stockItems');
   }, [firestore]);
 
+  const recipesQuery = useMemoFirebase(() => {
+    if(!firestore || !canUpdate) return null;
+    return collection(firestore, 'menuItemRecipes');
+  }, [firestore, canUpdate]);
+
   const { data: activeOrders, isLoading: isLoadingActive } = useCollection<Order>(ordersQuery);
   const { data: doneOrdersData, isLoading: isLoadingDone } = useCollection<Order>(doneOrdersQuery);
   const { data: menuItems, isLoading: isLoadingMenu } = useCollection<MenuItem>(menuItemsQuery);
   const { data: stockItems, isLoading: isLoadingStock } = useCollection<StockItem>(stockItemsQuery);
+  const { data: recipes, isLoading: isLoadingRecipes } = useCollection<MenuItemRecipe>(recipesQuery);
 
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
@@ -68,7 +74,7 @@ export default function KitchenDisplayPage() {
     const orderRef = doc(firestore, 'orders', orderId);
 
     // --- Stock Deduction Logic ---
-    if (newStatus === 'Cooking' && menuItems && stockItems) {
+    if (newStatus === 'Cooking' && menuItems && stockItems && recipes) {
         const orderSnap = await getDoc(orderRef);
         if (orderSnap.exists() && !orderSnap.data().stockDeducted) {
             const orderData = orderSnap.data() as Order;
@@ -77,13 +83,16 @@ export default function KitchenDisplayPage() {
                 
                 for (const orderItem of orderData.items) {
                     const menuItem = menuItems.find(mi => mi.name === orderItem.name);
-                    if (menuItem?.recipe) {
-                        for (const recipeIngredient of menuItem.recipe) {
-                            const stockItem = stockItems.find(si => si.id === recipeIngredient.stockItemId);
-                            if (stockItem) {
-                                const totalDeduction = recipeIngredient.quantity * orderItem.quantity;
-                                const current = deductions.get(stockItem.id) || { item: stockItem, change: 0 };
-                                deductions.set(stockItem.id, { ...current, change: current.change + totalDeduction });
+                    if (menuItem) {
+                        const recipe = recipes.find(r => r.id === menuItem.id);
+                        if (recipe?.recipe) {
+                            for (const recipeIngredient of recipe.recipe) {
+                                const stockItem = stockItems.find(si => si.id === recipeIngredient.stockItemId);
+                                if (stockItem) {
+                                    const totalDeduction = recipeIngredient.quantity * orderItem.quantity;
+                                    const current = deductions.get(stockItem.id) || { item: stockItem, change: 0 };
+                                    deductions.set(stockItem.id, { ...current, change: current.change + totalDeduction });
+                                }
                             }
                         }
                     }
@@ -174,7 +183,7 @@ export default function KitchenDisplayPage() {
       </div>
   );
   
-  const isLoading = userLoading || isLoadingActive || isLoadingDone || isLoadingMenu || isLoadingStock;
+  const isLoading = userLoading || isLoadingActive || isLoadingDone || isLoadingMenu || isLoadingStock || isLoadingRecipes;
 
   if (userLoading || !user || !allowedRoles.includes(user.role || '')) {
       return (

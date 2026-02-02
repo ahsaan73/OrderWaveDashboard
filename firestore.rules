@@ -31,6 +31,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isStaff();
     }
+
+    match /menuItemRecipes/{recipeId} {
+      allow read, write: if isStaff();
+    }
     
     match /tables/{tableId} {
       allow read: if true;

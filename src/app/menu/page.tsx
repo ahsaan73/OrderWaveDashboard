@@ -7,9 +7,9 @@ import { MenuItemCard } from '@/components/menu-item-card';
 import { AddEditMenuModal } from '@/components/add-edit-menu-modal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { collection, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, addDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import type { MenuItem, StockItem } from '@/lib/types';
+import type { MenuItem, StockItem, RecipeIngredient } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
 
@@ -70,24 +70,41 @@ export default function MenuPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveItem = async (item: Omit<MenuItem, 'id' | 'ref'>, id?: string) => {
+  const handleSaveItem = async (item: Omit<MenuItem, 'id' | 'ref'> & { recipe?: RecipeIngredient[] }, id?: string) => {
     if (!firestore) return;
+    const { recipe, ...publicData } = item;
+    
     try {
-        if (id) {
-            // Update existing item
-            const itemRef = doc(firestore, 'menuItems', id);
-            await updateDoc(itemRef, item);
-            toast({ title: 'Success', description: 'Menu item updated.' });
+      if (id) {
+        // Update existing item
+        const itemRef = doc(firestore, 'menuItems', id);
+        await updateDoc(itemRef, publicData);
+        
+        const recipeRef = doc(firestore, 'menuItemRecipes', id);
+        if (recipe && recipe.length > 0) {
+          await setDoc(recipeRef, { recipe });
         } else {
-            // Add new item
-            await addDoc(collection(firestore, 'menuItems'), item);
-            toast({ title: 'Success', description: 'New menu item added.' });
+          // if recipe is empty or undefined, delete the recipe document if it exists
+          try {
+            await deleteDoc(recipeRef);
+          } catch (e) {
+             // Ignore error if doc doesn't exist
+          }
         }
-        setIsModalOpen(false);
-
+        toast({ title: 'Success', description: 'Menu item updated.' });
+      } else {
+        // Add new item
+        const newDocRef = await addDoc(collection(firestore, 'menuItems'), publicData);
+        if (recipe && recipe.length > 0) {
+          const recipeRef = doc(firestore, 'menuItemRecipes', newDocRef.id);
+          await setDoc(recipeRef, { recipe });
+        }
+        toast({ title: 'Success', description: 'New menu item added.' });
+      }
+      setIsModalOpen(false);
     } catch(error) {
-        console.error('Error saving item:', error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not save menu item.'});
+      console.error('Error saving item:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not save menu item.'});
     }
   };
 
@@ -100,7 +117,16 @@ export default function MenuPage() {
     if (!firestore || !itemToDelete) return;
     try {
       const itemRef = doc(firestore, 'menuItems', itemToDelete.id);
+      const recipeRef = doc(firestore, 'menuItemRecipes', itemToDelete.id);
+      
       await deleteDoc(itemRef);
+      // It's possible a recipe doc doesn't exist, so we don't want to fail if it's not there
+      try {
+        await deleteDoc(recipeRef);
+      } catch(e) {
+        // Ignore if recipe doc doesn't exist
+      }
+      
       toast({ title: 'Success', description: `"${itemToDelete.name}" was deleted.` });
       setIsDeleteAlertOpen(false);
       setItemToDelete(null);

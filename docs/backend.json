@@ -76,18 +76,7 @@
         "imageUrl": { "type": "string", "format": "uri" },
         "imageHint": { "type": "string" },
         "isAvailable": { "type": "boolean" },
-        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] },
-        "recipe": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "stockItemId": { "type": "string" },
-              "quantity": { "type": "number" }
-            },
-            "required": ["stockItemId", "quantity"]
-          }
-        }
+        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] }
       },
       "required": ["name", "price", "imageUrl", "isAvailable", "category"]
     },
@@ -134,7 +123,27 @@
     },
     "/menuItems/{menuItemId}": {
       "schema": { "$ref": "#/entities/MenuItem" },
-      "description": "Stores the menu items available in the restaurant."
+      "description": "Stores the public menu items available in the restaurant."
+    },
+    "/menuItemRecipes/{menuItemId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "recipe": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stockItemId": { "type": "string" },
+                "quantity": { "type": "number" }
+              },
+              "required": ["stockItemId", "quantity"]
+            }
+          }
+        },
+        "required": ["recipe"]
+      },
+      "description": "Stores the recipe for a corresponding menu item. Private to staff."
     },
     "/stockItems/{stockItemId}": {
       "schema": { "$ref": "#/entities/StockItem" },
