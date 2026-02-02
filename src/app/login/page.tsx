@@ -15,6 +15,14 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   const handleLogin = async () => {
+    if (!auth || !firestore) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Firebase services are not available. Please try again later.",
+        });
+        return;
+    }
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -57,16 +65,15 @@ export default function LoginPage() {
                 description: "Welcome! You have full administrative access.",
                 duration: 5000,
             });
-            // Go to dashboard, it will handle routing.
-            router.push('/');
         } else {
             toast({
                 title: "Account Registered!",
-                description: "An administrator must assign you a role before you can log in.",
+                description: "Your account has been created with a default role. Welcome!",
                 duration: 5000,
             });
-            await auth.signOut();
         }
+        // Redirect all new users to the dashboard, which will handle role-based routing.
+        router.push('/');
       }
     } catch (error: any) {
       if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
