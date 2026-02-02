@@ -1,3 +1,4 @@
+
 'use client';
 
 import { DashboardLayout } from "@/components/dashboard-layout";
@@ -40,7 +41,7 @@ const pieChartConfig = {
 
 export default function Home() {
   const firestore = useFirestore();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -62,10 +63,18 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Still loading, do nothing yet.
     if (userLoading) {
-      return; // Wait until loading is finished
+      return;
     }
 
+    // Finished loading. If there's no authenticated user, redirect to login.
+    if (!authUser) {
+      router.replace('/login');
+      return;
+    }
+    
+    // If there is an authenticated user, wait for the full user profile with role.
     if (user && user.role) {
       // We have a full user with a role, decide where they go
       switch (user.role) {
@@ -87,11 +96,10 @@ export default function Home() {
           router.replace('/login');
           break;
       }
-    } else {
-      // If after loading there's no user or no role, they can't be here.
-      router.replace('/login');
     }
-  }, [user, userLoading, router]);
+    // If userLoading is false, authUser exists, but `user` is still null (profile loading),
+    // we do nothing and let the component show its loading state. This prevents the loop.
+  }, [user, userLoading, authUser, router]);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -273,9 +281,15 @@ export default function Home() {
   const isLoading = isLoadingOrders || isLoadingTables || isLoadingMenuItems;
   const canManagePayment = user?.role === 'manager' || user?.role === 'admin';
 
-  if (userLoading || !user || (user.role !== 'manager' && user.role !== 'admin')) {
+  if (userLoading || !user || !user.role) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
+  
+  // This is a fallback. The useEffect should handle redirection for other roles.
+  if (user.role !== 'manager' && user.role !== 'admin') {
+      return <DashboardLayout><div>Loading...</div></DashboardLayout>;
+  }
+
 
   return (
     <DashboardLayout>
@@ -443,3 +457,5 @@ export default function Home() {
     return (table.status === 'Eating' || table.status === 'Needs Bill') && table.orderId;
   }
 }
+
+    

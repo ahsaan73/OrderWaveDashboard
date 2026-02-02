@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -16,23 +17,26 @@ export default function AdminPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
 
   useEffect(() => {
     if (userLoading) {
       return; // Wait until loading is finished
     }
-
-    if (user && user.role === 'admin') {
-      // User is an admin, they can stay.
-    } else if (user) {
-      // User is logged in but not an admin, send to dashboard.
-      router.replace('/');
-    } else {
-      // No user at all, send to login.
-      router.replace('/login');
+    
+    if (!authUser) {
+        router.replace('/login');
+        return;
     }
-  }, [user, userLoading, router]);
+
+    if (user && user.role) {
+      if (user.role !== 'admin') {
+        router.replace('/');
+      }
+      // else user is admin, they can stay
+    } 
+    // If profile is still loading, do nothing and wait.
+  }, [user, userLoading, authUser, router]);
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || user.role !== 'admin') return null;
@@ -140,3 +144,5 @@ export default function AdminPage() {
     </DashboardLayout>
   );
 }
+
+    
