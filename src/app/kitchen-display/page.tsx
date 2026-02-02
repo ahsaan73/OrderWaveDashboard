@@ -1,12 +1,12 @@
 'use client';
 
 import { useMemo, useEffect } from "react";
-import Link from "next/link";
 import { OrderCard } from "@/components/order-card";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { collection, query, where, doc, updateDoc, getDoc, runTransaction, addDoc, setDoc } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useUser, useCollection, useMemoFirebase, useAuth } from "@/firebase";
+import { signOut } from 'firebase/auth';
 import type { Order, MenuItem, StockItem, MenuItemRecipe } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,14 @@ export default function KitchenDisplayPage() {
   const { toast } = useToast();
   const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
+  const auth = useAuth();
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/login');
+    }
+  };
 
   const allowedRoles = ['kitchen', 'manager', 'admin'];
 
@@ -197,10 +205,9 @@ export default function KitchenDisplayPage() {
     <div className="bg-gray-900 text-white min-h-screen p-4">
       <header className="flex justify-between items-center mb-4">
         <h1 className="text-4xl font-bold text-primary font-headline">Kitchen Orders</h1>
-        <Button variant="ghost" asChild>
-          <Link href="/" aria-label="Close KDS">
-            <X className="w-8 h-8"/>
-          </Link>
+        <Button variant="ghost" className="text-white hover:text-white hover:bg-gray-700" onClick={handleLogout}>
+          <LogOut className="mr-2 h-6 w-6"/>
+          Logout
         </Button>
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">

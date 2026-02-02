@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Order, Table } from '@/lib/types';
 import { collection, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { startOfToday } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,7 +13,7 @@ import { OrdersTable } from '@/components/orders-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Printer, ChefHat } from 'lucide-react';
+import { Printer, ChefHat, LogOut } from 'lucide-react';
 
 export default function BillingPage() {
   const firestore = useFirestore();
@@ -21,6 +22,14 @@ export default function BillingPage() {
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
   const prevTablesRef = useRef<Table[]>();
+  const auth = useAuth();
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/login');
+    }
+  };
 
   const playNotificationSound = () => {
     const context = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -152,6 +161,10 @@ export default function BillingPage() {
                 <p className="text-sm text-muted-foreground">Billing & Live Orders</p>
             </div>
         </div>
+        <Button variant="outline" onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </header>
 
       <main className="p-4 sm:p-6 lg:p-8">

@@ -4,9 +4,12 @@ import { useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TableCard } from '@/components/table-card';
 import { collection, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 import type { Table } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 
 const statuses: Table['status'][] = ['Empty', 'Seated', 'Eating', 'Needs Bill'];
 
@@ -17,6 +20,14 @@ export default function WaiterPage() {
   const router = useRouter();
   const prevTablesRef = useRef<Table[]>();
   const allowedRoles = ['waiter', 'manager', 'admin'];
+  const auth = useAuth();
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/login');
+    }
+  };
 
   const playNotificationSound = () => {
     const context = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -121,6 +132,10 @@ export default function WaiterPage() {
     <div className="bg-muted/30 min-h-screen">
       <header className="bg-background shadow-sm p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-primary font-headline">{pageTitle}</h1>
+        <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+        </Button>
       </header>
       <main className="p-4 sm:p-6 lg:p-8">
         {user?.role === 'waiter' && (

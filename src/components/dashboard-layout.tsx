@@ -17,6 +17,7 @@ import {
   Home,
   DollarSign,
   Link as LinkIcon,
+  LogOut,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -33,7 +34,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import { AiAdviceModal } from "./ai-advice-modal";
-import { useUser } from "@/firebase";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ShareLinkModal } from "./share-link-modal";
 
@@ -60,6 +62,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading } = useUser();
+  const auth = useAuth();
 
   const [activeSection, setActiveSection] = React.useState<AiSection | null>(
     null
@@ -77,6 +80,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
     if (id === 'OnlineOrdering') {
         setIsShareModalOpen(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/login');
     }
   };
 
@@ -132,16 +142,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
           <SidebarSeparator />
           <SidebarFooter className="p-2 flex flex-col gap-2">
-            {user && <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-9 w-9">
-                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col truncate">
-                    <span className="font-medium text-sm truncate">{user.displayName || 'User'}</span>
-                    <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
-                </div>
-            </div>}
+            {user && (
+              <div className="flex items-center justify-between p-2 rounded-md hover:bg-sidebar-accent">
+                  <div className="flex items-center gap-2 truncate">
+                      <Avatar className="h-9 w-9">
+                          <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                          <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col truncate">
+                          <span className="font-medium text-sm truncate">{user.displayName || 'User'}</span>
+                          <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
+                      </div>
+                  </div>
+                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleLogout}>
+                        <LogOut className="h-4 w-4" />
+                        <span className="sr-only">Logout</span>
+                    </Button>
+              </div>
+            )}
             
             {isManagerOrAdmin && (
                 <Button
