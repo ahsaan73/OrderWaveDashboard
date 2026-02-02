@@ -3,7 +3,7 @@
 import { useMemo, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { collection, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import type { User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,22 +25,32 @@ export default function AdminPage() {
   }, [user, userLoading, router]);
 
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || user.role !== 'admin') return null;
     return collection(firestore, 'users');
   }, [firestore, user]);
 
   const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);
 
-  const handleRoleChange = async (uid: string, newRole: User['role']) => {
+  const handleRoleChange = (uid: string, newRole: User['role']) => {
     if (!firestore) return;
     const userRef = doc(firestore, 'users', uid);
-    try {
-      await updateDoc(userRef, { role: newRole });
-      toast({ title: 'Success', description: 'User role updated.' });
-    } catch (error) {
-      console.error('Error updating user role', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not update user role.' });
-    }
+    updateDoc(userRef, { role: newRole })
+      .then(() => {
+        toast({ title: 'Success', description: 'User role updated.' });
+      })
+      .catch((serverError) => {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not update user role.',
+        });
+        const permissionError = new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'update',
+          requestResourceData: { role: newRole },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
   
   const getInitials = (name?: string | null) => {
