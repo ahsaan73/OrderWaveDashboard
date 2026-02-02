@@ -14,16 +14,20 @@ import { useRouter } from "next/navigation";
 export default function KitchenDisplayPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
 
   const allowedRoles = ['kitchen', 'manager', 'admin'];
 
   useEffect(() => {
-    if (!userLoading && (!user || !allowedRoles.includes(user.role || ''))) {
-      router.replace('/login');
+    if (!userLoading) {
+      if (user && !allowedRoles.includes(user.role || '')) {
+        router.replace('/');
+      } else if (!user && !authUser) {
+        router.replace('/login');
+      }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
 
   const canUpdate = user?.role === 'kitchen';
 

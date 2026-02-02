@@ -17,7 +17,7 @@ import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal'
 export default function StockPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
 
   const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
@@ -25,13 +25,18 @@ export default function StockPage() {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
   
+  const allowedRoles = ['manager', 'admin'];
   const isManager = user?.role === 'manager' || user?.role === 'admin';
 
   useEffect(() => {
-    if (!userLoading && !isManager) {
-      router.replace('/');
+    if (!userLoading) {
+      if (user && !allowedRoles.includes(user.role || '')) {
+        router.replace('/');
+      } else if (!user && !authUser) {
+        router.replace('/login');
+      }
     }
-  }, [user, userLoading, router, isManager]);
+  }, [user, userLoading, authUser, router]);
 
   const stockQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -150,7 +155,7 @@ export default function StockPage() {
   
   const isLoading = userLoading || dataLoading;
 
-  if (isLoading || !isManager) {
+  if (isLoading || !user || !allowedRoles.includes(user.role || '')) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 

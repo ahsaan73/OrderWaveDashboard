@@ -17,15 +17,20 @@ export default function TableCodesPage() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  const allowedRoles = ['manager', 'admin'];
 
   useEffect(() => {
-    if (!userLoading && !['manager', 'admin'].includes(user?.role || '')) {
-      router.replace('/');
+    if (!userLoading) {
+      if (user && !allowedRoles.includes(user.role || '')) {
+        router.replace('/');
+      } else if (!user && !authUser) {
+        router.replace('/login');
+      }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
 
   const firestore = useFirestore();
   const tablesQuery = useMemoFirebase(() => {
@@ -59,7 +64,7 @@ export default function TableCodesPage() {
 
   const isLoading = userLoading || dataLoading;
 
-  if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
+  if (userLoading || !user || !allowedRoles.includes(user.role || '')) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 

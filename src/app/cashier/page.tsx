@@ -21,18 +21,19 @@ export default function CashierPage() {
   const [order, setOrder] = useState<OrderItem[]>([]);
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
+  const allowedRoles = ['manager', 'admin', 'cashier'];
 
   useEffect(() => {
     if (!userLoading) {
-      if (!user) {
-        router.replace('/login');
-      } else if (!['manager', 'admin', 'cashier'].includes(user.role || '')) {
+      if (user && !allowedRoles.includes(user.role || '')) {
         router.replace('/');
+      } else if (!user && !authUser) {
+        router.replace('/login');
       }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
   
   const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -103,7 +104,7 @@ export default function CashierPage() {
   
   const isLoading = userLoading || dataLoading;
 
-  if (isLoading || !user) {
+  if (isLoading || !user || !allowedRoles.includes(user.role || '')) {
     return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
   }
 

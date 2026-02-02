@@ -10,15 +10,20 @@ import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 
 export default function OnlineOrderQrPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
   const qrCodeRef = useRef<HTMLDivElement>(null);
+  const allowedRoles = ['manager', 'admin'];
 
   useEffect(() => {
-    if (!userLoading && !['manager', 'admin'].includes(user?.role || '')) {
-      router.replace('/');
+    if (!userLoading) {
+      if (user && !allowedRoles.includes(user.role || '')) {
+        router.replace('/');
+      } else if (!user && !authUser) {
+        router.replace('/login');
+      }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
   
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const url = `${origin}/online-order`;
@@ -72,7 +77,7 @@ export default function OnlineOrderQrPage() {
     }
   };
 
-  if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
+  if (userLoading || !user || !allowedRoles.includes(user.role || '')) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 

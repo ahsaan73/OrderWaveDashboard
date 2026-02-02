@@ -16,7 +16,7 @@ import { Printer, ChefHat } from 'lucide-react';
 
 export default function BillingPage() {
   const firestore = useFirestore();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -41,14 +41,13 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (!userLoading) {
-      if (!user) {
-        // This won't be hit in demo mode, but leaving for robustness
+      if (user && !allowedRoles.includes(user.role || '')) {
         router.replace('/');
-      } else if (!allowedRoles.includes(user.role || '')) {
-        router.replace('/');
+      } else if (!user && !authUser) {
+        router.replace('/login');
       }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;

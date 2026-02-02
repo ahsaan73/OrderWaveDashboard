@@ -13,9 +13,10 @@ const statuses: Table['status'][] = ['Empty', 'Seated', 'Eating', 'Needs Bill'];
 export default function WaiterPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
   const prevTablesRef = useRef<Table[]>();
+  const allowedRoles = ['waiter', 'manager', 'admin'];
 
   const playNotificationSound = () => {
     const context = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -34,13 +35,13 @@ export default function WaiterPage() {
 
   useEffect(() => {
     if (!userLoading) {
-      if (!user) {
-        router.replace('/login');
-      } else if (!['waiter', 'manager', 'admin'].includes(user.role || '')) {
+      if (user && !allowedRoles.includes(user.role || '')) {
         router.replace('/');
+      } else if (!user && !authUser) {
+        router.replace('/login');
       }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
 
   const tablesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -110,7 +111,7 @@ export default function WaiterPage() {
 
   const isLoading = userLoading || dataLoading;
   
-  if (isLoading || !user) {
+  if (isLoading || !user || !allowedRoles.includes(user.role || '')) {
       return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
   }
 
