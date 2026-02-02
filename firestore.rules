@@ -1,66 +1,10 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isStaff() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['manager', 'admin'];
-    }
-    
-    function isKitchenStaff() {
-       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['kitchen', 'manager', 'admin'];
-    }
-
-    function isCashier() {
-        return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['cashier', 'manager', 'admin'];
-    }
-    
-    function isWaiter() {
-       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['waiter', 'manager', 'admin'];
-    }
-
-    function isAdmin() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    function isSignedIn() {
-        return request.auth != null;
-    }
-
-    match /menuItems/{itemId} {
-      allow read: if true;
-      allow write: if isStaff();
-    }
-    
-    match /tables/{tableId} {
-      allow read: if true;
-      allow write: if isWaiter() || isStaff();
-    }
-
-    match /orders/{orderId} {
-        allow create: if true;
-        allow read: if isSignedIn();
-        allow update: if isKitchenStaff() || isCashier() || isStaff();
-    }
-
-    match /stockItems/{stockItemId} {
-        allow read: if isStaff();
-        allow write: if isStaff();
-    }
-    
-    match /inventoryLogs/{logId} {
-        allow read: if isStaff();
-        allow write: if isStaff();
-    }
-
-    match /users/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin();
-      allow create: if request.auth.uid == userId;
-      // An admin can update any field. A user can update their own profile,
-      // but cannot change their own role.
-      allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
+    // Allow all reads and writes for demo purposes.
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

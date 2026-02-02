@@ -12,7 +12,7 @@ import { OrdersTable } from '@/components/orders-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Printer, LogOut, ChefHat } from 'lucide-react';
+import { Printer, ChefHat } from 'lucide-react';
 
 export default function BillingPage() {
   const firestore = useFirestore();
@@ -42,17 +42,13 @@ export default function BillingPage() {
   useEffect(() => {
     if (!userLoading) {
       if (!user) {
-        router.replace('/login');
+        // This won't be hit in demo mode, but leaving for robustness
+        router.replace('/');
       } else if (!allowedRoles.includes(user.role || '')) {
         router.replace('/');
       }
     }
   }, [user, userLoading, router]);
-  
-  const handleLogout = () => {
-    localStorage.removeItem('userUid');
-    router.push('/login');
-  }
 
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -157,7 +153,6 @@ export default function BillingPage() {
                 <p className="text-sm text-muted-foreground">Billing & Live Orders</p>
             </div>
         </div>
-        <Button variant="ghost" onClick={handleLogout}><LogOut className="mr-2"/> Logout</Button>
       </header>
 
       <main className="p-4 sm:p-6 lg:p-8">
