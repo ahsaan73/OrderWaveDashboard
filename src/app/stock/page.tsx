@@ -9,7 +9,7 @@ import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebas
 import type { StockItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, BookMarked } from 'lucide-react';
 import { AddEditStockModal } from '@/components/add-edit-stock-modal';
 import { AddStockModal } from '@/components/add-stock-modal';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
@@ -171,9 +171,12 @@ export default function StockPage() {
               Add, edit, delete, and update the stock levels for your restaurant's ingredients.
             </p>
           </div>
-          <div className='flex gap-2'>
+          <div className='flex flex-wrap gap-2'>
             <Button onClick={() => handleOpenManageModal()} size="lg">
-              <Plus className="mr-2" /> Manage Ingredients
+              <Plus className="mr-2" /> Add Ingredient
+            </Button>
+            <Button onClick={() => router.push('/menu')} size="lg" variant="outline">
+              <BookMarked className="mr-2" /> Manage Recipes
             </Button>
             <Button onClick={() => setIsAddStockModalOpen(true)} size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black">
               <Plus className="mr-2" /> Add Stock
