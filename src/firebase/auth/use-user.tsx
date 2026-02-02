@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useFirebase, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { User as AppUser } from '@/lib/types';
+import type { User as AuthUser } from 'firebase/auth';
 
 export function useUser() {
     const { user: authUser, isUserLoading: authLoading, userError: authError } = useFirebase();
@@ -44,5 +45,6 @@ export function useUser() {
         user,
         loading: authLoading || profileLoading,
         error: authError || profileError,
+        authUser,
     };
 }

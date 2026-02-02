@@ -40,7 +40,7 @@ const pieChartConfig = {
 
 export default function Home() {
   const firestore = useFirestore();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -62,7 +62,9 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Wait until the user loading state is fully resolved.
     if (!userLoading) {
+      // If we have a full application user with a role, handle role-based redirects.
       if (user) {
         if (user.role === 'cashier') router.replace('/billing');
         else if (user.role === 'waiter') router.replace('/waiter');
@@ -70,11 +72,16 @@ export default function Home() {
         else if (!['manager', 'admin'].includes(user.role || '')) {
           router.replace('/login');
         }
-      } else {
+        // If the user is an admin or manager, they stay on this dashboard page.
+      } else if (!authUser) {
+        // If there's no full user AND no basic Firebase auth user,
+        // then they are truly unauthenticated. Redirect to login.
         router.replace('/login');
       }
+      // If there IS an authUser but not a full user, we do nothing.
+      // This means the profile is still loading, so we wait to prevent a redirect loop.
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
