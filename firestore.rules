@@ -57,8 +57,8 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if request.auth.uid == userId;
       // Only allow an admin to change the role.
-      // A user can still update their own other details if you add them later.
-      allow update(diff): if isAdmin() || (request.auth.uid == userId && !('role' in diff.after.data));
+      // A user can still update their own other details.
+      allow update: if isAdmin() || (request.auth.uid == userId && !('role' in request.resource.data));
     }
   }
 }

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ChefHat } from 'lucide-react';
 import { useAuth, useFirestore } from "@/firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
-        // 1. Existing User: Send them to their dashboard
+        // Existing User: Route them based on their role
         const data = userSnap.data();
         if (data.role === 'admin' || data.role === 'manager') {
             router.push('/');
@@ -35,15 +35,22 @@ export default function LoginPage() {
         } else if (data.role === 'kitchen') {
             router.push('/kitchen-display');
         } else {
-            // Fallback for any other roles
+            // Fallback for any other roles or new users without a valid role yet
             router.push('/');
         }
       } else {
-        // 2. New User: Inform them they need approval and sign them out.
-        console.log("New user detected. Please assign role in Firebase Console.");
+        // New User: Create their user document, then inform and sign out.
+        await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            role: 'waiter' // Assign a default, non-privileged role
+        });
+        
         toast({
-            title: "Account Created!",
-            description: "Please wait for an administrator to assign you a role.",
+            title: "Account Registered!",
+            description: "An administrator must assign you a role before you can log in.",
             duration: 5000,
         });
         await auth.signOut();
