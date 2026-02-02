@@ -87,7 +87,7 @@
         "name": { "type": "string" },
         "currentStock": { "type": "number" },
         "totalStock": { "type": "number" },
-        "unit": { "type": "string", "enum": ["g", "ml", "pcs"] },
+        "unit": { "type": "string", "enum": ["g", "ml", "pcs", "kg"] },
         "threshold": { "type": "number" }
       },
       "required": ["name", "currentStock", "totalStock", "unit", "threshold"]

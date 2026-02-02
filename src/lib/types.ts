@@ -45,7 +45,7 @@ export type StockItem = FirebaseDocument & {
   name: string;
   currentStock: number;
   totalStock: number;
-  unit: 'g' | 'ml' | 'pcs';
+  unit: 'g' | 'ml' | 'pcs' | 'kg';
   threshold: number; // Percentage below which it is considered low
 };
 

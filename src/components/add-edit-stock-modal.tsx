@@ -36,7 +36,7 @@ const stockItemSchema = z.object({
     (a) => parseInt(z.string().parse(a), 10),
     z.number().positive('Total stock must be positive.')
   ),
-  unit: z.enum(['g', 'ml', 'pcs']),
+  unit: z.enum(['g', 'ml', 'pcs', 'kg']),
   threshold: z.number().min(0).max(100),
 });
 
@@ -144,6 +144,7 @@ export function AddEditStockModal({ isOpen, setIsOpen, item, onSave }: AddEditSt
                         <SelectItem value="g">Grams (g)</SelectItem>
                         <SelectItem value="ml">Milliliters (ml)</SelectItem>
                         <SelectItem value="pcs">Pieces (pcs)</SelectItem>
+                        <SelectItem value="kg">Kilograms (kg)</SelectItem>
                       </SelectContent>
                   </Select>
                   )}
