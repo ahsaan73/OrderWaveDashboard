@@ -35,20 +35,14 @@ const menuItemCategories: readonly [MenuItemCategory, ...MenuItemCategory[]] = [
 
 const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  price: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().positive('Price must be positive')
-  ),
+  price: z.coerce.number().positive('Price must be a positive number.'),
   description: z.string().optional(),
   imageUrl: z.string().min(1, "Image is required."),
   imageHint: z.string().optional(),
   category: z.enum(menuItemCategories),
   recipe: z.array(z.object({
     stockItemId: z.string().min(1, 'Ingredient is required.'),
-    quantity: z.preprocess(
-      (val) => parseFloat(String(val)),
-      z.number().positive('Quantity must be a positive number.')
-    ),
+    quantity: z.coerce.number().positive('Quantity must be a positive number.'),
   })).optional(),
 });
 
@@ -177,7 +171,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
             {item ? 'Update the details for this food sticker.' : 'Enter the details for the new food sticker.'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-grow overflow-y-auto pr-6 pl-2 -ml-2">
+        <form id="menu-item-form" onSubmit={handleSubmit(onSubmit)} className="flex-grow overflow-y-auto pr-6 pl-2 -ml-2">
           <div className="grid gap-6 py-4">
             {/* Item Details */}
             <div className="grid grid-cols-4 items-center gap-4">
@@ -324,7 +318,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }
         </form>
          <DialogFooter className="border-t pt-4">
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-            <Button type="submit" onClick={handleSubmit(onSubmit)}>Save changes</Button>
+            <Button type="submit" form="menu-item-form">Save changes</Button>
           </DialogFooter>
       </DialogContent>
     </Dialog>
