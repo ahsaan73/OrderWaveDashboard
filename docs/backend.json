@@ -60,7 +60,8 @@
         "paymentMethod": { "type": "string", "enum": ["Cash", "Card"] },
         "orderType": { "type": "string", "enum": ["Pickup", "Delivery", "Dine-in"] },
         "address": { "type": "string" },
-        "phoneNumber": { "type": "string" }
+        "phoneNumber": { "type": "string" },
+        "stockDeducted": { "type": "boolean" }
       },
       "required": ["orderNumber", "customerName", "items", "status", "total", "time", "createdAt", "orderType"]
     },
@@ -75,7 +76,18 @@
         "imageUrl": { "type": "string", "format": "uri" },
         "imageHint": { "type": "string" },
         "isAvailable": { "type": "boolean" },
-        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] }
+        "category": { "type": "string", "enum": ["Burgers", "Sides", "Wraps", "Pizzas", "Drinks", "Pasta"] },
+        "recipe": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stockItemId": { "type": "string" },
+              "quantity": { "type": "number" }
+            },
+            "required": ["stockItemId", "quantity"]
+          }
+        }
       },
       "required": ["name", "price", "imageUrl", "isAvailable", "category"]
     },

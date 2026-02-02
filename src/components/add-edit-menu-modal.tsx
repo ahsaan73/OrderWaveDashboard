@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,20 +12,23 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { MenuItem, MenuItemCategory } from '@/lib/types';
+import type { MenuItem, MenuItemCategory, StockItem } from '@/lib/types';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from './ui/textarea';
+import { Separator } from './ui/separator';
+import { Trash2 } from 'lucide-react';
 
 interface AddEditMenuModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   item: MenuItem | null;
   onSave: (item: Omit<MenuItem, 'id' | 'ref'>, id?: string) => void;
+  stockItems: StockItem[];
 }
 
 const menuItemCategories: readonly [MenuItemCategory, ...MenuItemCategory[]] = ['Burgers', 'Sides', 'Wraps', 'Pizzas', 'Drinks', 'Pasta'];
@@ -40,11 +43,18 @@ const menuItemSchema = z.object({
   imageUrl: z.string().min(1, "Image is required."),
   imageHint: z.string().optional(),
   category: z.enum(menuItemCategories),
+  recipe: z.array(z.object({
+    stockItemId: z.string().min(1, 'Ingredient is required.'),
+    quantity: z.preprocess(
+      (val) => parseFloat(String(val)),
+      z.number().positive('Quantity must be a positive number.')
+    ),
+  })).optional(),
 });
 
 type MenuItemFormData = z.infer<typeof menuItemSchema>;
 
-export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMenuModalProps) {
+export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave, stockItems }: AddEditMenuModalProps) {
   const {
     register,
     handleSubmit,
@@ -61,11 +71,21 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
       imageUrl: '',
       imageHint: '',
       category: 'Burgers',
+      recipe: [],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "recipe",
+  });
+
+  const [ingredient, setIngredient] = useState('');
+  const [quantity, setQuantity] = useState('');
+
   const watchedImageUrl = watch("imageUrl");
   const watchedCategory = watch('category');
+  const watchedRecipe = watch('recipe');
 
   useEffect(() => {
     if (isOpen) {
@@ -76,7 +96,8 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
             description: item.description,
             imageUrl: item.imageUrl,
             imageHint: item.imageHint,
-            category: item.category
+            category: item.category,
+            recipe: item.recipe || [],
           });
         } else {
           const initialCategory = 'Burgers';
@@ -88,7 +109,8 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
             description: '',
             imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
             imageHint: hint,
-            category: initialCategory
+            category: initialCategory,
+            recipe: [],
           });
         }
     }
@@ -113,6 +135,7 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
       imageHint: data.imageHint || '',
       category: data.category,
       isAvailable: item?.isAvailable ?? true,
+      recipe: data.recipe,
     };
     onSave(savedItem, item?.id);
   };
@@ -128,17 +151,35 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
     }
   };
 
+  const handleAddIngredient = () => {
+    const qty = parseFloat(quantity);
+    if(ingredient && qty > 0) {
+        append({ stockItemId: ingredient, quantity: qty });
+        setIngredient('');
+        setQuantity('');
+    }
+  }
+
+  const getIngredientName = (stockItemId: string) => {
+    return stockItems.find(s => s.id === stockItemId)?.name || 'Unknown';
+  }
+   const getIngredientUnit = (stockItemId: string) => {
+    return stockItems.find(s => s.id === stockItemId)?.unit || '';
+  }
+
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{item ? 'Edit Food Sticker' : 'Add New Food Sticker'}</DialogTitle>
           <DialogDescription>
             {item ? 'Update the details for this food sticker.' : 'Enter the details for the new food sticker.'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-grow overflow-y-auto pr-6 pl-2 -ml-2">
+          <div className="grid gap-6 py-4">
+            {/* Item Details */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
                 Name
@@ -237,11 +278,54 @@ export function AddEditMenuModal({ isOpen, setIsOpen, item, onSave }: AddEditMen
               </div>
             </div>
 
+            <Separator className="col-span-4 my-2"/>
+
+            {/* Recipe Section */}
+            <div className="col-span-4 grid gap-4">
+                 <h3 className="text-lg font-medium">Recipe</h3>
+                 <div className="grid grid-cols-4 items-start gap-4">
+                    <Label className="text-right pt-2">
+                        Ingredients
+                    </Label>
+                    <div className="col-span-3 space-y-4">
+                        {fields.map((field, index) => (
+                            <div key={field.id} className="flex items-center gap-2">
+                                <span className="font-semibold flex-1">{getIngredientName(field.stockItemId)}</span>
+                                <span className="w-24">{(field.quantity)} {getIngredientUnit(field.stockItemId)}</span>
+                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="text-destructive h-4 w-4"/></Button>
+                            </div>
+                        ))}
+                         {watchedRecipe?.length === 0 && <p className="text-sm text-muted-foreground">No ingredients added yet.</p>}
+                    </div>
+                </div>
+                 <div className="grid grid-cols-4 items-end gap-4">
+                     <Label htmlFor="ingredient" className="text-right">
+                        Add Ingredient
+                    </Label>
+                    <div className="col-span-3 grid grid-cols-3 gap-2">
+                        <Select value={ingredient} onValueChange={setIngredient}>
+                             <SelectTrigger className="col-span-2">
+                                <SelectValue placeholder="Select ingredient" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {stockItems.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <Input id="quantity" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Qty" className="w-full" type="number"/>
+                    </div>
+                 </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <div className="col-start-2 col-span-3">
+                         <Button type="button" variant="secondary" onClick={handleAddIngredient}>Add to Recipe</Button>
+                    </div>
+                 </div>
+            </div>
           </div>
-          <DialogFooter>
-            <Button type="submit">Save changes</Button>
-          </DialogFooter>
         </form>
+         <DialogFooter className="border-t pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+            <Button type="submit" onClick={handleSubmit(onSubmit)}>Save changes</Button>
+          </DialogFooter>
       </DialogContent>
     </Dialog>
   );

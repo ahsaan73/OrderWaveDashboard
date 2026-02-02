@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { collection, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, StockItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
 
@@ -35,8 +35,14 @@ export default function MenuPage() {
     if (!firestore) return null;
     return collection(firestore, 'menuItems');
   }, [firestore]);
+  
+  const stockItemsQuery = useMemoFirebase(() => {
+    if(!firestore) return null;
+    return collection(firestore, 'stockItems');
+  }, [firestore]);
 
   const { data: menuItems, isLoading: dataLoading } = useCollection<MenuItem>(menuItemsQuery);
+  const { data: stockItems, isLoading: stockLoading } = useCollection<StockItem>(stockItemsQuery);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -104,7 +110,7 @@ export default function MenuPage() {
     }
   };
 
-  const isLoading = userLoading || dataLoading;
+  const isLoading = userLoading || dataLoading || stockLoading;
 
   if (userLoading || !user || !allowedRoles.includes(user.role || '')) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
@@ -142,6 +148,7 @@ export default function MenuPage() {
         setIsOpen={setIsModalOpen}
         item={editingItem}
         onSave={handleSaveItem}
+        stockItems={stockItems || []}
       />
       <DeleteConfirmationModal
         isOpen={isDeleteAlertOpen}

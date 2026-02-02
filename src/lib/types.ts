@@ -27,9 +27,15 @@ export type Order = FirebaseDocument & {
   orderType: 'Pickup' | 'Delivery' | 'Dine-in';
   address?: string;
   phoneNumber?: string;
+  stockDeducted?: boolean;
 };
 
 export type MenuItemCategory = 'Burgers' | 'Sides' | 'Wraps' | 'Pizzas' | 'Drinks' | 'Pasta';
+
+export type RecipeIngredient = {
+  stockItemId: string;
+  quantity: number;
+};
 
 export type MenuItem = FirebaseDocument & {
   name: string;
@@ -39,6 +45,7 @@ export type MenuItem = FirebaseDocument & {
   imageHint: string;
   isAvailable: boolean;
   category: MenuItemCategory;
+  recipe?: RecipeIngredient[];
 };
 
 export type StockItem = FirebaseDocument & {

@@ -5,9 +5,9 @@ import Link from "next/link";
 import { OrderCard } from "@/components/order-card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, getDoc, runTransaction, addDoc } from 'firebase/firestore';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import type { Order } from "@/lib/types";
+import type { Order, MenuItem, StockItem } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -29,7 +29,7 @@ export default function KitchenDisplayPage() {
     }
   }, [user, userLoading, authUser, router]);
 
-  const canUpdate = user?.role === 'kitchen';
+  const canUpdate = user?.role === 'kitchen' || user?.role === 'manager' || user?.role === 'admin';
 
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -46,16 +46,93 @@ export default function KitchenDisplayPage() {
           where('status', '==', 'Done')
       )
   }, [firestore, user]);
+  
+  const menuItemsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'menuItems');
+  }, [firestore]);
+
+  const stockItemsQuery = useMemoFirebase(() => {
+      if(!firestore) return null;
+      return collection(firestore, 'stockItems');
+  }, [firestore]);
 
   const { data: activeOrders, isLoading: isLoadingActive } = useCollection<Order>(ordersQuery);
   const { data: doneOrdersData, isLoading: isLoadingDone } = useCollection<Order>(doneOrdersQuery);
+  const { data: menuItems, isLoading: isLoadingMenu } = useCollection<MenuItem>(menuItemsQuery);
+  const { data: stockItems, isLoading: isLoadingStock } = useCollection<StockItem>(stockItemsQuery);
 
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     if (!firestore || !canUpdate) return;
     const orderRef = doc(firestore, 'orders', orderId);
+
+    // --- Stock Deduction Logic ---
+    if (newStatus === 'Cooking' && menuItems && stockItems) {
+        const orderSnap = await getDoc(orderRef);
+        if (orderSnap.exists() && !orderSnap.data().stockDeducted) {
+            const orderData = orderSnap.data() as Order;
+            try {
+                const deductions = new Map<string, { item: StockItem, change: number }>();
+                
+                for (const orderItem of orderData.items) {
+                    const menuItem = menuItems.find(mi => mi.name === orderItem.name);
+                    if (menuItem?.recipe) {
+                        for (const recipeIngredient of menuItem.recipe) {
+                            const stockItem = stockItems.find(si => si.id === recipeIngredient.stockItemId);
+                            if (stockItem) {
+                                const totalDeduction = recipeIngredient.quantity * orderItem.quantity;
+                                const current = deductions.get(stockItem.id) || { item: stockItem, change: 0 };
+                                deductions.set(stockItem.id, { ...current, change: current.change + totalDeduction });
+                            }
+                        }
+                    }
+                }
+
+                const logData = [];
+                for (const [stockItemId, deduction] of deductions.entries()) {
+                    const stockItemRef = doc(firestore, 'stockItems', stockItemId);
+                    const { oldStockLevel, newStockLevel } = await runTransaction(firestore, async (transaction) => {
+                        const stockDoc = await transaction.get(stockItemRef);
+                        if (!stockDoc.exists()) throw `Stock item ${deduction.item.name} not found!`;
+                        
+                        const oldStock = stockDoc.data().currentStock;
+                        const newStock = oldStock - deduction.change;
+                        transaction.update(stockItemRef, { currentStock: newStock });
+                        return { oldStockLevel: oldStock, newStockLevel: newStock };
+                    });
+
+                    logData.push({
+                        itemId: stockItemId,
+                        itemName: deduction.item.name,
+                        userId: user?.uid || 'system',
+                        userName: user?.displayName || 'System (Kitchen)',
+                        change: -deduction.change,
+                        oldStockLevel,
+                        newStockLevel,
+                        reason: 'Order Fulfillment',
+                        timestamp: Date.now(),
+                    });
+                }
+                
+                const logCollection = collection(firestore, 'inventoryLogs');
+                await Promise.all(logData.map(log => addDoc(logCollection, log)));
+
+                await updateDoc(orderRef, { stockDeducted: true });
+                toast({ title: "Stock Deducted", description: `Ingredients for order ${orderData.orderNumber} deducted.` });
+
+            } catch (e) {
+                console.error("Stock deduction failed:", e);
+                toast({ variant: 'destructive', title: 'Stock Deduction Failed', description: (e as Error).message });
+                // We don't block the status update if stock deduction fails.
+            }
+        }
+    }
+
+
+    // --- Original Status Update Logic ---
     try {
-      const updatePayload: { status: Order['status'], cookingStartedAt?: number } = { status: newStatus };
+      const updatePayload: { status: Order['status'], cookingStartedAt?: number, stockDeducted?: boolean } = { status: newStatus };
       if (newStatus === 'Cooking') {
         updatePayload.cookingStartedAt = Date.now();
       }
@@ -79,7 +156,7 @@ export default function KitchenDisplayPage() {
   const cookingOrders = useMemo(() =>
     activeOrders
       ?.filter(o => o.status === 'Cooking')
-      .sort((a, b) => a.createdAt - b.createdAt)
+      .sort((a, b) => (a.cookingStartedAt || a.createdAt) - (b.cookingStartedAt || b.createdAt))
   , [activeOrders]);
   
   const doneOrders = useMemo(() =>
@@ -97,7 +174,7 @@ export default function KitchenDisplayPage() {
       </div>
   );
   
-  const isLoading = userLoading || isLoadingActive || isLoadingDone;
+  const isLoading = userLoading || isLoadingActive || isLoadingDone || isLoadingMenu || isLoadingStock;
 
   if (userLoading || !user || !allowedRoles.includes(user.role || '')) {
       return (
@@ -121,7 +198,7 @@ export default function KitchenDisplayPage() {
         {/* Waiting Column */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-semibold text-red-400 text-center uppercase tracking-wider">Waiting</h2>
-          {isLoadingActive ? renderSkeleton() : waitingOrders?.map(order => (
+          {isLoading ? renderSkeleton() : waitingOrders?.map(order => (
             <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateOrderStatus} canUpdate={canUpdate} />
           ))}
         </div>
@@ -129,7 +206,7 @@ export default function KitchenDisplayPage() {
         {/* Cooking Column */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-semibold text-yellow-400 text-center uppercase tracking-wider">Cooking</h2>
-          {isLoadingActive ? null : cookingOrders?.map(order => (
+          {isLoading ? null : cookingOrders?.map(order => (
             <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateOrderStatus} canUpdate={canUpdate} />
           ))}
         </div>
@@ -137,7 +214,7 @@ export default function KitchenDisplayPage() {
         {/* Done Column */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-semibold text-green-400 text-center uppercase tracking-wider">Recently Done</h2>
-          {isLoadingDone ? null : doneOrders?.map(order => (
+          {isLoading ? null : doneOrders?.map(order => (
             <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateOrderStatus} canUpdate={canUpdate} />
           ))}
         </div>
