@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ChefHat } from 'lucide-react';
 import { useAuth, useFirestore } from "@/firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,12 +20,24 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
+      // Special check for Admin email. Make it case-insensitive.
+      const isAdminEmail = user.email?.toLowerCase() === 'orderwave1@gmail.com';
+
       const userRef = doc(firestore, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
-        // Existing User: Route them based on their role
         const data = userSnap.data();
+        
+        // Self-healing: If this IS the admin email but the role in DB is wrong, fix it.
+        if (isAdminEmail && data.role !== 'admin') {
+            await updateDoc(userRef, { role: 'admin' });
+            toast({ title: "Admin role corrected!", description: "Your administrative access has been restored." });
+            router.push('/'); // Redirect to main admin dashboard
+            return;
+        }
+
+        // Standard routing for existing users
         if (data.role === 'admin' || data.role === 'manager') {
             router.push('/');
         } else if (data.role === 'cashier') {
@@ -35,12 +47,18 @@ export default function LoginPage() {
         } else if (data.role === 'kitchen') {
             router.push('/kitchen-display');
         } else {
-            // Fallback for any other roles or new users without a valid role yet
-            router.push('/');
+            // Fallback for users with no valid role yet (should be caught by useUser hook)
+            // but as a safety, send to login with a message.
+            toast({
+                title: "Role Not Assigned",
+                description: "An administrator must assign you a role before you can log in.",
+                duration: 5000,
+            });
+            await auth.signOut();
+            router.push('/login');
         }
       } else {
-        // New User: Create their user document. Special check for the first admin user.
-        const isAdminEmail = user.email === 'orderwave1@gmail.com';
+        // New User
         const roleToAssign = isAdminEmail ? 'admin' : 'waiter';
 
         await setDoc(userRef, {
@@ -68,7 +86,6 @@ export default function LoginPage() {
         }
       }
     } catch (error: any) {
-      // Don't treat closing the popup as a critical error.
       if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
         console.log('Login popup closed by user.');
         return; 
