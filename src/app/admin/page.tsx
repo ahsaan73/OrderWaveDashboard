@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { collection, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError, useAuth } from '@/firebase';
 import type { User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,31 +11,40 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
 
 export default function AdminPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   const { user, loading: userLoading, authUser } = useUser();
+  const auth = useAuth();
 
   useEffect(() => {
+    // While user state is loading, do nothing.
     if (userLoading) {
-      return; // Wait until loading is finished
+      return;
     }
-    
+
+    // If no authenticated user, redirect to login.
     if (!authUser) {
         router.replace('/login');
         return;
     }
 
-    if (user && user.role) {
-      if (user.role !== 'admin') {
-        router.replace('/');
-      }
-      // else user is admin, they can stay
-    } 
-    // If profile is still loading, do nothing and wait.
-  }, [user, userLoading, authUser, router]);
+    // If user profile is not yet loaded, wait.
+    if (!user) {
+      return;
+    }
+
+    // If user has a role, but it's not admin, redirect to dashboard.
+    if (user.role && user.role !== 'admin') {
+      router.replace('/');
+    } else if (!user.role) {
+      // No role is an invalid state. Log out.
+      signOut(auth).then(() => router.replace('/login'));
+    }
+  }, [user, userLoading, authUser, router, auth]);
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || user.role !== 'admin') return null;

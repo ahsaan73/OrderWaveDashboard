@@ -45,12 +45,18 @@ export default function WaiterPage() {
   };
 
   useEffect(() => {
-    if (!userLoading) {
-      if (user && !allowedRoles.includes(user.role || '')) {
-        router.replace('/');
-      } else if (!user && !authUser) {
-        router.replace('/login');
-      }
+    if (userLoading) {
+      return;
+    }
+    if (!authUser) {
+      router.replace('/login');
+      return;
+    }
+    if (!user) {
+      return;
+    }
+    if (!allowedRoles.includes(user.role || '')) {
+      router.replace('/');
     }
   }, [user, userLoading, authUser, router]);
 
@@ -122,7 +128,7 @@ export default function WaiterPage() {
 
   const isLoading = userLoading || dataLoading;
   
-  if (isLoading || !user || !allowedRoles.includes(user.role || '')) {
+  if (isLoading || !user) {
       return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
   }
 

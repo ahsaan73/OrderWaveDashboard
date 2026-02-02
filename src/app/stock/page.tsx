@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { EditableStockCard } from '@/components/editable-stock-card';
 import { collection, doc, updateDoc, addDoc, deleteDoc, getDoc, runTransaction } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, useAuth } from '@/firebase';
 import type { StockItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,14 @@ import { Plus, BookMarked } from 'lucide-react';
 import { AddEditStockModal } from '@/components/add-edit-stock-modal';
 import { AddStockModal } from '@/components/add-stock-modal';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
+import { signOut } from 'firebase/auth';
 
 export default function StockPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
+  const auth = useAuth();
 
   const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
@@ -29,12 +31,18 @@ export default function StockPage() {
   const isManager = user?.role === 'manager' || user?.role === 'admin';
 
   useEffect(() => {
-    if (!userLoading) {
-      if (user && !allowedRoles.includes(user.role || '')) {
-        router.replace('/');
-      } else if (!user && !authUser) {
-        router.replace('/login');
-      }
+    if (userLoading) {
+      return;
+    }
+    if (!authUser) {
+      router.replace('/login');
+      return;
+    }
+    if (!user) {
+      return;
+    }
+    if (!allowedRoles.includes(user.role || '')) {
+      router.replace('/');
     }
   }, [user, userLoading, authUser, router]);
 
@@ -155,7 +163,7 @@ export default function StockPage() {
   
   const isLoading = userLoading || dataLoading;
 
-  if (isLoading || !user || !allowedRoles.includes(user.role || '')) {
+  if (isLoading || !user) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 

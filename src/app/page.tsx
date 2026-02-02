@@ -1,4 +1,3 @@
-
 'use client';
 
 import { DashboardLayout } from "@/components/dashboard-layout";
@@ -16,11 +15,12 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import type { Order, Table, MenuItem } from "@/lib/types";
 import { collection, query, where, orderBy, doc, updateDoc } from "firebase/firestore";
-import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useUser, useCollection, useMemoFirebase, useAuth } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { startOfToday, getHours, startOfYesterday } from 'date-fns';
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { signOut } from "firebase/auth";
 
 
 const lineChartConfig = {
@@ -43,6 +43,7 @@ export default function Home() {
   const firestore = useFirestore();
   const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
+  const auth = useAuth();
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
   const prevTablesRef = useRef<Table[]>();
@@ -63,30 +64,30 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // 1. Wait while we determine the user's status.
+    // While user state is loading, do nothing.
     if (userLoading) {
       return;
     }
 
-    // 2. If loading is done and there's no authUser, they must log in.
+    // When loading is finished, if there is no authenticated user,
+    // they must be sent to the login page.
     if (!authUser) {
       router.replace('/login');
       return;
     }
 
-    // 3. If loading is done, authUser exists, but the user profile (with role)
-    // could not be loaded, it's an invalid state. Redirect to login to be safe.
+    // If an authenticated user exists, but we don't have their profile data yet (e.g., after initial sign up),
+    // we simply wait for the profile to load. The `useUser` hook will trigger a re-render when it's ready.
     if (!user) {
-      router.replace('/login');
       return;
     }
     
-    // 4. We have a valid user with a role. Redirect them if necessary.
+    // Once we have the full user object with a role, we can route them.
     if (user.role) {
       switch (user.role) {
         case 'admin':
         case 'manager':
-          // They belong here. Do nothing.
+          // Admins and managers belong on the main dashboard. Do nothing.
           break;
         case 'cashier':
           router.replace('/billing');
@@ -98,15 +99,15 @@ export default function Home() {
           router.replace('/kitchen-display');
           break;
         default:
-          // Unknown role.
-          router.replace('/login');
+          // An unknown role is an invalid state. Log out and redirect.
+          signOut(auth).then(() => router.replace('/login'));
           break;
       }
     } else {
-      // No role found, redirect to login.
-      router.replace('/login');
+      // A user without a role is an invalid state. Log out and redirect.
+      signOut(auth).then(() => router.replace('/login'));
     }
-  }, [user, userLoading, authUser, router]);
+  }, [user, userLoading, authUser, router, auth]);
 
 
   const ordersQuery = useMemoFirebase(() => {
@@ -291,11 +292,6 @@ export default function Home() {
 
   if (userLoading || !user) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
-  }
-  
-  // This is a fallback. The useEffect should handle redirection for other roles.
-  if (user.role !== 'manager' && user.role !== 'admin') {
-      return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
 

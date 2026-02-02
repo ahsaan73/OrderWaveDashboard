@@ -28,12 +28,18 @@ export default function KitchenDisplayPage() {
   const allowedRoles = ['kitchen', 'manager', 'admin'];
 
   useEffect(() => {
-    if (!userLoading) {
-      if (user && !allowedRoles.includes(user.role || '')) {
-        router.replace('/');
-      } else if (!user && !authUser) {
-        router.replace('/login');
-      }
+    if (userLoading) {
+      return;
+    }
+    if (!authUser) {
+      router.replace('/login');
+      return;
+    }
+    if (!user) {
+      return;
+    }
+    if (!allowedRoles.includes(user.role || '')) {
+      router.replace('/');
     }
   }, [user, userLoading, authUser, router]);
 
@@ -193,7 +199,7 @@ export default function KitchenDisplayPage() {
   
   const isLoading = userLoading || isLoadingActive || isLoadingDone || isLoadingMenu || isLoadingStock || isLoadingRecipes;
 
-  if (userLoading || !user || !allowedRoles.includes(user.role || '')) {
+  if (userLoading || !user) {
       return (
           <div className="bg-gray-900 text-white min-h-screen p-4 flex items-center justify-center">
               <p>Loading...</p>

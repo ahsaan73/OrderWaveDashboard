@@ -8,10 +8,11 @@ import { AddEditMenuModal } from '@/components/add-edit-menu-modal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { collection, doc, updateDoc, addDoc, deleteDoc, setDoc } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, useAuth } from '@/firebase';
 import type { MenuItem, StockItem, RecipeIngredient } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
+import { signOut } from 'firebase/auth';
 
 
 export default function MenuPage() {
@@ -19,15 +20,22 @@ export default function MenuPage() {
   const { toast } = useToast();
   const { user, loading: userLoading, authUser } = useUser();
   const router = useRouter();
+  const auth = useAuth();
   const allowedRoles = ['manager', 'admin'];
 
   useEffect(() => {
-    if (!userLoading) {
-      if (user && !allowedRoles.includes(user.role || '')) {
-        router.replace('/');
-      } else if (!user && !authUser) {
-        router.replace('/login');
-      }
+    if (userLoading) {
+      return;
+    }
+    if (!authUser) {
+      router.replace('/login');
+      return;
+    }
+    if (!user) {
+      return;
+    }
+    if (!allowedRoles.includes(user.role || '')) {
+      router.replace('/');
     }
   }, [user, userLoading, authUser, router]);
 
@@ -138,7 +146,7 @@ export default function MenuPage() {
 
   const isLoading = userLoading || dataLoading || stockLoading;
 
-  if (userLoading || !user || !allowedRoles.includes(user.role || '')) {
+  if (userLoading || !user) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
