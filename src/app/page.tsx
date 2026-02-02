@@ -278,7 +278,7 @@ export default function Home() {
     }
   };
   
-  const isLoading = isLoadingOrders || isLoadingTables || isLoadingMenuItems;
+  const isLoading = userLoading || isLoadingOrders || isLoadingTables || isLoadingMenuItems;
   const canManagePayment = user?.role === 'manager' || user?.role === 'admin';
 
   if (userLoading || !user || !user.role) {
@@ -457,5 +457,3 @@ export default function Home() {
     return (table.status === 'Eating' || table.status === 'Needs Bill') && table.orderId;
   }
 }
-
-    
