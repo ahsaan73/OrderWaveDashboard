@@ -39,21 +39,33 @@ export default function LoginPage() {
             router.push('/');
         }
       } else {
-        // New User: Create their user document, then inform and sign out.
+        // New User: Create their user document. Special check for the first admin user.
+        const isAdminEmail = user.email === 'orderwave1@gmail.com';
+        const roleToAssign = isAdminEmail ? 'admin' : 'waiter';
+
         await setDoc(userRef, {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-            role: 'waiter' // Assign a default, non-privileged role
+            role: roleToAssign,
         });
         
-        toast({
-            title: "Account Registered!",
-            description: "An administrator must assign you a role before you can log in.",
-            duration: 5000,
-        });
-        await auth.signOut();
+        if (isAdminEmail) {
+            toast({
+                title: "Admin Account Initialized!",
+                description: "Welcome! You have full administrative access.",
+                duration: 5000,
+            });
+            router.push('/');
+        } else {
+            toast({
+                title: "Account Registered!",
+                description: "An administrator must assign you a role before you can log in.",
+                duration: 5000,
+            });
+            await auth.signOut();
+        }
       }
     } catch (error: any) {
       // Don't treat closing the popup as a critical error.

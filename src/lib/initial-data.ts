@@ -1,18 +1,8 @@
 import { PlaceHolderImages } from './placeholder-images';
-import type { User, MenuItem, StockItem, Table } from './types';
+import type { MenuItem, StockItem, Table } from './types';
 
 
 const imageMap = new Map(PlaceHolderImages.map(p => [p.id, p.imageUrl]));
-
-export const users: Omit<User, 'id' | 'ref'>[] = [
-  {
-    uid: 'admin-placeholder-uid',
-    displayName: 'Admin User',
-    email: 'admin@example.com',
-    photoURL: 'https://picsum.photos/seed/admin/100/100',
-    role: 'admin'
-  }
-];
 
 export const menuItems: Omit<MenuItem, 'id' | 'ref'>[] = [
   {

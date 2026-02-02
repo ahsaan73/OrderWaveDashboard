@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, getDocs, setDoc, doc } from "firebase/firestore";
 import { firebaseConfig } from "@/firebase/config";
-import { menuItems, stockItems, tables, users } from "@/lib/initial-data";
+import { menuItems, stockItems, tables } from "@/lib/initial-data";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -45,13 +45,10 @@ export async function GET() {
         console.log("Tables already exist, skipping.");
     }
 
-    // Seed/Update Users (always)
-    for (const user of users) {
-      await setDoc(doc(db, "users", user.uid), user);
-    }
-    console.log("Users seeded/updated.");
+    // User seeding has been removed. Users are created on first login.
+    console.log("User creation is now handled dynamically on login.");
     
-    return NextResponse.json({ success: true, message: 'Database seeding process completed. Users are now up-to-date.' });
+    return NextResponse.json({ success: true, message: 'Database seeding process completed. User creation is now dynamic.' });
 
   } catch (error) {
     console.error("Error seeding database:", error);
