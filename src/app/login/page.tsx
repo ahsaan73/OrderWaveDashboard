@@ -20,19 +20,37 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // 1. Check the "users" collection for this ID
       const userRef = doc(firestore, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
-      // 2. Routing Logic based on your Hierarchy
-      if (userSnap.exists() && userSnap.data().role === 'owner') {
-        router.push("/owner-dashboard");
+      if (userSnap.exists()) {
+        // 1. Existing User: Send them to their dashboard
+        const data = userSnap.data();
+        if (data.role === 'admin' || data.role === 'manager') {
+            router.push('/');
+        } else if (data.role === 'cashier') {
+            router.push('/billing');
+        } else if (data.role === 'waiter') {
+            router.push('/waiter');
+        } else if (data.role === 'kitchen') {
+            router.push('/kitchen-display');
+        } else {
+            // Fallback for any other roles
+            router.push('/');
+        }
       } else {
-        // If they aren't an owner, they are treated as staff or new users
-        router.push("/staff-dashboard");
+        // 2. New User: Inform them they need approval and sign them out.
+        console.log("New user detected. Please assign role in Firebase Console.");
+        toast({
+            title: "Account Created!",
+            description: "Please wait for an administrator to assign you a role.",
+            duration: 5000,
+        });
+        await auth.signOut();
       }
     } catch (error: any) {
-        toast({
+      console.error("Login Failed:", error.code, error.message);
+       toast({
             variant: "destructive",
             title: "Login Error",
             description: error.message,

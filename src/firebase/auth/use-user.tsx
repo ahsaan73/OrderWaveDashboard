@@ -19,25 +19,24 @@ export function useUser() {
     const user: AppUser | null = useMemo(() => {
         if (!authUser) return null;
 
-        // Base user from auth
-        const baseUser: Partial<AppUser> = {
-            id: authUser.uid,
-            uid: authUser.uid,
-            email: authUser.email,
-            displayName: authUser.displayName,
-            photoURL: authUser.photoURL,
-        };
-
-        // If profile exists, merge it.
-        if (userProfile) {
-            return { ...baseUser, ...userProfile } as AppUser;
-        }
-
-        // If still loading profile but auth is done, return null to wait for profile
+        // If we are still fetching auth or profile, we aren't done yet.
         if (authLoading || profileLoading) return null;
+
+        // If the profile exists, combine it with the auth data.
+        if (userProfile) {
+            return {
+                id: authUser.uid,
+                uid: authUser.uid,
+                email: authUser.email,
+                displayName: authUser.displayName,
+                photoURL: authUser.photoURL,
+                ...userProfile 
+            } as AppUser;
+        }
         
-        // If auth is done, but there's no profile yet (e.g., first login), return a user without a role
-        return baseUser as AppUser;
+        // If auth is done, but there's no profile (e.g., first login or awaiting approval),
+        // we should not consider them a valid app user.
+        return null;
 
     }, [authUser, userProfile, authLoading, profileLoading]);
 
