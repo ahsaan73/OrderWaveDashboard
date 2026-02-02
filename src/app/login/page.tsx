@@ -49,6 +49,12 @@ export default function LoginPage() {
         await auth.signOut();
       }
     } catch (error: any) {
+      // Don't treat closing the popup as a critical error.
+      if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+        console.log('Login popup closed by user.');
+        return; 
+      }
+      
       console.error("Login Failed:", error.code, error.message);
        toast({
             variant: "destructive",
