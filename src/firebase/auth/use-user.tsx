@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import { useFirebase, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { User as AppUser } from '@/lib/types';
-import type { User as AuthUser } from 'firebase/auth';
 
 export function useUser() {
     const { user: authUser, isUserLoading: authLoading, userError: authError } = useFirebase();
@@ -17,33 +16,27 @@ export function useUser() {
 
     const { data: userProfile, isLoading: profileLoading, error: profileError } = useDoc<Omit<AppUser, 'id' | 'uid' | 'email' | 'displayName' | 'photoURL'>>(userDocRef);
 
+    // The user is considered "loading" if auth is loading, or if we have an authUser but are still waiting for their profile.
+    const isLoading = authLoading || (!!authUser && profileLoading);
+
     const user: AppUser | null = useMemo(() => {
-        if (!authUser) return null;
+        // We can only construct a full user if we have both the auth info and the firestore profile.
+        if (!authUser || !userProfile) return null;
 
-        // If we are still fetching auth or profile, we aren't done yet.
-        if (authLoading || profileLoading) return null;
+        return {
+            id: authUser.uid,
+            uid: authUser.uid,
+            email: authUser.email,
+            displayName: authUser.displayName,
+            photoURL: authUser.photoURL,
+            ...userProfile 
+        } as AppUser;
 
-        // If the profile exists, combine it with the auth data.
-        if (userProfile) {
-            return {
-                id: authUser.uid,
-                uid: authUser.uid,
-                email: authUser.email,
-                displayName: authUser.displayName,
-                photoURL: authUser.photoURL,
-                ...userProfile 
-            } as AppUser;
-        }
-        
-        // If auth is done, but there's no profile (e.g., first login or awaiting approval),
-        // we should not consider them a valid app user.
-        return null;
-
-    }, [authUser, userProfile, authLoading, profileLoading]);
+    }, [authUser, userProfile]);
 
     return {
         user,
-        loading: authLoading || profileLoading,
+        loading: isLoading,
         error: authError || profileError,
         authUser,
     };

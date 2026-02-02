@@ -63,24 +63,30 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Still loading, do nothing yet.
+    // 1. Wait while we determine the user's status.
     if (userLoading) {
       return;
     }
 
-    // Finished loading. If there's no authenticated user, redirect to login.
+    // 2. If loading is done and there's no authUser, they must log in.
     if (!authUser) {
       router.replace('/login');
       return;
     }
+
+    // 3. If loading is done, authUser exists, but the user profile (with role)
+    // could not be loaded, it's an invalid state. Redirect to login to be safe.
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
     
-    // If there is an authenticated user, wait for the full user profile with role.
-    if (user && user.role) {
-      // We have a full user with a role, decide where they go
+    // 4. We have a valid user with a role. Redirect them if necessary.
+    if (user.role) {
       switch (user.role) {
         case 'admin':
         case 'manager':
-          // This is their page, do nothing.
+          // They belong here. Do nothing.
           break;
         case 'cashier':
           router.replace('/billing');
@@ -92,14 +98,16 @@ export default function Home() {
           router.replace('/kitchen-display');
           break;
         default:
-          // An unknown role, boot to login.
+          // Unknown role.
           router.replace('/login');
           break;
       }
+    } else {
+      // No role found, redirect to login.
+      router.replace('/login');
     }
-    // If userLoading is false, authUser exists, but `user` is still null (profile loading),
-    // we do nothing and let the component show its loading state. This prevents the loop.
   }, [user, userLoading, authUser, router]);
+
 
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -281,7 +289,7 @@ export default function Home() {
   const isLoading = userLoading || isLoadingOrders || isLoadingTables || isLoadingMenuItems;
   const canManagePayment = user?.role === 'manager' || user?.role === 'admin';
 
-  if (userLoading || !user || !user.role) {
+  if (userLoading || !user) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
   
