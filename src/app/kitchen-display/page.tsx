@@ -61,9 +61,9 @@ export default function KitchenDisplayPage() {
   }, [firestore]);
 
   const stockItemsQuery = useMemoFirebase(() => {
-      if(!firestore) return null;
+      if(!firestore || !user) return null;
       return collection(firestore, 'stockItems');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const recipesQuery = useMemoFirebase(() => {
     if(!firestore || !canUpdate) return null;

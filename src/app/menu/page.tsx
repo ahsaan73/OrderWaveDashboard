@@ -37,9 +37,9 @@ export default function MenuPage() {
   }, [firestore]);
   
   const stockItemsQuery = useMemoFirebase(() => {
-    if(!firestore) return null;
+    if(!firestore || !user) return null;
     return collection(firestore, 'stockItems');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: menuItems, isLoading: dataLoading } = useCollection<MenuItem>(menuItemsQuery);
   const { data: stockItems, isLoading: stockLoading } = useCollection<StockItem>(stockItemsQuery);
