@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect } from 'react';
+import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore, useUser, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
@@ -16,21 +16,23 @@ export default function AdminPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const { user, loading: userLoading, authUser } = useUser();
+  const { user, loading: userLoading } = useUser();
 
   useEffect(() => {
-    if (!userLoading) {
-        if (user && user.role !== 'admin') {
-            // Has a profile, but isn't an admin
-            router.replace('/');
-        } else if (!user && !authUser) {
-            // Not logged in at all
-            router.replace('/login');
-        }
-        // If user is admin, do nothing.
-        // If !user but authUser exists, it means profile is loading, so do nothing and wait.
+    if (userLoading) {
+      return; // Wait until loading is finished
     }
-  }, [user, userLoading, authUser, router]);
+
+    if (user && user.role === 'admin') {
+      // User is an admin, they can stay.
+    } else if (user) {
+      // User is logged in but not an admin, send to dashboard.
+      router.replace('/');
+    } else {
+      // No user at all, send to login.
+      router.replace('/login');
+    }
+  }, [user, userLoading, router]);
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || user.role !== 'admin') return null;

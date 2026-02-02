@@ -40,7 +40,7 @@ const pieChartConfig = {
 
 export default function Home() {
   const firestore = useFirestore();
-  const { user, loading: userLoading, authUser } = useUser();
+  const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -62,26 +62,36 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Wait until the user loading state is fully resolved.
-    if (!userLoading) {
-      // If we have a full application user with a role, handle role-based redirects.
-      if (user) {
-        if (user.role === 'cashier') router.replace('/billing');
-        else if (user.role === 'waiter') router.replace('/waiter');
-        else if (user.role === 'kitchen') router.replace('/kitchen-display');
-        else if (!['manager', 'admin'].includes(user.role || '')) {
-          router.replace('/login');
-        }
-        // If the user is an admin or manager, they stay on this dashboard page.
-      } else if (!authUser) {
-        // If there's no full user AND no basic Firebase auth user,
-        // then they are truly unauthenticated. Redirect to login.
-        router.replace('/login');
-      }
-      // If there IS an authUser but not a full user, we do nothing.
-      // This means the profile is still loading, so we wait to prevent a redirect loop.
+    if (userLoading) {
+      return; // Wait until loading is finished
     }
-  }, [user, userLoading, authUser, router]);
+
+    if (user && user.role) {
+      // We have a full user with a role, decide where they go
+      switch (user.role) {
+        case 'admin':
+        case 'manager':
+          // This is their page, do nothing.
+          break;
+        case 'cashier':
+          router.replace('/billing');
+          break;
+        case 'waiter':
+          router.replace('/waiter');
+          break;
+        case 'kitchen':
+          router.replace('/kitchen-display');
+          break;
+        default:
+          // An unknown role, boot to login.
+          router.replace('/login');
+          break;
+      }
+    } else {
+      // If after loading there's no user or no role, they can't be here.
+      router.replace('/login');
+    }
+  }, [user, userLoading, router]);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -263,7 +273,7 @@ export default function Home() {
   const isLoading = isLoadingOrders || isLoadingTables || isLoadingMenuItems;
   const canManagePayment = user?.role === 'manager' || user?.role === 'admin';
 
-  if (userLoading || !user || !['manager', 'admin'].includes(user.role || '')) {
+  if (userLoading || !user || (user.role !== 'manager' && user.role !== 'admin')) {
     return <DashboardLayout><div>Loading...</div></DashboardLayout>;
   }
 
