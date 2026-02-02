@@ -16,13 +16,21 @@ export default function AdminPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, authUser } = useUser();
 
   useEffect(() => {
-    if (!userLoading && user?.role !== 'admin') {
-      router.replace('/');
+    if (!userLoading) {
+        if (user && user.role !== 'admin') {
+            // Has a profile, but isn't an admin
+            router.replace('/');
+        } else if (!user && !authUser) {
+            // Not logged in at all
+            router.replace('/login');
+        }
+        // If user is admin, do nothing.
+        // If !user but authUser exists, it means profile is loading, so do nothing and wait.
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, authUser, router]);
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || user.role !== 'admin') return null;
