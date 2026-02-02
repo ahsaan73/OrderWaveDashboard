@@ -56,9 +56,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if request.auth.uid == userId;
-      // Only allow an admin to change the role.
-      // A user can still update their own other details.
-      allow update: if isAdmin() || (request.auth.uid == userId && !('role' in request.resource.data));
+      // An admin can update any user.
+      // A user can update their own profile, but cannot change their role UNLESS they are the designated admin.
+      allow update: if isAdmin() || (request.auth.uid == userId && (!('role' in request.resource.data) || 
+        (request.resource.data.role == 'admin' && request.auth.token.email == 'orderwave1@gmail.com')));
     }
   }
 }
