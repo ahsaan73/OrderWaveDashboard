@@ -33,30 +33,12 @@ export default function LoginPage() {
         if (isAdminEmail && data.role !== 'admin') {
             await updateDoc(userRef, { role: 'admin' });
             toast({ title: "Admin role corrected!", description: "Your administrative access has been restored." });
-            router.push('/'); // Redirect to main admin dashboard
-            return;
         }
+        
+        // For all existing users, just go to the dashboard.
+        // The dashboard page will handle role-based redirects.
+        router.push('/');
 
-        // Standard routing for existing users
-        if (data.role === 'admin' || data.role === 'manager') {
-            router.push('/');
-        } else if (data.role === 'cashier') {
-            router.push('/billing');
-        } else if (data.role === 'waiter') {
-            router.push('/waiter');
-        } else if (data.role === 'kitchen') {
-            router.push('/kitchen-display');
-        } else {
-            // Fallback for users with no valid role yet (should be caught by useUser hook)
-            // but as a safety, send to login with a message.
-            toast({
-                title: "Role Not Assigned",
-                description: "An administrator must assign you a role before you can log in.",
-                duration: 5000,
-            });
-            await auth.signOut();
-            router.push('/login');
-        }
       } else {
         // New User
         const roleToAssign = isAdminEmail ? 'admin' : 'waiter';
@@ -75,6 +57,7 @@ export default function LoginPage() {
                 description: "Welcome! You have full administrative access.",
                 duration: 5000,
             });
+            // Go to dashboard, it will handle routing.
             router.push('/');
         } else {
             toast({
